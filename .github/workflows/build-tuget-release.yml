@@ -62,6 +62,7 @@ jobs:
           git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "git@gitee.com:"
           git submodule sync
           git submodule update --init Pro-GetPic browser TuGet-Client website tools
+          git -C TuGet-Client pull origin master
 
       - name: Install Linux System Dependencies
         if: runner.os == 'Linux'
