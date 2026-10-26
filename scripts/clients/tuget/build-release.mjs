@@ -145,14 +145,17 @@ function signMacosChromiumAppBundle(chromiumRoot, signingIdentity, childEntitlem
     }
     const frameworksDir = path.join(appPath, 'Contents', 'Frameworks');
     if (fs.existsSync(frameworksDir)) {
-      // 1. Sign nested dylibs and helper executables (crashpad / app_mode_loader) inside Frameworks
+      // 1. Sign nested dylibs and helper executables (crashpad / app_mode_loader / web_app_shortcut_copier) inside Frameworks
       const innerLeafBinaries = collectMatchingPaths(
         frameworksDir,
-        (_fullPath, d) =>
+        (fullPath, d) =>
           d.isFile() &&
+          !d.name.startsWith('.') &&
           (d.name.endsWith('.dylib') ||
             d.name === 'chrome_crashpad_handler' ||
-            d.name === 'app_mode_loader'),
+            d.name === 'app_mode_loader' ||
+            d.name === 'web_app_shortcut_copier' ||
+            path.basename(path.dirname(fullPath)) === 'Helpers'),
       );
       for (const leaf of innerLeafBinaries) {
         if (!leaf.endsWith('.dylib')) fs.chmodSync(leaf, 0o755);
