@@ -523,7 +523,7 @@ try {
     fs.rmSync(chromiumHoldDir, { recursive: true, force: true });
     fs.renameSync(stagedChromiumDir, chromiumHoldDir);
   }
-  const bundleArgs = process.platform === 'darwin' ? ['--bundles', 'app'] : [];
+  const bundleArgs = process.platform === 'darwin' ? ['--bundles', 'app', '--no-sign'] : [];
   const tauriArgs = [
     'run',
     'tauri',
@@ -531,13 +531,16 @@ try {
     'build',
     ...bundleArgs,
     ...configArgs,
-    ...signArgs,
+    ...(process.platform === 'darwin' ? [] : signArgs),
     ...cargoTargetArgs,
   ];
-  const tauriEnv =
-    process.platform === 'darwin'
-      ? { ...process.env, APPLE_ID: '', APPLE_PASSWORD: '', APPLE_TEAM_ID: '' }
-      : process.env;
+  const tauriEnv = { ...process.env };
+  if (process.platform === 'darwin') {
+    delete tauriEnv.APPLE_ID;
+    delete tauriEnv.APPLE_PASSWORD;
+    delete tauriEnv.APPLE_TEAM_ID;
+    delete tauriEnv.APPLE_SIGNING_IDENTITY;
+  }
   run(clientDir, 'npm', tauriArgs, tauriEnv);
 } finally {
   if (fs.existsSync(chromiumHoldDir)) {
