@@ -1,0 +1,6 @@
+- [x] is_still_on_platform_non_product 分支已回滚为 Skip（被动等待）
+- [x] 编译通过，无错误和警告
+- [ ] 6个链接（4淘宝+2京东），并发2，Worker 0 和 Worker 1 正常工作
+- [ ] Worker 0 登录后不会卡死
+- [ ] Worker 1 能正常滚动
+- [ ] 看门狗正常工作

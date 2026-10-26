@@ -1,0 +1,13 @@
+- [x] FAQ 第 4 条文案已改为"未激活可正常使用客户端，但核心下载功能受限。激活后解锁全部功能"
+- [x] FAQ 第 4 条英文文案已同步更新
+- [x] DesktopHero 标题为纯黑色文字（非蓝色渐变）
+- [x] DesktopHero 无蓝色 Orb 背景装饰
+- [x] DesktopHero Badge 无 🖥️ emoji，显示 `v{version} 桌面客户端`
+- [x] DesktopCompare 插件列无 ❌ emoji，使用灰色 `—`
+- [x] DesktopCompare 客户端列无 🚀 emoji，使用蓝色 `Check` 图标
+- [x] DesktopCompare 客户端列高亮从蓝色渐变背景改为浅色左边框
+- [x] DesktopTutorial 为横向卡片布局（桌面端），无蓝色圆圈和连接线
+- [x] DesktopTutorial 每张卡片有灰色图标、灰色 STEP 标签、黑色标题、灰色描述
+- [x] DesktopTutorial 移动端卡片纵向堆叠
+- [x] 所有修改在移动端响应式正常
+- [x] DesktopFeatures / DesktopDownload / DesktopFAQ 未被修改（样式已符合要求）

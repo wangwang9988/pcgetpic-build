@@ -1,0 +1,39 @@
+- [x] ywUtils.ts 实现 decodeEscapedUrl（Unicode 转义解码）、cleanYiwugoImageUrl（义乌购专用 URL 清洗）、isUrlBlacklisted（黑名单过滤，支持严格级和扩展级）
+- [x] ywUtils.ts 优先使用共享 cleanImageUrl() 处理通用清洗，仅在义乌购特有需求时覆盖
+- [x] ywGetMain.ts 实现三路提取（__INITIAL_STATE__ / script 标签 / DOM），合并去重后通过 tauriBridge.send('MainPic') 上报
+- [x] ywGetMain.ts 初始空上报 MainPic: []，重试循环使用共享 sleep，MAX_RETRIES=20, MAX_EXTRA_FETCHES=3
+- [x] ywGetDetail.ts 实现三路提取（__INITIAL_STATE__.detaill HTML / script 标签 / DOM），通过 tauriBridge.send('DetailPic') 上报
+- [x] ywGetDetail.ts 详情图 DOM 选择器优先级正确，优先取 data-lazyload-src > data-src > src
+- [x] ywGetDetail.ts 追加轮询间隔 1000ms（详情图加载较慢）
+- [x] ywGetDetail.ts MutationObserver 精确监听详情图容器（.tab-detail/.cpxq/.content-detail），监听 childList+subtree+attributes
+- [x] ywGetDetail.ts 返回清理函数，同时清理 Observer 和 pollTimer
+- [x] ywGetSku.ts 实现三路提取（productPropertySkuBoList / script 标签 / DOM），通过 tauriBridge.send('SkuPic') 上报
+- [x] ywGetSku.ts script 标签提取仅限 ywgimg.yiwugo.com 域名图片
+- [x] ywGetSku.ts 黑名单包含 /img/none. 过滤项（扩展级）
+- [x] ywGetSku.ts MutationObserver 精确监听目标容器（.specification-box/.calculator）而非 document.body
+- [x] ywGetSku.ts MutationObserver 监听 attributes 变化（src、data-src）
+- [x] ywGetSku.ts 返回清理函数，同时清理 Observer 和 pollTimer
+- [x] ywGetSku.ts MAX_POLL_RETRIES=15（SKU 图可能不存在，减少无效重试）
+- [x] ywGetVideo.ts 实现从 __INITIAL_STATE__.c.shop.videourl 和 videoFaceUrl 提取视频
+- [x] yiwugoGetVideo.ts 实现 XHR/Fetch 拦截 + Performance API 增量监控（游标增量检测）+ MutationObserver 动态监听
+- [x] ywGetVideo.ts 视频去重机制（URL 精确匹配 + 规范化 ID 去重）
+- [x] ywGetVideo.ts 通过 tauriBridge.send('VideoUrls', videoData) 上报，videoData 格式为 {url, type, timestamp, pageUrl}[]
+- [x] ywGetVideo.ts 采用先读后写策略（tauriBridge.get → 去重 → 追加头部 → tauriBridge.send）
+- [x] ywGetVideo.ts 延时梯度扫描（1s/3s/5s/10s）
+- [x] ywGetHylinkTitle.ts 从 URL 提取商品 ID（/product/detail/{id} 和 /productdetail/{id} 两种格式）
+- [x] ywGetHylinkTitle.ts 标题提取覆盖 9 个选择器 + document.title 降级（去除"义乌购"后缀）
+- [x] ywGetHylinkTitle.ts 输出全部四个字段：productTitle、productLink、productId、visitTime（YYYY-MM-DD HH:mm）
+- [x] index.ts 严格遵循开发指南标准模板
+- [x] index.ts 实现 iframe 防护（window !== window.top 检查）
+- [x] index.ts 视频模块立即启动，其余模块 DOMContentLoaded 后并行运行
+- [x] index.ts LOGIN_SELECTORS=[] + CAPTCHA_SELECTORS=[]（义乌购无需登录/验证码）
+- [x] index.ts 使用 waitForCompletion 数据驱动完成判定（7s 静默 / 15s 最大等待 / 3s 最小停留 / 硬性截止 / baseline 机制）
+- [x] index.ts 单模块 15s 超时保护（withTimeout）
+- [x] index.ts 异常降级：有数据 completeTask，无数据 failTask
+- [x] index.ts 清理函数统一管理（各模块返回的 cleanup function 由 waitTaskCompletion 统一调用）
+- [x] build-scraper.mjs 已注册 yiwugo 入口
+- [x] 运行 `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/yiwugo.bundle.js`
+- [x] 所有模块使用 TypeScript 编写，类型安全，无 any 滥用
+- [x] 所有模块通信层使用 tauriBridge，不使用 browser.runtime
+- [x] 所有模块不包含页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主管理）
+- [x] 所有模块使用共享 sleep（import { sleep } from '../shared/utils'），不重复定义本地 sleep

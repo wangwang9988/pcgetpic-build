@@ -1,0 +1,8 @@
+- [x] 数据库迁移：orders 表成功添加 original_email 和 is_email_modified 字段，服务启动无报错
+- [x] PUT /api/admin/orders/:id/email 接口：正常修改邮箱、邮箱格式校验、订单不存在均符合预期
+- [x] Admin 前端 OrderRecord 类型包含 original_email 和 is_email_modified 字段
+- [x] Admin 订单列表：已修改邮箱的订单显示"已修改"标签，悬浮可查看原始邮箱
+- [x] Admin 订单列表：点击"修改邮箱"可弹出弹窗、输入新邮箱、确认修改成功并刷新列表
+- [x] 修改邮箱后点击"重发邮件"，邮件发送到新邮箱（含抵扣券邮件，如有）
+- [x] Store 收银台：右下角有"联系客服"悬浮按钮，点击弹出微信二维码和提示文案
+- [x] Store 收银台：微信二维码图片正确显示

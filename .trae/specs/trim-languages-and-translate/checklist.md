@@ -1,0 +1,15 @@
+- [x] i18n.ts 中 locales 数组仅包含 11 种语言
+- [x] i18n.ts 中 CORE_LOCALES 包含 11 种语言
+- [x] i18n.ts 中 localeFlagMap 仅包含 11 种语言映射
+- [x] locales 目录仅包含 11 个 JSON 文件
+- [x] zh-TW.json 无空字符串值
+- [x] ja.json 无空字符串值
+- [x] ko.json 无空字符串值
+- [x] es.json 无空字符串值
+- [x] de.json 无空字符串值
+- [x] pt-BR.json 无空字符串值
+- [x] vi.json 无空字符串值
+- [x] th.json 无空字符串值
+- [x] id.json 无空字符串值
+- [x] 语言切换器仅显示 11 种语言
+- [x] Sitemap 包含 11 种语言的 alternatives

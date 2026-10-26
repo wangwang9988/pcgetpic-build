@@ -1,0 +1,26 @@
+{
+  "host": "139.196.170.245",
+  "port": 22,
+  "username": "root",
+  "password": "在此填入服务器root密码",
+  "site": "downpictures.yueding168.com",
+  "verify_urls": [
+    "https://downpictures.com/",
+    "https://www.downpictures.com/",
+    "https://downpictures.yueding168.com/",
+    "https://downpictures.com/platforms/",
+    "https://downpictures.com/tuget/",
+    "https://downpictures.com/en-US/",
+    "https://downpictures.com/sitemap.xml"
+  ],
+  "preserve": [
+    ".well-known",
+    "downloads",
+    "baidu_verify_codeva-qbvH0uZ2LF.html",
+    "c2134ed6e9e0e1100564f547f783bf41.txt",
+    "jd_root.txt",
+    "dangtu-icon.png",
+    "_ipx",
+    "_payload.json"
+  ]
+}

@@ -1,0 +1,8 @@
+- [x] DesktopCompare 组件无任何"插件版"/"免费版"提及
+- [x] DesktopCompare 使用优势卡片布局（非对比表格）
+- [x] 桌面端 3×2 网格排列，移动端纵向堆叠
+- [x] 6 个优势项文案为正面陈述，无拉踩式对比表达
+- [x] i18n 数据结构已从对比式改为 icon/title/desc 结构
+- [x] zh-CN.json 和 en-US.json 同步更新
+- [x] 无残留的对比表相关样式和代码
+- [x] 卡片使用 glass-card 风格，与页面整体设计一致

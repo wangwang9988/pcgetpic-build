@@ -1,0 +1,17 @@
+- [ ] Rust `check_for_update` 命令能正确请求 version.json 并比较版本号
+- [ ] Rust `download_update` 命令下载 EXE 时不触发授权校验
+- [ ] `download_update` 命令通过 IPC 事件上报下载进度、完成、失败
+- [ ] 前端 upgradeStore 启动后 30~60 分钟随机延迟触发首次版本检查
+- [ ] 前端 upgradeStore 每 24 小时周期性检查版本
+- [ ] 版本检查失败时静默忽略，不影响用户体验
+- [ ] UpgradeNotice 组件在有新版本时显示升级图标和呼吸动画
+- [ ] UpgradeNotice 组件无新版本时不显示
+- [ ] 点击升级图标弹出确认对话框，显示当前版本和最新版本
+- [ ] 用户确认下载后，EXE 下载到用户设置的下载目录
+- [ ] 用户未设置下载目录时弹出目录选择对话框
+- [ ] 下载过程中 StatusBar 显示下载进度
+- [ ] 下载完成后弹出通知并提供"打开文件夹"按钮
+- [ ] 下载失败后弹出失败通知，允许重试
+- [ ] StatusBar 布局顺序正确：UpgradeCountdown | UpgradeNotice | LicenseStatus | 运行状态
+- [ ] 版本比较逻辑正确（2.0.117 > 2.0.9）
+- [ ] lib.rs 中新命令已注册到 invoke_handler

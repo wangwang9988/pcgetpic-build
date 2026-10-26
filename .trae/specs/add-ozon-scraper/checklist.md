@@ -1,0 +1,41 @@
+- [x] 所有模块使用共享 `sleep`（from `../shared/utils`），无本地 `sleep` 定义
+- [x] 图片类模块使用共享 `deduplicateUrls`（from `../shared/utils`）进行 URL 去重；视频模块使用归一化视频 ID 去重（与 tbGetVideo.ts 一致，设计合理）
+- [x] ozonGetMain.ts 实现了 `getOriginalOzonUrl()` 原图还原：`/c\d+/wc\d+/` → `/wc1000/`，`/wc\d+/` → `/wc1000/`，`/c\d+/` → `/wc1000/`，移除查询参数
+- [x] ozonGetMain.ts 实现了 `isValidOzonImageUrl()` 验证：必须 `ir.ozone.ru` 域名，图片格式，排除 `/cms/`、`/icons/`、`/logos/`、`sprite`、`_icon`
+- [x] ozonGetMain.ts 实现了多方案提取：data-state JSON → HTML 正则 → NUXT State → JSON-LD
+- [x] ozonGetMain.ts 实现了重试+额外探测：MAX_RETRIES=20, MAX_EXTRA_FETCHES=3
+- [x] ozonGetMain.ts 导出 `run()` 函数，使用 `tauriBridge.send('MainPic', ...)` 通信
+- [x] ozonGetSku.ts 实现了从 `data-widget="webAspects"` DOM 提取 SKU 图片
+- [x] ozonGetSku.ts 实现了 HTML 正则备用方案
+- [x] ozonGetSku.ts 实现了 MutationObserver 精确监听（对 webAspects 容器，监听 childList+subtree+attributes）
+- [x] ozonGetSku.ts 实现了轮询兜底（MAX_POLLS=10, POLL_INTERVAL=3000）
+- [x] ozonGetSku.ts 返回清理函数，同时 disconnect Observer 和 clearInterval 定时器
+- [x] ozonGetSku.ts 导出 `run()` 函数，使用 `tauriBridge.send('SkuPic', ...)` 通信
+- [x] ozonGetDetail.ts 实现了从 `[data-widget="webDescription"]` 和 `#section-description` 容器提取图片
+- [x] ozonGetDetail.ts 实现了 img/noscript/background-image 多源提取
+- [x] ozonGetDetail.ts 实现了 URL 清理（仅移除查询参数，保持原始尺寸）
+- [x] ozonGetDetail.ts 实现了 MutationObserver 持续监听 + 返回清理函数
+- [x] ozonGetDetail.ts 导出 `run()` 函数，使用 `tauriBridge.send('DetailPic', ...)` 通信
+- [x] ozonGetVideo.ts 实现了 `isValidOzonVideoUrl()` 验证：接受 `cdnvideo.v.ozone.ru` 视频 URL，排除封面图/网站资源/图片格式
+- [x] ozonGetVideo.ts 实现了多方案提取：data-state → HTML 正则 → video 标签 → XHR/Fetch 拦截 → Performance API 增量监控 → MutationObserver
+- [x] ozonGetVideo.ts 实现了视频双重去重（原始 URL + 归一化视频 ID）
+- [x] ozonGetVideo.ts 实现了视频分类上报（先读后写策略；Ozon 平台视频均归为 main 类型，与参考插件一致）
+- [x] ozonGetVideo.ts 导出 `run()` 函数，使用 `tauriBridge.send('VideoUrls', ...)` 通信
+- [x] ozonGetHylinkTitle.ts 实现了从 `#productTitle` 提取标题，兜底 `document.title`
+- [x] ozonGetHylinkTitle.ts 实现了标题清理（移除 " - OZON" 等后缀）
+- [x] ozonGetHylinkTitle.ts 实现了商品ID提取（URL 正则 `/product/(?:.*-)?(\d+)` 和 `/context/detail/id/(\d+)`）
+- [x] ozonGetHylinkTitle.ts 实现了 URL 清洗（origin + pathname）
+- [x] ozonGetHylinkTitle.ts 实现了 visitTime 生成（`YYYY-MM-DD HH:mm`）
+- [x] ozonGetHylinkTitle.ts 实现了初始空上报（productTitle/productLink/productId）
+- [x] ozonGetHylinkTitle.ts 导出 `run()` 函数，发送全部四个字段（productTitle/productLink/productId/visitTime）
+- [x] index.ts 严格遵循开发指南标准模板
+- [x] index.ts 实现了 iframe 防护 + 视频模块先行 + DOM 就绪后并行运行其他模块
+- [x] index.ts 实现了数据驱动完成判定（`waitForCompletion()` + `tauriBridge.completeTask()`）
+- [x] index.ts 实现了登录检测（`probeAndReportLogin()`）
+- [x] index.ts 实现了验证码检测（`setupCaptchaWatcher()` + 节流保护）
+- [x] index.ts 实现了异常降级（有数据 completeTask，无数据 failTask）
+- [x] index.ts 实现了模块超时保护（`withTimeout` 15s 上限）
+- [x] build-scraper.mjs 已注册 `ozon` 平台入口
+- [x] login/mod.rs 已为 Ozon 注册默认登录策略
+- [x] `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/ozon.bundle.js`（24.08 kB）
+- [x] 前端 TypeScript 类型检查无新增错误（pre-existing error in PlatformDetect.vue 与 Ozon 无关）

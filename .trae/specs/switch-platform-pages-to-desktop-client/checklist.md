@@ -1,0 +1,21 @@
+- [ ] `InstallCard.vue` 已重写为客户端下载卡片，无浏览器检测/ZIP下载/CrxTipModal
+- [ ] `CTA.vue` 已重写为客户端下载 CTA，有"下载 Windows 客户端"主按钮和"获取激活码"次按钮
+- [ ] `Tutorial.vue` 已从 4 步改为 3 步客户端流程
+- [ ] `pages/platforms/index.vue` CTA 区域链接和文案改为客户端导向
+- [ ] `pages/platforms/[slug].vue` fallback 链接改为客户端下载链接
+- [ ] `pages/platforms/[slug].vue` SEO Schema `applicationCategory` 为 `DesktopApplication`
+- [ ] `pages/platforms/[slug].vue` SEO Schema `operatingSystem` 为 `Windows 10, Windows 11`
+- [ ] `pages/platforms/[slug].vue` SEO Schema `downloadUrl` 指向客户端下载链接
+- [ ] `zh-CN.json` platformPage `description`/`metaDescription` 已去插件化
+- [ ] `zh-CN.json` platformPage `tutorialStep1~3` 已改为客户端流程文案
+- [ ] `zh-CN.json` platformPage `tutorialStep4Title`/`tutorialStep4Desc` 已移除或清空
+- [ ] `zh-CN.json` platformPage `faqA2`/`faqA3`/`faqA4` 已改为客户端语境
+- [ ] `zh-CN.json` `platformsIndex.ctaTitle`/`ctaSubtitle` 已改为客户端描述
+- [ ] `zh-CN.json` `footer.desc` 已改为通用/客户端描述
+- [ ] `zh-CN.json` 40+ 平台描述中"插件"已全部替换为"客户端"
+- [ ] `en-US.json` 已完成与 zh-CN 同步的所有修改
+- [ ] `en-US.json` 40+ 平台描述中"extension""plugin"已全部替换为"desktop client"
+- [ ] 52 种其他语言 locale 文件已添加/覆盖修改后的 key（值为空字符串）
+- [ ] `/extension` 页面及其组件完全不受影响
+- [ ] 所有客户端下载链接从 `client-version.json` 读取，无硬编码 Chrome Web Store 链接残留
+- [ ] 项目 lint/typecheck 通过

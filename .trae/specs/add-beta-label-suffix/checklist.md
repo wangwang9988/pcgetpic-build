@@ -1,0 +1,6 @@
+- [x] 前端 PLATFORM_LABELS 中 taobao/jd/vip/ali1688 标签未修改
+- [x] 前端 PLATFORM_LABELS 中其余 37 个平台标签均已添加 `(测试中)` 后缀
+- [x] Rust get_platform_label() 中 taobao/jd/vip/ali1688 标签未修改
+- [x] Rust get_platform_label() 中其余 37 个平台标签均已添加 `(测试中)` 后缀
+- [x] 前端与 Rust 的每个平台标签完全一致
+- [x] 项目可正常编译（Rust cargo check 通过，前端 TS 错误为预存问题与本次修改无关）

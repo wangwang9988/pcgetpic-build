@@ -1,0 +1,74 @@
+# 图个吉利官网生产部署模板
+# 发布前请确认 root、证书路径和 proxy_pass，并先执行 nginx -t。
+
+server {
+    listen 80;
+    server_name tuget.yueding168.com;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /www/wwwroot/tuget.yueding168.com;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name tuget.yueding168.com;
+    root /www/wwwroot/tuget.yueding168.com;
+    index index.html;
+
+    ssl_certificate /www/server/panel/vhost/cert/tuget.yueding168.com/fullchain.pem;
+    ssl_certificate_key /www/server/panel/vhost/cert/tuget.yueding168.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "origin-when-cross-origin" always;
+
+    gzip on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/json application/javascript application/xml image/svg+xml;
+
+    # 浏览器始终请求同域 /api/v1；线上由这里转发到授权服务。
+    location ^~ /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location ^~ /_nuxt/ {
+        try_files $uri =404;
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # 404 错误页配置：返回 Nuxt 生成的 404.html
+    error_page 404 /404.html;
+    location = /404.html {
+        internal;
+    }
+
+    # 历史与未发布路由处理说明：
+    # 依据《三站定位与两阶段官网改造方案》，本站未曾对外发布过 /extension/ 与 /compare/。
+    # 严禁将 /extension/ 重定向到 /client/（意图不符）。未知路径一律保持真实 HTTP 404，由 /404.html 承接。
+    # Nuxt generate 为 6 个合法正式路由（/、/client/、/download/、/buy/、/terms/、/privacy/）生成实体目录与 index.html。
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ ^/(?:\.git|\.env|node_modules|\.nuxt|\.output)(?:/|$) {
+        return 404;
+    }
+
+    access_log /www/wwwlogs/tuget.yueding168.com.log;
+    error_log /www/wwwlogs/tuget.yueding168.com.error.log;
+}

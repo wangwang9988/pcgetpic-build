@@ -1,0 +1,12 @@
+- [ ] `commands/mod.rs` 正确声明 6 个子模块并重导出所有公共函数
+- [ ] `commands/scraping.rs` 包含 `start_scraping`, `pause_scraping`, `stop_scraping`, `submit_tasks`, `dispatch_tasks`
+- [ ] `commands/worker.rs` 包含 `get_worker_status`, `get_task_status`, `navigate_worker`, `force_start_worker`, `complete_task`, `fail_task`, `try_convert_to_keeper`
+- [ ] `commands/download.rs` 包含 `download_file`, `fetch_resource_as_data_url`
+- [ ] `commands/file_ops.rs` 包含 `open_folder`, `locate_file`, `clear_worker_data`
+- [ ] `commands/login.rs` 包含 `open_login_window`, `confirm_external_login`, `is_external_browser_login`, `pre_login_verified`, `close_login_windows` 及所有 CDP 辅助函数
+- [ ] `commands/config.rs` 包含 `set_worker_count`, `set_scraping_config`, `greet`, `resolve_platform`, `get_scrape_data`
+- [ ] 旧 `commands.rs` 文件已删除
+- [ ] `cargo build` 编译通过，无错误
+- [ ] `cargo check` 无新增警告
+- [ ] `lib.rs` 未做任何修改（`commands::函数名` 路径不变）
+- [ ] 所有命令的函数签名、可见性（`pub`）、属性宏（`#[tauri::command]`）完全保持不变

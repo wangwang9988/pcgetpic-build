@@ -1,0 +1,8 @@
+- [x] 看门狗豁免：60秒看门狗同时跳过 CaptchaBlocked 和 WaitingForLogin 状态的 Worker
+- [x] 等待页 URL：WaitingForLogin Worker 使用 WebviewUrl::App 而非 data:text/html
+- [x] 前端等待页：App.vue 检测 page=waiting 参数并渲染等待组件
+- [x] 强制开始按钮：等待页面的 invoke('force_start_worker') 可正常调用
+- [x] 自动释放导航：从 App 本地域名 eval("location.href='...'") 可成功跳转到外部 HTTPS
+- [x] 验证缓存清理：Worker 进入 CaptchaBlocked 时自动移除该平台的 verified_platforms 缓存
+- [x] Rust 代码中不再包含 data:text/html 硬编码 HTML 模板
+- [x] cargo build 编译通过，无新增 error

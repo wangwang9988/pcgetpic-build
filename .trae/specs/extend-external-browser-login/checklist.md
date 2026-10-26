@@ -1,0 +1,7 @@
+- [x] `use_external_browser_login()` 对 Taobao/Jd/Vip 返回 false，其余已知平台返回 true，Unknown 返回 false
+- [x] `is_external_browser_login` 命令正确映射所有平台字符串到 Platform 枚举（不再将未知字符串映射为 Unknown）
+- [x] `external_login_url()` 为所有外部浏览器登录平台提供登录页 URL
+- [x] PlatformDetect.vue 的 handlePreLogin 提示文案使用动态平台名称而非硬编码"1688"
+- [x] 淘宝/京东/唯品会点击登录仍弹出 WebView2 Worker 窗口
+- [x] 1688 点击登录仍弹出外部浏览器
+- [x] 其他平台（如拼多多、速卖通等）点击登录弹出外部浏览器

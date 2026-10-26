@@ -1,0 +1,18 @@
+- [ ] `UPDATE_REMINDER_ENABLED` 常量存在且当前值为 `false`
+- [ ] `parseVersion()` 能正确将版本号解析为 `{ major, minor, build }` 三段数字
+- [ ] `shouldCheckUpdate()` 版本判断逻辑正确：major ≥ 3 不提醒；major < 3 时比较 build，低于线上则提醒
+- [ ] `fetchLatestVersion()` 能正确请求 version.json 并提取 extensionVersion
+- [ ] `checkForUpdate()` 使用 browser.storage.local 缓存，24 小时有效期
+- [ ] 缓存有效期内不发起网络请求
+- [ ] 网络请求失败时静默忽略，不影响用户体验
+- [ ] `useUpdateReminder` composable 正确管理 hasUpdate / latestVersion / localVersion / dismissed 状态
+- [ ] `dismissReminder()` 通过 browser.storage.session 记录关闭状态
+- [ ] popup UpdateReminder 组件在有更新时显示横幅，包含提示文字 + 前往官网按钮 + 关闭按钮
+- [ ] pages UpdateReminder 组件在有更新时显示横幅，与 popup 风格一致
+- [ ] 横幅包含 "只需要安装一个版本即可" 提示
+- [ ] 点击 "前往官网更新" 打开 downpictures.com 带对应 source 参数
+- [ ] 点击关闭按钮后当前会话不再显示
+- [ ] `UPDATE_REMINDER_ENABLED = false` 时完全不显示任何更新提醒
+- [ ] 版本号 major ≥ 3 时即使 build 较低也不提醒
+- [ ] popup App.vue 中 UpdateReminder 位于 Linkcopyright 上方
+- [ ] pages App.vue 中 UpdateReminder 位于页面顶部

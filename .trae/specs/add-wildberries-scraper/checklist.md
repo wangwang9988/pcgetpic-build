@@ -1,0 +1,35 @@
+- [x] wbGetMain.ts 实现了 4 个容器选择器（mediaSlider/slidersStickyWrap/sliders/miniatureSlide）
+- [x] wbGetMain.ts 实现了图片 URL 提取优先级（data-src-pb > img.src > getAttribute('src')）
+- [x] wbGetMain.ts 实现了原图还原（/tm/ → /big/，/c\d+x\d+/ → /big/）
+- [x] wbGetMain.ts 实现了轮询等待（MAX_RETRIES=20，RETRY_INTERVAL=1000ms）
+- [x] wbGetMain.ts 实现了 MutationObserver 监听，防抖 300ms
+- [x] wbGetMain.ts 通过 tauriBridge.send('MainPic', urls) 上报数据
+- [x] wbGetDetail.ts 实现了 7 个 rich* 容器选择器
+- [x] wbGetDetail.ts 实现了图片 URL 提取和 // 协议补全
+- [x] wbGetDetail.ts 实现了容器查找重试（最多 20 次，间隔 1s）
+- [x] wbGetDetail.ts 实现了 MutationObserver 监听和持续轮询（连续 10 次无新增停止）
+- [x] wbGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报数据
+- [x] wbGetSku.ts 实现了 5 个 SKU 容器选择器
+- [x] wbGetSku.ts 实现了 data-src-pb 优先提取
+- [x] wbGetSku.ts 实现了 cleanAndProcessUrl()（反引号清理、扩展名截断、/tm/→/big/、排除 tps-2-2.png）
+- [x] wbGetSku.ts 实现了 MutationObserver 和轮询兜底
+- [x] wbGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报数据
+- [x] wbGetVideo.ts 实现了 7 层视频检测渠道（DOM/JSON/Window/Performance/XHR/Fetch/MutationObserver）
+- [x] wbGetVideo.ts 实现了双层去重（原始 URL + 归一化视频 ID）
+- [x] wbGetVideo.ts 实现了视频分类（main/detail）
+- [x] wbGetVideo.ts 实现了先读后写策略上报 VideoUrls
+- [x] wbGetVideo.ts 可在 document_start 阶段启动 XHR/Fetch 拦截
+- [x] wbGetHylinkTitle.ts 实现了标题提取优先级（mainTitle title > textContent > head title > document.title）
+- [x] wbGetHylinkTitle.ts 实现了商品 ID 提取（/catalog/(\d+)）
+- [x] wbGetHylinkTitle.ts 实现了 URL 清洗（移除查询参数）
+- [x] wbGetHylinkTitle.ts 通过 tauriBridge.send 上报 productTitle/productLink/productId
+- [x] index.ts 实现了视频模块立即启动（不等待 DOMContentLoaded）
+- [x] index.ts 实现了 DOMContentLoaded 后并行启动 4 个模块
+- [x] index.ts 实现了 15 秒超时保护
+- [x] index.ts 实现了 waitForCompletion() 完成判定
+- [x] index.ts 实现了 iframe 防护
+- [x] index.ts 实现了异常容错（有数据则 complete，否则 fail）
+- [x] build-scraper.mjs 已注册 wildberries 构建入口
+- [x] utils.rs 已添加 wbbasket.ru 和 wildberries.ru 的 Referer 映射
+- [x] TypeScript 编译无错误
+- [x] 构建脚本可成功生成 dist-scripts/wildberries.bundle.js

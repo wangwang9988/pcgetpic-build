@@ -1,0 +1,7 @@
+- [x] CaptchaBlockedRecovery 重新注入脚本时包含 `window.__IDLE_TIMEOUT_MS__` 变量，值等于 `AppState.idle_timeout * 1000`
+- [x] `set_scraping_config` 命令对 `idle_timeout` 参数做了 clamp(3, 60) 值域校验
+- [x] 传入 idle_timeout=0 时实际存储值为 3
+- [x] 传入 idle_timeout=100 时实际存储值为 60
+- [x] ControlBar.vue 5 秒选项标签显示 "5秒 (快速·有风险)"
+- [x] ControlBar.vue 7 秒选项标签显示 "7秒 (推荐·安全)"
+- [x] 项目编译通过（`cargo check` + `vue-tsc --noEmit`）

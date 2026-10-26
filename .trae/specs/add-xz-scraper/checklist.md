@@ -1,0 +1,30 @@
+- [x] `scraper-scripts/xz/xzUtils.ts` 实现了 `cleanXzImageUrl`（补全协议、移除查询参数、剥离尺寸后缀 `_800x800.jpg` / `_sum.jpg`、截断到扩展名）
+- [x] `scraper-scripts/xz/xzUtils.ts` 实现了 `isUrlBlacklisted`（过滤 `assets.571xz.com`、`/gonziyu/`、`play-icon`、`loading.gif`、`/resource/img/`）
+- [x] `scraper-scripts/xz/xzUtils.ts` 实现了 `extractBestUrlFromImg`（`data-src` > `data-original` > `src` 优先级）
+- [x] `scraper-scripts/xz/xzUtils.ts` 实现了 `extractUrlFromImg`（`data-src` > `data-lazyload-src` > `src`，支持懒加载）
+- [x] `scraper-scripts/xz/xzUtils.ts` 导出了 `URL_BLACKLIST`、`DETAIL_URL_BLACKLIST`、`SKU_URL_BLACKLIST` 常量
+- [x] `scraper-scripts/xz/xzGetMain.ts` 覆盖了所有参考脚本中的主图容器选择器（`.magnifier-box img`、`.photoAlbum-booth-big img`、`.photoAlbum-thumb-content li img`、`.swiper-slide img`、`.photoAlbum-video img`、`.product-img img`、`#J_UlThumb img`）
+- [x] `scraper-scripts/xz/xzGetMain.ts` 遵循 GetMain 标准流程：初始空上报 → 循环重试（20 次 × 500ms）→ 额外抓取（3 轮 × 500ms）→ 最终上报
+- [x] `scraper-scripts/xz/xzGetMain.ts` 使用 `import { sleep, deduplicateUrls } from '../shared/utils'`，无本地 sleep 定义
+- [x] `scraper-scripts/xz/xzGetDetail.ts` 覆盖了所有详情图容器选择器（`.itemInnerWrap-img img`、`.itemInnerWrap1 img`、`.ant-tabs-tabpane-active img`、`.product-detail img`、`.rich-text-component img`、`#productDetail img`）
+- [x] `scraper-scripts/xz/xzGetDetail.ts` 支持 `data-lazyload-src` 懒加载属性并有 1 秒初始延迟
+- [x] `scraper-scripts/xz/xzGetDetail.ts` 遵循 GetDetail 标准流程：初始空上报 → 重试等待容器 → 多轮提取 → 最终上报
+- [x] `scraper-scripts/xz/xzGetDetail.ts` 使用 `import { sleep } from '../shared/utils'`，无本地 sleep 定义
+- [x] `scraper-scripts/xz/xzGetSku.ts` 覆盖了专用 SKU 选择器（`.specSku .item-color-img ul li img`、`.item-color ul li img`）和通用/属性匹配选择器
+- [x] `scraper-scripts/xz/xzGetSku.ts` MutationObserver 精确监听目标 SKU 容器（而非 document.body），监听 `childList` + `subtree` + `attributes`（`src`、`data-src`、`data-original`）
+- [x] `scraper-scripts/xz/xzGetSku.ts` **返回清理函数**，同时清理 `observer.disconnect()` 和 `clearInterval(pollTimer)`
+- [x] `scraper-scripts/xz/xzGetVideo.ts` 实现了 XHR/Fetch 拦截、DOM 检测、JSON 提取、Performance API 增量监控、MutationObserver
+- [x] `scraper-scripts/xz/xzGetVideo.ts` 支持 571xz 专用的 `__INITIAL_STATE__.c.shop.videourl` 和 `videoFaceUrl` 字段提取，含 `\u002F` 转义解码
+- [x] `scraper-scripts/xz/xzGetVideo.ts` Performance API 使用增量检测（游标记录已扫描位置）
+- [x] `scraper-scripts/xz/xzGetVideo.ts` 所有视频统一归类为 `main` 类型，双重去重
+- [x] `scraper-scripts/xz/xzGetHylinkTitle.ts` 首选 `.i-d-c-title h3` 纯文本节点提取标题
+- [x] `scraper-scripts/xz/xzGetHylinkTitle.ts` 从 URL 匹配 `/item/{id}` 提取商品 ID，生成干净链接
+- [x] `scraper-scripts/xz/xzGetHylinkTitle.ts` 降级 `document.title` 时移除站点后缀
+- [x] `scraper-scripts/xz/xzGetHylinkTitle.ts` **输出全部四个字段**：`productTitle`、`productLink`、`productId`、`visitTime`
+- [x] `scraper-scripts/xz/index.ts` 严格遵循开发指南标准模板：iframe 防护、视频先行、登录探测、模块并行、完成判定、异常降级
+- [x] `scraper-scripts/xz/index.ts` 配置了 `LOGIN_SELECTORS` 和 `CAPTCHA_SELECTORS`（空数组）
+- [x] `scripts/build-scraper.mjs` 包含 `xz` 平台入口
+- [x] `src-tauri/src/login/mod.rs` 注册了四季星座的默认登录策略
+- [x] `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/xz.bundle.js`
+- [x] Rust 编译通过（`cargo check`）
+- [x] `cleanXzImageUrl` 操作顺序正确：查询参数移除在缩略图后缀剥离之前

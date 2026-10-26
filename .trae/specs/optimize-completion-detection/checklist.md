@@ -1,0 +1,7 @@
+- [x] `shared/utils.ts` 存在 `waitForCompletion` 函数，接受参数化 `CompletionOptions`
+- [x] `taobao/index.ts` 引用 `shared/utils.ts` 的通用 `waitForCompletion`，传入 7s 静默 / 15s 最大等待
+- [x] `taobao/index.ts` 中 `waitTaskCompletion` 结束后调用各模块 cleanup 函数
+- [x] `tbGetMain.ts` 中 `MAX_RETRIES = 60`，`MAX_EXTRA_FETCHES = 2`
+- [x] `tbGetSku.ts` 的 `run()` 返回类型包含 `cleanup` 函数，可断开 MutationObserver 和 clearInterval
+- [x] `shared/utils.ts` 中 `simulateScroll` 间隔为 `200 + Math.random() * 200`
+- [x] TypeScript 编译无错误

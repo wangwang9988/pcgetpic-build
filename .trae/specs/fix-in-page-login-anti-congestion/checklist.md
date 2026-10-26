@@ -1,0 +1,12 @@
+- [x] 数据质量门控：scrape-data 处理器仅对实质性数据（MainPic/DetailPic/SkuPic/VideoInfo/VideoUrls 且非空数组）触发平台验证
+- [x] 数据质量门控：空数组和元数据（productTitle/productLink/productId/visitTime）不触发平台验证
+- [x] LoginRequired 事件：scraper 发送 LoginRequired 时，后端将 Worker 设为 CaptchaBlocked 并取消平台验证
+- [x] 登录探针模块：shared/loginProbe.ts 提供 detectLogin() 和 probeAndReportLogin() 共享函数
+- [x] 淘宝 scraper 集成：启动时调用 probeAndReportLogin()，检测到登录时发送 LoginRequired 并停止
+- [x] 京东 scraper 集成：启动时调用 probeAndReportLogin()，检测到登录时发送 LoginRequired 并停止
+- [x] 淘宝 check_login 增强：检测 login.tmall.com 和 passport.taobao.com 和 passport.tmall.com
+- [ ] 验证场景：并发数=2，输入 4 淘宝 + 2 京东链接，第一个淘宝 Worker 打开商品页，第二个淘宝 Worker 显示等待页面
+- [ ] 验证场景：淘宝探路者 Worker 登录成功并产出实质性数据后，等待页面的跟随者 Worker 自动跳转
+- [ ] 验证场景：京东防拥堵仍然正常工作（回归测试）
+- [x] cargo build 编译通过，无新增 error
+- [x] scraper 脚本构建通过，无新增 error

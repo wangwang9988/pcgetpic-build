@@ -1,0 +1,10 @@
+- [x] 服务端 `createOrder` 函数正确调用 `alipay.trade.page.pay` 并返回 `pay_url`
+- [x] `alipay.trade.page.pay` 调用失败时不阻断订单创建，`pay_url` 返回空值
+- [x] `CreateOrderResult` / `CreateOrderData` 类型新增 `pay_url?` 可选字段
+- [x] `create-order` 路由响应包含 `pay_url` 字段
+- [x] 支付宝网页支付回调复用现有 `alipay-notify`，无需额外处理
+- [x] `PaymentQRCode.vue` 在二维码下方展示"无法扫码？使用支付宝账号登录支付"链接
+- [x] 链接使用 `v-if="orderData.pay_url"` 条件渲染，`pay_url` 为空时不展示
+- [x] 点击链接后新窗口打开支付宝官方收银台页面
+- [x] 账号支付后当前页面继续轮询订单状态，支付成功自动跳转
+- [x] 原有扫码支付流程不受影响

@@ -1,0 +1,39 @@
+- [x] jdGetMain.ts 存在且导出 `run()` 函数，核心 URL 提取逻辑与参考项目 jdGetMain.js 对齐
+- [x] jdGetMain.ts 使用 `tauriBridge.send('MainPic', urls)` 上报数据，无 `browser.runtime.sendMessage` 调用
+- [x] jdGetMain.ts 保留京东特有的 jfs/ 路径拼接 img14.360buyimg.com/imgzone/ 逻辑
+- [x] jdGetMain.ts 保留京东占位图过滤逻辑（4 个硬编码占位图 URL）
+- [x] jdGetMain.ts 无页面可见性/不活动超时/SPA 导航/状态保存等插件特有逻辑
+- [x] jdGetSku.ts 存在且导出 `run()` 函数，核心 URL 提取逻辑与参考项目 jdGetSku.js 对齐
+- [x] jdGetSku.ts 使用 `tauriBridge.send('SkuPic', urls)` 上报数据
+- [x] jdGetSku.ts 保留京东特有的 cleanAndProcessUrl（jfs/ 路径提取、尺寸前缀移除、扩展名截断）
+- [x] jdGetSku.ts 保留多属性收集逻辑（src、data-src、data-original、placeholder、style 背景图、父元素 data-src）
+- [x] jdGetSku.ts 使用 MutationObserver（300ms 防抖）+ 轮询兜底机制
+- [x] jdGetSku.ts 排除 `.detail` 区域内的 SKU 元素
+- [x] jdGetDetail.ts 存在且导出 `run()` 函数，核心 URL 提取逻辑与参考项目 jdGetDetail.js 对齐
+- [x] jdGetDetail.ts 使用 `tauriBridge.send('DetailPic', urls)` 上报数据
+- [x] jdGetDetail.ts 保留四源提取：隐藏数据容器、img 标签、CSS 背景图、Style 标签
+- [x] jdGetDetail.ts 保留 normalizeImageUrl（CDN 双后缀移除、尺寸参数移除）
+- [x] jdGetDetail.ts 保留 isValidImageUrl（京东 UI 标志/广告过滤）
+- [x] jdGetDetail.ts 保留 processImageUrl（jfs/ 路径补全 img13 域名）
+- [x] jdGetVideo.ts 存在且导出 `run()` 函数，核心视频检测逻辑与参考项目 jdGetVideo.js 对齐
+- [x] jdGetVideo.ts 使用 `tauriBridge.send('VideoUrls', videoObjs)` 上报数据
+- [x] jdGetVideo.ts 保留 Performance API + XHR/Fetch 拦截 + MutationObserver + 页面数据提取四通道
+- [x] jdGetVideo.ts 保留 Shadow DOM 深度遍历（递归深度限制 10 层）
+- [x] jdGetVideo.ts 保留京东特有的 jdPatterns 正则匹配（__detail_data__、__product_data__ 等）
+- [x] jdGetVideo.ts 视频数据格式为 `{url, type, timestamp, pageUrl}` 对象数组
+- [x] jdGetVideo.ts 视频分类为 main 和 detail 两种类型
+- [x] jdGetHylinkTitle.ts 存在且导出 `run()` 函数，核心逻辑与参考项目 jdGetHylinkTitle.js 对齐
+- [x] jdGetHylinkTitle.ts 使用 `tauriBridge.send('productTitle', title)` 上报标题
+- [x] jdGetHylinkTitle.ts 使用 `tauriBridge.send('productLink', cleanUrl)` 上报链接
+- [x] jdGetHylinkTitle.ts 使用 `tauriBridge.send('productId', productId)` 上报商品 ID
+- [x] jdGetHylinkTitle.ts 保留京东 URL 清洗逻辑（清空 search + hash、路径名正则提取商品 ID）
+- [x] index.ts 存在且按标准模板编排各模块执行时序
+- [x] index.ts 在 document_start 阶段启动 runVideo()
+- [x] index.ts 在 DOMContentLoaded 后并行启动 Main/Sku/Detail/HylinkTitle 模块
+- [x] index.ts 实现 iframe 防护（`if (window !== window.top) return;`）
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定
+- [x] index.ts 使用 withTimeout() 为每个模块添加 15 秒超时保护
+- [x] vite.scraper.config.ts 包含 jd 入口配置
+- [x] `npm run build:scraper` 成功产出 `dist-scripts/jd.bundle.js`
+- [x] 所有新增文件使用 TypeScript，无 `any` 类型滥用
+- [x] 所有新增代码注释使用中文

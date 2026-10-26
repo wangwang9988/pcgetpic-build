@@ -1,0 +1,11 @@
+- [x] rkGetMain.ts 实现三路合并提取策略（AppData JSON + JSON-LD + DOM），URL 清洗正确
+- [x] rkGetDetail.ts 实现 4 个容器选择器扫描，排除 icon-img，MutationObserver 动态监听
+- [x] rkGetSku.ts 实现漏斗式五级选择器，MutationObserver + 轮询兜底
+- [x] rkGetVideo.ts 实现五路并行检测 + XHR/Fetch 拦截 + Shadow DOM 遍历 + 双重去重
+- [x] rkGetHylinkTitle.ts 实现标题轮询等待、商品 ID 提取（排除非商品路径）、链接清洗
+- [x] index.ts 入口编排正确：视频立即启动，其余模块 DOMContentLoaded 后并行，登录检测 + 验证码监控 + 完成判定
+- [x] build-scraper.mjs 注册 rakuten 构建入口
+- [x] login/mod.rs 注册 Rakuten DefaultLoginStrategy
+- [x] 所有模块使用 tauriBridge.send 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除插件特有的页面可见性/焦点/SPA 导航检测逻辑
+- [x] 构建脚本成功生成 rakuten.bundle.js

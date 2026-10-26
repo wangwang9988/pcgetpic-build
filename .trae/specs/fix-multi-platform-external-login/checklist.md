@@ -1,0 +1,10 @@
+- [x] `AppState` 使用 `HashMap<String, CdpBrowserSession>` 按平台存储 CDP 会话，替代单个 `cdp_port` + `cdp_browser_pid`
+- [x] `open_login_window` 不再杀掉之前的浏览器，为每个平台创建独立的 CDP 浏览器会话
+- [x] 同一平台已有 CDP 会话时不重复创建浏览器
+- [x] `confirm_external_login` 从 HashMap 按 platform 查找 CDP 端口
+- [x] `confirm_external_login` 成功后自动关闭该平台的浏览器进程并从 HashMap 移除
+- [x] `kill_cdp_browser` 改为 `kill_all_cdp_browsers`，新增 `kill_cdp_browser_for_platform`
+- [x] 删除 `external_login_url()` 方法
+- [ ] 输入 3 个 1688 链接 + 2 个亚马逊链接 + 5 个敦煌网链接，一键预登录弹出 3 个独立浏览器
+- [ ] 逐个点击平台登录按钮，前面的浏览器不会被杀掉
+- [ ] 各平台「已完成登录」导入 Cookie 互不干扰

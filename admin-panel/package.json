@@ -1,0 +1,30 @@
+{
+  "name": "pcgetpic-admin-panel",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open /dashboard",
+    "build": "echo [1/2] 正在进行 Vue/TypeScript 类型检查，可能需要几秒钟... && vue-tsc && echo [2/2] 正在构建生产版本... && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vicons/ionicons5": "^0.12.0",
+    "axios": "^1.7.9",
+    "echarts": "^6.1.0",
+    "naive-ui": "^2.40.3",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-echarts": "^8.0.1",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.7.2",
+    "unplugin-vue-components": "^32.1.0",
+    "vite": "^6.0.5",
+    "vite-plugin-vue-devtools": "^8.1.2",
+    "vue-tsc": "^2.2.0"
+  }
+}

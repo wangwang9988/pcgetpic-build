@@ -1,0 +1,11 @@
+- [x] `scraper-scripts/newegg/neUtils.ts` 实现了 `getNeweggItemId`、`cleanNeweggImageUrl`、`processToLargeImage` 三个函数，逻辑与参考插件 neweggUtils.js 对齐
+- [x] `scraper-scripts/newegg/neGetMain.ts` 从 Newegg 主图区域提取图片 URL，清洗为 nb1280 高清版本，通过 tauriBridge.send('MainPic') 上报
+- [x] `scraper-scripts/newegg/neGetSku.ts` 从 Stylitics 穿搭模块和原生轮播图提取 SKU 图，Adobe Scene7 图片追加高清参数，通过 tauriBridge.send('SkuPic') 上报
+- [x] `scraper-scripts/newegg/neGetDetail.ts` 从 #overview-desktop 和 #product-details 提取详情图，排除黑名单图片，通过 tauriBridge.send('DetailPic') 上报
+- [x] `scraper-scripts/newegg/neGetVideo.ts` 通过 DOM 扫描、JSON 解析、XHR/Fetch 拦截、Performance API、MutationObserver 多策略检测视频，通过 tauriBridge.send('VideoUrls') 上报
+- [x] `scraper-scripts/newegg/neGetHylinkTitle.ts` 提取标题、清洗 URL、提取商品 ID，通过 tauriBridge.send('productTitle'/'productLink'/'productId') 上报
+- [x] `scraper-scripts/newegg/index.ts` 入口编排：iframe 防护、视频模块立即启动、DOMContentLoaded 后启动其余模块、登录检测、滚动触发、完成判定、异常处理
+- [x] `scripts/build-scraper.mjs` 已注册 newegg 平台入口
+- [x] 构建成功生成 `dist-scripts/newegg.bundle.js`
+- [x] 所有模块使用 TypeScript 编写，遵循项目既有代码风格（中文注释、tauriBridge 通信、无 any 滥用）
+- [x] 所有模块遵循项目架构约束：纯 DOM 解析 + tauriBridge 单向上报，不含浏览器扩展 API（browser.runtime 等）

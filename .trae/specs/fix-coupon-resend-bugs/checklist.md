@@ -1,0 +1,5 @@
+- [x] 后端 resendCoupon 查询添加 ORDER BY id DESC，确保返回最新有效券
+- [x] 后端 createCoupon 用 db.transaction 包裹作废+创建操作，邮件发送放在事务外
+- [x] 前端 doResendCoupon 的 onPositiveClick 返回 Promise，利用 Naive UI 自动 loading 防抖
+- [x] 前端重发成功后调用 fetchOrders() 刷新列表数据
+- [x] 前端新建优惠券弹窗添加 loading 状态防重复点击

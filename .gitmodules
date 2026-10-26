@@ -1,0 +1,36 @@
+[submodule "website"]
+	path = website
+	url = git@gitee.com:zhaoge168/dangtu-plugin-official-website.git
+[submodule "plugin"]
+	path = GetPic
+	url = git@gitee.com:zhaoge168/alibaba-image-download.git
+[submodule "server"]
+	path = server
+	url = git@gitee.com:zhaoge168/server-dangtu.git
+[submodule "browser"]
+	path = browser
+	url = git@gitee.com:zhaoge168/browser.git
+[submodule "client"]
+	path = client
+	url = git@gitee.com:zhaoge168/client-side-diagram.git
+[submodule "cps-server"]
+	path = cps-server
+	url = https://gitee.com/zhaoge168/dataoke-pic-search.git
+[submodule "ec-nuxt"]
+	path = ec-nuxt
+	url = git@gitee.com:zhaoge168/e-commerce-website-nuxt.git
+[submodule "Pro-GetPic"]
+	path = Pro-GetPic
+	url = git@gitee.com:zhaoge168/pro-getpic.git
+[submodule "tools"]
+	path = tools
+	url = git@gitee.com:zhaoge168/tools.yueding168.com.git
+[submodule "TuGet-Client"]
+	path = TuGet-Client
+	url = git@gitee.com:zhaoge168/tu-get-client.git
+[submodule "next-GetPic"]
+	path = next-GetPic
+	url = git@gitee.com:zhaoge168/next-GetPic.git
+[submodule "oneget-website"]
+	path = oneget-website
+	url = git@gitee.com:zhaoge168/oneget-website.git

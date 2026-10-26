@@ -1,0 +1,24 @@
+- [x] vvicUtils.ts 导出 cleanVvicImageUrl、isUrlBlacklisted、extractBestUrlFromImg、extractUrlFromImg、URL_BLACKLIST、DETAIL_URL_BLACKLIST
+- [x] vvicGetMain.ts 通过 .thumbnail、#thumblist、.owl-item 三种容器提取主图，属性优先级 big > mid > src
+- [x] vvicGetMain.ts 实现重试机制（20次，500ms间隔）和首次发现后额外轮询（3次，500ms间隔）
+- [x] vvicGetMain.ts 通过 tauriBridge.send('MainPic', urls) 上报去重后的主图 URL
+- [x] vvicGetDetail.ts 通过 .item-detail-product-desc、.right-side、#info、.detail-desc 四种容器提取详情图，属性优先级 data-src > src
+- [x] vvicGetDetail.ts 实现重试机制（20次，500ms间隔）和首次发现后额外轮询（5次，1000ms间隔）
+- [x] vvicGetDetail.ts 初始化延迟 1000ms 等待懒加载元素就绪
+- [x] vvicGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报去重后的详情图 URL
+- [x] vvicGetSku.ts 通过 #skuInfo、.detail-info-line、#size-container 三种容器提取 SKU 图，属性优先级 big > mid > src
+- [x] vvicGetSku.ts 实现重试机制（20次，500ms间隔）和首次发现后额外轮询（3次，500ms间隔）
+- [x] vvicGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报去重后的 SKU 图 URL
+- [x] vvicGetVideo.ts 在 document_start 阶段启动，拦截 XHR/Fetch 网络请求
+- [x] vvicGetVideo.ts 实现 DOM 检测、页面 JSON 解析、Performance API 监控、MutationObserver 多渠道视频检测
+- [x] vvicGetVideo.ts 所有视频统一分类为 mainVideo，通过 tauriBridge.send('VideoUrls', videos) 上报
+- [x] vvicGetVideo.ts 实现视频去重（URL + 规范化 ID 双重机制）和 10 轮初始检测
+- [x] vvicGetHylinkTitle.ts 按优先级链尝试标题选择器，降级使用 document.title（去除搜款网/vvic 后缀）
+- [x] vvicGetHylinkTitle.ts 从 URL 提取商品 ID（/item/{id} 或 /goods/{id}），清洗链接为 {origin}/item/{id} 格式
+- [x] vvicGetHylinkTitle.ts 通过 tauriBridge.send() 上报 productTitle、productLink、productId、visitTime
+- [x] index.ts 立即执行视频拦截模块，DOM 就绪后后台并行运行主图/SKU/详情图/标题模块
+- [x] index.ts 集成 probeAndReportLogin() 登录检测和 waitForCompletion() 数据驱动完成判定
+- [x] index.ts 包含 iframe 防护（window !== window.top 检查）和异常处理（有数据 completeTask / 无数据 failTask）
+- [x] build-scraper.mjs 的 PLATFORMS 对象中新增 vvic 条目
+- [x] login/mod.rs 的 LoginStrategyRegistry::new() 中为 VVIC 注册 DefaultLoginStrategy（login.vvic.com）
+- [x] 执行构建脚本验证 vvic.bundle.js 成功生成

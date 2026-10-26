@@ -1,0 +1,41 @@
+- [x] `src/utils/platforms/shein.ts` 存在且导出 `sheinHandler`，类型为 `PlatformHandler`
+- [x] `sheinHandler.cleanUrl()` 正确移除查询参数和 hash，只保留 origin + pathname
+- [x] `sheinHandler.extractProductId()` 能从 `goods_id` 参数、`-p-xxx.html` 路径、纯数字兜底三种方式提取商品 ID
+- [x] `scraper-scripts/shein/sheinGetMain.ts` 使用共享 `sleep` 和 `deduplicateUrls`（无本地定义）
+- [x] `sheinGetMain.ts` 实现了 Script 标签提取（`origin_image`/`skcImages`/`skuImages`/JSON-LD）和 DOM 提取（`.main-picture` 容器）
+- [x] `sheinGetMain.ts` 的 URL 清洗正确移除 `_(?:square_)?thumbnail_\d+x?\d*` 后缀和查询字符串
+- [x] `sheinGetMain.ts` 实现重试轮询（40 次/500ms）和额外抓取（3 次）
+- [x] `sheinGetMain.ts` 初始空上报 `tauriBridge.send('MainPic', [])`
+- [x] `scraper-scripts/shein/sheinGetDetail.ts` 使用共享 `sleep` 和 `deduplicateUrls`（无本地定义）
+- [x] `sheinGetDetail.ts` 实现了 9 个 DOM 选择器扫描和 background-image 提取
+- [x] `sheinGetDetail.ts` 的 URL 清洗正确移除 `_thumbnail_\d+x\d+` 和 `_\d+x\d+$` 后缀
+- [x] `sheinGetDetail.ts` 实现了排除路径模式过滤（`/flags/`、`/avatar/` 等）
+- [x] `sheinGetDetail.ts` 实现了 MutationObserver 持续监听（增量上报）+ 返回清理函数
+- [x] `sheinGetDetail.ts` 清理函数同时清理 Observer 和定时器
+- [x] `scraper-scripts/shein/sheinGetSku.ts` 使用共享 `sleep`、`deduplicateUrls`、`cleanImageUrl`、`extractImageKey`（无本地定义）
+- [x] `sheinGetSku.ts` 实现了 Script 标签 `goods_image` 提取和 DOM 三种方法提取
+- [x] `sheinGetSku.ts` 实现了基于文件名哈希的去重机制
+- [x] `sheinGetSku.ts` MutationObserver 精确监听 SKU 容器（而非 document.body）+ 监听属性变化
+- [x] `sheinGetSku.ts` 返回清理函数，同时清理 Observer 和 setInterval 定时器
+- [x] `scraper-scripts/shein/sheinGetVideo.ts` 实现了 XHR/Fetch 拦截（立即启动层）
+- [x] `sheinGetVideo.ts` 实现了 Performance API 增量监控 + requestAnimationFrame 循环
+- [x] `sheinGetVideo.ts` 实现了 Script 标签提取（`videoUrl`/`video_url`/`gbRawData`）和 DOM 提取
+- [x] `sheinGetVideo.ts` 实现了视频有效性验证（排除 blob:/data:/API 链接，验证扩展名）
+- [x] `sheinGetVideo.ts` 实现了视频分类（main/detail）和"先读后写"策略
+- [x] `sheinGetVideo.ts` 实现了双重去重（原始 URL + 归一化视频 ID）
+- [x] `sheinGetVideo.ts` 以 `[{url, type, timestamp, pageUrl}]` 格式上报视频数据
+- [x] `scraper-scripts/shein/sheinGetHylinkTitle.ts` 使用共享 `sleep`（无本地定义）
+- [x] `sheinGetHylinkTitle.ts` 实现了商品 ID 多来源提取
+- [x] `sheinGetHylinkTitle.ts` 实现了标题多渠道提取和清洗（移除 SHEIN 后缀）
+- [x] `sheinGetHylinkTitle.ts` 实现了链接清洗（只保留 origin + pathname）
+- [x] `sheinGetHylinkTitle.ts` **必须输出 `visitTime`**（格式 `YYYY-MM-DD HH:mm`）
+- [x] `scraper-scripts/shein/index.ts` 严格遵循开发指南标准模板
+- [x] `index.ts` 实现了 iframe 防护
+- [x] `index.ts` 实现了登录检测（`probeAndReportLogin`）和验证码监控（CAPTCHA_SELECTORS 留空）
+- [x] `index.ts` 正确编排模块时序：Video 立即启动，其余模块 DOM 就绪后并行
+- [x] `index.ts` 实现了超时保护（withTimeout 15s）和清理函数统一调用
+- [x] `index.ts` 实现了数据静默完成判定（`waitForCompletion`）和异常处理
+- [x] `scripts/build-scraper.mjs` 注册了 shein 平台入口
+- [x] `src-tauri/src/login/mod.rs` 注册了 SHEIN 登录策略
+- [x] 运行 `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/shein.bundle.js`
+- [x] 前端 TypeScript 编译无错误（SHEIN 相关文件编译通过；`PlatformDetect.vue` 的 TS 错误为既有问题，与本次变更无关）

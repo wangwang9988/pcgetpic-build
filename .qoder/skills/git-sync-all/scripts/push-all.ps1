@@ -1,0 +1,292 @@
+﻿param(
+    # Legacy fallback for callers that still want one message for every repo.
+    [string]$Message = "",
+
+    # Preferred input. Example:
+    # @{
+    #   'browser' = @{
+    #     Title = 'fix: 修复图片采集状态刷新'
+    #     Details = @('同步更新采集计数与按钮状态', '避免切换标签页后显示旧状态')
+    #   }
+    # }
+    [hashtable]$RepoMessages = @{},
+
+    # Abort before staging anything unless every changed repo has both a title
+    # and at least one concrete detail in RepoMessages.
+    [switch]$RequireRepoMessages,
+    [switch]$Scan,
+       [switch]$Detailed,
+       [switch]$DryRun,
+
+        # Agent skill copies under .codebuddy/.trae/.catpaw are mirrors of
+        # .agents/skills. Abort before staging when they have drifted, otherwise the
+        # commit records an inconsistent skill set and the other tools stay stale.
+        [switch]$SkipSkillSyncCheck
+    )
+
+. (Join-Path $PSScriptRoot 'git-common.ps1')
+
+# Children first; root records only successfully published child commits.
+$repos = $childRepos + @('(root)')
+
+function Get-MessagePlan($repo) {
+    $title = ''
+    $details = @()
+
+    if ($RepoMessages.ContainsKey($repo)) {
+        $entry = $RepoMessages[$repo]
+        if ($entry -is [string]) {
+            $title = $entry.Trim()
+        } elseif ($entry -is [System.Collections.IDictionary]) {
+            if ($entry.Contains('Title') -and $null -ne $entry['Title']) {
+                $title = ([string]$entry['Title']).Trim()
+            }
+            if ($entry.Contains('Details') -and $null -ne $entry['Details']) {
+                $details = @($entry['Details'] | ForEach-Object {
+                    if ($null -ne $_ -and ([string]$_).Trim()) { ([string]$_).Trim() }
+                })
+            }
+        } else {
+            if ($null -ne $entry.Title) { $title = ([string]$entry.Title).Trim() }
+            if ($null -ne $entry.Details) {
+                $details = @($entry.Details | ForEach-Object {
+                    if ($null -ne $_ -and ([string]$_).Trim()) { ([string]$_).Trim() }
+                })
+            }
+        }
+    }
+
+    if (-not $title -and -not $RequireRepoMessages) {
+        if ($Message) { $title = $Message.Trim() }
+        else { $title = "chore: 更新 $repo" }
+    }
+
+    return @{
+        Title = $title
+        Details = $details
+    }
+}
+
+function Show-MessagePlan($repo, $plan) {
+    Write-Output "  [$repo] $($plan.Title)"
+    foreach ($detail in $plan.Details) {
+        Write-Output "    - $detail"
+    }
+}
+
+function Get-ChangedRepos {
+    $changed = @()
+    foreach ($repo in $repos) {
+        $path = Get-RepoPath $repo
+        if (-not (Test-Path "$path/.git")) { continue }
+        $changes = (Invoke-RepoGit $path @('status', '--porcelain')).Output
+        if ($changes) { $changed += $repo }
+    }
+    return $changed
+}
+
+# Inspect every initialized repository before staging anything. DryRun and Scan
+# read local refs only; a real push fetches the explicit primary branch first.
+$branchPlans = @{}
+$preflightFailures = @()
+foreach ($repo in $repos) {
+    $path = Get-RepoPath $repo
+    if (-not (Test-Path -LiteralPath (Join-Path $path '.git'))) {
+        Write-Output "[$repo] SKIPPED (repository not initialized)"
+        continue
+    }
+    try {
+        $branchPlans[$repo] = Get-PrimaryBranchPlan $path $repo -Fetch:(-not ($Scan -or $DryRun))
+        $branchPlan = $branchPlans[$repo]
+        $current = if ($branchPlan.Current) { $branchPlan.Current } else { 'DETACHED' }
+        Write-Output "[$repo] branch=$current; primary=$($branchPlan.Branch); $($branchPlan.Ahead) ahead, $($branchPlan.Behind) behind"
+        if (-not $Scan -and $branchPlan.Behind -gt 0) {
+            throw 'Primary branch is behind origin; run pull-all.ps1 and review changes before pushing.'
+        }
+    } catch {
+        $preflightFailures += "[$repo] $($_.Exception.Message)"
+    }
+}
+
+if ($Scan) {
+    $anyChanged = $false
+    foreach ($repo in $repos) {
+        $path = Get-RepoPath $repo
+        if (-not (Test-Path -LiteralPath (Join-Path $path '.git'))) { continue }
+        $changes = (Invoke-RepoGit $path @('status', '--porcelain')).Output
+        if (-not $changes) { continue }
+        $anyChanged = $true
+        Write-Output "[$repo] CHANGED ($(@($changes).Count) files)"
+        $limit = if ($Detailed) { 50 } else { 10 }
+        $changes | Select-Object -First $limit | ForEach-Object { Write-Output "  $_" }
+        if ($Detailed) {
+            (Invoke-RepoGit $path @('diff', 'HEAD', '--stat')).Output |
+                Select-Object -First 50 | ForEach-Object { Write-Output "  $_" }
+        }
+    }
+    if (-not $anyChanged) { Write-Output 'All repositories are clean.' }
+}
+if ($preflightFailures.Count -gt 0) {
+    $preflightFailures | ForEach-Object { Write-Output "FAILED $_" }
+    throw 'Primary-branch preflight failed before any branch switches, staging, commits or pushes.'
+}
+
+# Skill drift gate. .agents/skills is the single source of truth and the other
+# tool directories (.codebuddy/.trae/.catpaw) are mirrors generated by
+# scripts/sync-skills.ps1. Scan and DryRun only report; a real push aborts before
+# anything is staged so a drifting mirror can never reach the remote.
+$skillSyncScript = Join-Path $root 'scripts/sync-skills.ps1'
+$skillDrift = $false
+if (-not (Test-Path -LiteralPath $skillSyncScript)) {
+    Write-Output '[skills] SKIPPED (scripts/sync-skills.ps1 not found)'
+} else {
+    $pwshCmd = if (Get-Command pwsh -ErrorAction SilentlyContinue) { 'pwsh' } else { 'powershell' }
+    $skillOut = @(& $pwshCmd -NoProfile -ExecutionPolicy Bypass -File $skillSyncScript -Check 2>&1 |
+        ForEach-Object { "$_" })
+    $skillExit = $LASTEXITCODE
+    if ($skillExit -eq 1) {
+        $skillDrift = $true
+        Write-Output '[skills] DRIFTED'
+        $skillOut | Where-Object { $_ -match '\[(缺失|漂移)\]' } |
+            ForEach-Object { Write-Output "  $_" }
+    } elseif ($skillExit -eq 0) {
+        Write-Output '[skills] mirrors in sync (.agents/skills == .codebuddy/.trae/.catpaw)'
+    } else {
+        Write-Output "[skills] WARNING sync-skills.ps1 -Check exited $skillExit; drift gate not evaluated"
+        $skillOut | Select-Object -Last 3 | ForEach-Object { Write-Output "  $_" }
+    }
+}
+if ($skillDrift -and $SkipSkillSyncCheck) {
+    Write-Output '[skills] drift ignored by -SkipSkillSyncCheck'
+}
+if ($Scan) { return }
+if ($skillDrift -and -not $SkipSkillSyncCheck) {
+    throw ('Agent skill mirrors drifted from .agents/skills. Run: powershell -ExecutionPolicy Bypass ' +
+        '-File scripts/sync-skills.ps1  (or re-run with -SkipSkillSyncCheck to override).')
+}
+
+# Resolve and validate the entire plan before staging or committing anything.
+$changedRepos = @(Get-ChangedRepos)
+$planRepos = @($changedRepos)
+# A child commit changes the submodule pointer even when root was initially clean.
+# Require the root message up front so strict mode cannot partially commit children.
+$childHeadChanges = @($branchPlans.Values | Where-Object {
+    $_.Repo -ne '(root)' -and $_.HeadSha -ne $_.EffectiveSha
+})
+if ((@($changedRepos | Where-Object { $_ -ne '(root)' }).Count -gt 0 -or $childHeadChanges.Count -gt 0) -and
+    $planRepos -notcontains '(root)') {
+    $planRepos += '(root)'
+}
+$plans = @{}
+foreach ($repo in $planRepos) {
+    $plans[$repo] = Get-MessagePlan $repo
+}
+
+if ($RequireRepoMessages) {
+    $missingTitles = @()
+    $missingDetails = @()
+    foreach ($repo in $planRepos) {
+        if (-not $RepoMessages.ContainsKey($repo)) {
+            $missingTitles += $repo
+            $missingDetails += $repo
+            continue
+        }
+        $plan = $plans[$repo]
+        if (-not $plan.Title) { $missingTitles += $repo }
+        if (@($plan.Details).Count -eq 0) { $missingDetails += $repo }
+    }
+
+    if ($missingTitles.Count -gt 0 -or $missingDetails.Count -gt 0) {
+        if ($missingTitles.Count -gt 0) {
+            Write-Error "Missing per-repo commit title: $($missingTitles -join ', ')"
+        }
+        if ($missingDetails.Count -gt 0) {
+            Write-Error "Missing per-repo commit details: $($missingDetails -join ', ')"
+        }
+        throw 'Commit plan validation failed before any files were staged.'
+    }
+}
+
+if ($DryRun) {
+    Write-Output "=== Commit plan (dry run) ==="
+    if ($planRepos.Count -eq 0) {
+        Write-Output "  All repositories are clean."
+    } else {
+        foreach ($repo in $planRepos) { Show-MessagePlan $repo $plans[$repo] }
+    }
+    return
+}
+
+# Return to the primary branches before making any commits. Preserve work and
+# staged state during branch repairs; stop globally if any repair fails.
+$repaired = 0
+foreach ($repo in $repos) {
+    if (-not $branchPlans.ContainsKey($repo)) { continue }
+    Invoke-PrimaryUpdate $branchPlans[$repo]
+    if ($branchPlans[$repo].NeedsSwitch) { $repaired++ }
+}
+
+$pushed = 0; $clean = 0; $failed = 0
+foreach ($repo in $repos) {
+    if (-not $branchPlans.ContainsKey($repo)) { continue }
+    $path = Get-RepoPath $repo
+    if ($repo -eq '(root)' -and $failed -gt 0) {
+        Write-Output '[(root)] FAILED (child failure; root will not publish unpublished child pointers)'
+        $failed++
+        continue
+    }
+    $createdCommit = $null
+    try {
+        Assert-PrimaryBranch $path $repo
+        $branch = Get-TargetBranch $repo
+        $changes = (Invoke-RepoGit $path @('status', '--porcelain')).Output
+        if ($changes) {
+            if (-not $plans.ContainsKey($repo)) { $plans[$repo] = Get-MessagePlan $repo }
+            $plan = $plans[$repo]
+            if ($RequireRepoMessages -and
+                (-not $RepoMessages.ContainsKey($repo) -or -not $plan.Title -or @($plan.Details).Count -eq 0)) {
+                throw 'Missing validated per-repo message.'
+            }
+            Invoke-RepoGit $path @('add', '-A') | Out-Null
+            # A dirty submodule can appear in status without anything stageable.
+            $staged = Invoke-RepoGit $path @('diff', '--cached', '--quiet') -AllowFailure
+            if ($staged.ExitCode -gt 1) { throw 'Cannot inspect staged changes.' }
+            if ($staged.ExitCode -eq 1) {
+                Assert-PrimaryBranch $path $repo
+                $commitArgs = @('commit', '-m', $plan.Title)
+                if (@($plan.Details).Count -gt 0) {
+                    $body = (@($plan.Details) | ForEach-Object { "- $_" }) -join "`n"
+                    $commitArgs += @('-m', $body)
+                }
+                Invoke-RepoGit $path $commitArgs | Out-Null
+                $createdCommit = Get-GitText $path @('rev-parse', '--short', 'HEAD')
+                Write-Output "[$repo] committed $createdCommit; message: $($plan.Title)"
+                foreach ($detail in $plan.Details) { Write-Output "  detail: $detail" }
+            }
+        }
+        Assert-PrimaryBranch $path $repo
+        $aheadRange = "refs/remotes/origin/$branch..refs/heads/$branch"
+        $ahead = [int](Get-GitText $path @('rev-list', '--count', $aheadRange))
+        if ($ahead -eq 0) {
+            Write-Output "[$repo] clean; branch=$branch"
+            $clean++
+            continue
+        }
+        $pending = (Invoke-RepoGit $path @('log', '--format=%h %s', $aheadRange)).Output
+        # Explicit source/destination ignores push.default, remote push refspecs
+        # and any previously incorrect upstream. Never force-push.
+        Invoke-RepoGit $path @('push', '--no-follow-tags', '--recurse-submodules=no', 'origin',
+            "refs/heads/${branch}:refs/heads/$branch") | Out-Null
+        Assert-PrimaryBranch $path $repo
+        Write-Output "[$repo] pushed ($ahead commits); branch=$branch"
+        foreach ($entry in $pending) { Write-Output "  commit: $entry" }
+        $pushed++
+    } catch {
+        $retained = if ($createdCommit) { " Commit $createdCommit remains local." } else { '' }
+        Write-Output "[$repo] FAILED - $($_.Exception.Message)$retained"
+        $failed++
+    }
+}
+
+Write-Output "=== Summary: $pushed pushed, $clean clean, $repaired repaired, $failed failed ==="
+if ($failed -gt 0) { throw "$failed repositories failed; local commits and changes have been retained." }

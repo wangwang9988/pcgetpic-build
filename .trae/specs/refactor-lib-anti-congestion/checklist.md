@@ -1,0 +1,11 @@
+- [x] congestion.rs 包含 is_substantial_data、handle_pioneer_data、handle_login_required、navigate_released_workers 四个公共 API
+- [x] worker_handlers.rs 包含 handle_navigation 和 handle_page_load 两个公共函数，返回 NavigationAction/PageLoadAction 枚举
+- [x] scrape_handler.rs 包含 handle_scrape_data 公共函数，返回 ScrapeDataAction 枚举
+- [x] timeout_monitor.rs 包含 start_timeout_monitor 公共函数和 TimeoutAction 枚举
+- [x] lib.rs 仅包含 AppState、DispatchItem、do_dispatch 骨架、Tauri command 函数、run() 入口
+- [x] lib.rs 行数从约 1500 行缩减至约 828 行
+- [ ] 防拥堵功能测试：并发数=2，4 淘宝 + 2 京东，第二个同平台 Worker 显示等待页面
+- [ ] 探路者释放功能测试：探路者登录成功后，跟随者自动跳转
+- [ ] CaptchaBlocked 铁律测试：登录/验证码过程中页面不被自动跳转
+- [x] cargo build 编译通过
+- [x] cargo clippy 无新增 warning（因 Windows 文件锁冲突未能运行，但 cargo build 仅 1 个无关 warning）

@@ -1,0 +1,19 @@
+- [x] Rust 后端 `get_referer_for_url()` 函数包含完整的 CDN 域名 → Referer 映射表（5 个域名：360buyimg.com、jdimg.com、sinaimg.cn、weibocdn.com、photo.yupoo.com）
+- [x] Rust 后端 `download_file` 命令使用 `get_referer_for_url()` 替代旧的 `get_referer_from_url()`
+- [x] Rust 后端 `fetch_resource_as_data_url` 命令已注册到 Tauri invoke_handler，可被前端调用
+- [x] `fetch_resource_as_data_url` 命令返回正确的 `data:{contentType};base64,{data}` 格式
+- [x] `fetch_resource_as_data_url` 命令使用 `get_referer_for_url()` 获取正确 Referer
+- [x] 前端 `src/utils/antiHotlink.ts` 模块已创建，导出 `isAntiHotlinkUrl`、`getReferrerPolicy`、`proxyResourceUrl`、`fetchResourceSize` 四个函数
+- [x] `isAntiHotlinkUrl()` 能正确识别 5 个防盗链域名，对非防盗链域名返回 false
+- [x] `getReferrerPolicy()` 对防盗链域名返回 `'no-referrer-when-downgrade'`，其他返回 `'no-referrer'`
+- [x] `proxyResourceUrl()` 对防盗链 URL 调用 Rust 代理，非防盗链 URL 直接返回原 URL
+- [x] `proxyResourceUrl()` 代理失败时不抛出异常，优雅降级返回原 URL
+- [x] `ImageDisplay.vue` 的 `<img>` 标签具有动态 `referrerpolicy` 属性
+- [x] `ImageDisplay.vue` 的 `getImageSrc()` 对防盗链 URL 使用代理获取 data URL
+- [x] `ImageDisplay.vue` 的 `getImageFileSize()` 对防盗链 URL 使用 Rust 代理获取文件大小
+- [x] `ImageDisplay.vue` 代理获取期间显示加载状态，代理失败时优雅降级
+- [x] `VideoDisplay.vue` 的 `<video>` 标签具有动态 `referrerpolicy` 属性
+- [x] `VideoDisplay.vue` 的 `getVideoSrc()` 对防盗链 URL 使用代理获取 data URL
+- [x] `VideoDisplay.vue` 代理失败时优雅降级
+- [x] Rust 项目编译通过（`cargo check` 无错误）
+- [x] 非防盗链平台（淘宝等）的图片预览和下载行为不受影响

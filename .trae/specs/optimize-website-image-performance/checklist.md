@@ -1,0 +1,12 @@
+- [x] DesktopPlatformProof 24 个平台图标添加了 `loading="lazy"`
+- [x] PlatformSection 35 个平台图标添加了 `loading="lazy"`
+- [x] DownloadSection 8 个浏览器图标添加了 `loading="lazy"`
+- [x] FooterSection Logo 添加了 `loading="lazy"`
+- [x] StoreTutorial/OfflineTutorial 图标添加了 `loading="lazy"`
+- [x] error.vue 平台图标添加了 `loading="lazy"`
+- [x] NavBar logo.png 使用 `<NuxtImg src="/logo.png" />`
+- [x] FooterSection logo.png 使用 `<NuxtImg src="/logo.png" />`
+- [x] 所有被修改的图片均有 `width`/`height` 属性
+- [x] SVG 图标保持原生 `<img>` 未被替换为 `<NuxtImg>`
+- [x] `npm run build` 编译通过无错误
+- [ ] 本地 dev 环境所有页面图片正常渲染

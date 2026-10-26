@@ -1,0 +1,17 @@
+- [x] mydepotGetMain.ts 实现三种 DOM 提取方式，Shopify URL 补充清洗（UUID/数字尺寸/文字尺寸后缀），通用清洗优先使用 shared/utils 的 cleanImageUrl()，tauriBridge.send('MainPic') 上报
+- [x] mydepotGetMain.ts 的 run() 对齐开发指南 GetMain 模式：初始空上报 → 循环重试 → 额外抓取 → 最终上报，使用共享 sleep 和 deduplicateUrls
+- [x] mydepotGetDetail.ts 实现三种 DOM 提取方式（.custom-image-container / .image-wrapper / 商品描述区域），tauriBridge.send('DetailPic') 上报
+- [x] mydepotGetDetail.ts 的 run() 对齐开发指南 GetDetail 模式：初始空上报 → 重试等待容器 → 多轮提取 → 最终上报
+- [x] mydepotGetSku.ts 实现从 script 标签提取 initData.productVariants SKU 图片，JSON 解析 + 正则备用，tauriBridge.send('SkuPic') 上报
+- [x] mydepotGetSku.ts 返回清理函数，同时清理 MutationObserver 和轮询定时器；MutationObserver 精确监听 SKU 容器（非 document.body），监听 attributes 变化
+- [x] mydepotGetVideo.ts 实现立即启动层：XHR 拦截、Fetch 拦截、Performance API 增量监控（必备策略）
+- [x] mydepotGetVideo.ts 实现 DOMContentLoaded 后启动层：MutationObserver、延时梯度扫描、页面内嵌 JSON 提取、window 全局变量检查、模拟用户交互
+- [x] mydepotGetVideo.ts 实现视频分类 isMainVideoUrl()、双重去重、"先读后写"策略，上报格式 {url, type, timestamp, pageUrl}
+- [x] mydepotGetHylinkTitle.ts 实现标题/链接/商品ID/访问时间四字段提取（visitTime 必须包含，格式 YYYY-MM-DD HH:mm），分别上报 tauriBridge.send
+- [x] mydepotGetHylinkTitle.ts 的 run() 对齐开发指南 GetHylinkTitle 模式：清空旧数据 → waitForDynamicContent → 提取四字段 → 一次性上报
+- [x] index.ts 严格遵循开发指南标准模板：iframe 防护、Video 立即启动、DOMContentLoaded 后 runModulesOnIdle（登录探测/滚动/验证码/四模块并行/waitForCompletion）
+- [x] index.ts 异常降级：有数据 completeTask，无数据 failTask
+- [x] 所有子模块移除插件特有的页面可见性/焦点/不活动定时器/SPA 导航检测逻辑，由 Rust 端统一管理
+- [x] 所有子模块使用共享 sleep（import from shared/utils），禁止定义本地 sleep；URL 清洗优先使用 shared/utils 的 cleanImageUrl()
+- [x] build-scraper.mjs 注册 mydepot 入口，构建成功生成 dist-scripts/mydepot.bundle.js
+- [x] 所有子模块使用 TypeScript 类型安全，避免 any 类型，与现有 scraper-scripts 代码风格一致

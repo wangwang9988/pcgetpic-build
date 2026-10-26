@@ -1,0 +1,16 @@
+- [x] lazadaGetVideo.ts Performance API 使用游标增量检测（`checkedResourceCount` 游标），不再全量扫描
+- [x] lazadaGetVideo.ts 新增 `checkVideoElement()` 函数，从 video 元素的 src/currentSrc/data-src/data-video-url/poster/<source> 子元素提取视频 URL
+- [x] lazadaGetVideo.ts 新增 `scanVideoContainers()` 函数，通过 CSS 选择器定位视频容器并提取视频信息
+- [x] lazadaGetVideo.ts 新增 `simulateInteraction()` 函数，模拟 mouseover/click 事件触发懒加载视频
+- [x] lazadaGetVideo.ts 延时扫描改为梯度 [1s, 3s, 5s, 10s]，首次执行 simulateInteraction
+- [x] lazadaGetVideo.ts MutationObserver 对 video 元素使用 checkVideoElement 替代直接取 src/currentSrc
+- [x] lazadaGetVideo.ts MutationObserver 添加 attributes 监听（src/data-src/data-video-url）
+- [x] lazadaGetVideo.ts run() 返回清理函数（断开 Observer + 取消 rAF + 清除定时器）
+- [x] lazadaGetVideo.ts 移除 extractVideoUrlsFromHTML() 全量 HTML 正则扫描
+- [x] lazadaGetSku.ts 轮询逻辑使用单一 pollTimer 定时器，移除冗余 pollCounter
+- [x] lazadaGetSku.ts 清理函数仅清理 observer + pollTimer
+- [x] lazadaGetDetail.ts 最终上报后注册 MutationObserver 持续监听详情区域
+- [x] lazadaGetDetail.ts Observer 检测到图片增加时增量上报
+- [x] lazadaGetDetail.ts run() 返回清理函数（断开 MutationObserver）
+- [x] index.ts setupCaptchaWatcher() 添加 CAPTCHA_SELECTORS.length === 0 守卫
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/lazada.bundle.js

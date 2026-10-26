@@ -1,0 +1,4 @@
+# The Native Messaging host is shipped beside the Browser Engine and must also
+# run on clean Windows installations without the Visual C++ Redistributable.
+[target.'cfg(target_env = "msvc")']
+rustflags = ["-C", "target-feature=+crt-static"]

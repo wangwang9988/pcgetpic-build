@@ -1,0 +1,19 @@
+- [x] `zh-CN.json` platformPage 命名空间无"浏览器扩展"/"插件"残留（description/metaDescription/tutorial/faq/ctaSubtitle）
+- [x] `en-US.json` platformPage 命名空间无 "extension"/"browser extension"/"plugin" 残留
+- [x] `zh-CN.json` platform.descriptions.* 中"插件支持..."/"插件自动提取..."已全部替换为"客户端支持..."/"客户端自动提取..."
+- [x] `en-US.json` platform.descriptions.* 中 "The extension supports..."/"The extension unlocks..." 已全部替换为 "The desktop client supports..." 等
+- [x] `zh-TW.json` platformPage + platform.descriptions 无 "擴充功能"/"外掛" 残留
+- [x] `ja.json` platformPage + platform.descriptions 无 "拡張機能" 残留
+- [x] `ko.json` platformPage + platform.descriptions 无 "확장 프로그램" 残留
+- [x] `es.json` platformPage + platform.descriptions 无 "extensión"/"complemento" 残留
+- [x] `de.json` platformPage + platform.descriptions 无 "Erweiterung" 残留
+- [x] `pt-BR.json` platformPage + platform.descriptions 无 "extensão" 残留
+- [x] `vi.json` platformPage + platform.descriptions 无 "tiện ích mở rộng" 残留
+- [x] `th.json` platformPage + platform.descriptions 无 "ส่วนขยาย" 残留，且 platformPage 键已翻译为泰语（非英文原文）
+- [x] `id.json` platformPage + platform.descriptions 无 "ekstensi" 残留
+- [x] 全部 11 种语言的 `platformsIndex.seoDescription` 无旧术语
+- [x] 全部 11 种语言的 `footer.desc` 无旧术语
+- [x] 全部 11 种语言的 `seo.keywords` 已追加桌面客户端关键词
+- [x] `InstallCard.vue` 无硬编码中文，所有文本通过 i18n key 引用
+- [x] `/extension` 页面相关 i18n 键（hero/download/usage/features）未被本次修改影响
+- [x] 项目 lint 检查通过

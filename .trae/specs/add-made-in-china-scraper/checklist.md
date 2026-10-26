@@ -1,0 +1,42 @@
+- [x] 所有模块导入共享 `sleep`（`from '../shared/utils'`），不在模块内定义本地 sleep 函数（指南 4.1 第 5 条）
+- [x] 所有模块入口处先执行初始空上报（如 `await tauriBridge.send('MainPic', [])`），清空旧数据（指南 4.1 第 6 条）
+- [x] 所有动态数据模块使用增量上报模式，每次检测到变化立即 `tauriBridge.send()`（指南 4.1 第 7 条）
+- [x] madeGetMain.ts 从 `.sr-proMainInfo-slide-picItem` 容器的 `fsrc` 属性提取主图 URL
+- [x] madeGetMain.ts 的 `truncateToExtension()` 正确截断到图片扩展名，移除缩略图后缀还原高清原图
+- [x] madeGetMain.ts 的 `run()` 重试参数为 20 次/1000ms（非 100 次/500ms），使用共享 `sleep`
+- [x] madeGetMain.ts 的 `run()` 实现了额外抓取（3 轮/500ms）逻辑
+- [x] madeGetSku.ts 实现了 valueItem 容器扫描（`[class*="valueItem--"]`）和固定选择器扫描
+- [x] madeGetSku.ts 的 `collectUrlsFromImageElement()` 从 src/placeholder/data-src/data-original/style/父元素多属性提取
+- [x] madeGetSku.ts 的 `cleanAndProcessUrl()` 正确移除反引号、截断到扩展名、过滤 `tps-2-2.png`
+- [x] madeGetSku.ts 对特定 SKU 容器元素挂载 MutationObserver（非 `document.body`），监听 `childList`、`subtree`、`attributes`，`attributeFilter: ['src', 'data-original']`（指南 4.3 第 3 条）
+- [x] madeGetSku.ts 实现了轮询兜底（20 次/1s）
+- [x] madeGetSku.ts 的 `run()` 返回清理函数，同时清理 Observer 和定时器：`() => { observer.disconnect(); if (pollTimer) clearInterval(pollTimer); }`（指南 4.3 第 5 条）
+- [x] madeGetDetail.ts 从 `.detail-desc` 容器提取详情图（5 次重试等待容器渲染，每次 1000ms）
+- [x] madeGetDetail.ts 优先从 `data-original` 属性提取，回退到 `src` 属性
+- [x] madeGetDetail.ts 的 `isValidDetailImageUrl()` 验证有效图片扩展名
+- [x] madeGetDetail.ts 的 `cleanAndNormalizeDetailUrl()` 正确移除反引号、处理 `//` 协议
+- [x] madeGetDetail.ts 实现了 3 轮提取（每轮间隔 2000ms，使用共享 `sleep`），增量上报（非 5 轮/1s）
+- [x] madeGetVideo.ts 实现了 `extractMadeInChinaVideos()` 从 `.J-play-video` 的 `ads-data` JSON 属性提取 `cloud_media_url`
+- [x] madeGetVideo.ts 实现了从 `script[type="text/data-video"]` 标签提取 `videoUrl`
+- [x] madeGetVideo.ts 实现了 XHR/Fetch 拦截 + JSON 响应体递归搜索
+- [x] madeGetVideo.ts 实现了 Performance API 增量监控（游标增量检测 + `requestAnimationFrame` 持续轮询）（指南 4.5）
+- [x] madeGetVideo.ts 实现了 MutationObserver 动态监听 `<video>` 和 `<script>` 新增
+- [x] madeGetVideo.ts 实现了延时梯度扫描（1s/3s/5s/10s）（指南 4.5 执行流程第 6 步）
+- [x] madeGetVideo.ts 的视频分类正确区分主图视频（含 `made-in-china.com`/`v.made-in-china.com`）和详情视频
+- [x] madeGetVideo.ts 的视频去重包含 Made-in-China 特有标识匹配（`[a-f0-9]+/[a-f0-9]+_h264_def`）
+- [x] madeGetVideo.ts 的视频上报采用"先读后写"策略（先 `tauriBridge.get()` 获取已上报列表，去重后追加回写）
+- [x] madeGetHylinkTitle.ts 从 `h1.J-baseInfo-name` 优先提取标题，回退到 `h1` 和 `head title`
+- [x] madeGetHylinkTitle.ts 正确提取商品 ID（`/product(?:-detail)?\/([^\/]+)\//` 正则）
+- [x] madeGetHylinkTitle.ts 的 `cleanMadeProductUrl()` 仅保留 origin + pathname
+- [x] madeGetHylinkTitle.ts 实现 `generateVisitTime()` 生成访问时间，格式 `YYYY-MM-DD HH:mm`（指南 4.6 字段表）
+- [x] madeGetHylinkTitle.ts 通过 `Promise.all` 并行上报四字段：`productTitle`、`productLink`、`productId`、`visitTime`（指南 4.6）
+- [x] index.ts 实现了 iframe 防护（`window !== window.top` 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带 15s 超时保护）
+- [x] index.ts 保存各模块返回的清理函数，完成判定后调用清理
+- [x] index.ts 使用 `waitForCompletion()` 进行数据静默判定（7s 无新数据 → 完成；15s 最大超时 → 强制完成）
+- [x] index.ts `CAPTCHA_SELECTORS` 留空数组，`setupCaptchaWatcher()` 自动跳过
+- [x] 所有模块使用 `tauriBridge.send()` 上报数据（非 `browser.runtime.sendMessage`）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] `scripts/build-scraper.mjs` 的 `PLATFORMS` 对象包含 `'made-in-china'` 入口
+- [x] `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/made-in-china.bundle.js`

@@ -1,0 +1,16 @@
+- [x] 浅色模式 `--bg-base` 为 `#ffffff`（纯白）
+- [x] 浅色模式 `--bg-sider` 为 `#f5f5f7`
+- [x] 浅色模式 `--bg-elevated` 为 `#fafafa`
+- [x] 浅色模式 `--text-secondary` 为 `#515154`
+- [x] 深色模式 `--bg-base` 为 `#000000`（纯黑）
+- [x] 深色模式 `--bg-card` 为 `#1c1c1e`
+- [x] 深色模式 `--bg-elevated` 为 `#2c2c2e`
+- [x] 深色模式 `--bg-sider` 为 `#0d0d0d`
+- [x] `body` 显式设置 `background-color: var(--bg-base)`
+- [x] `.sider-panel` 有 `background-color: var(--bg-sider)`
+- [x] `.app-content` 有 `background-color: var(--bg-base)`
+- [x] `NConfigProvider theme-overrides.common` 包含 `bodyColor`、`cardColor`、`inputColor`、`modalColor`、`popoverColor`
+- [x] Naive UI 主题覆盖的深色/浅色值分别与 CSS 变量值一致
+- [x] `vue-tsc --noEmit` 类型检查通过
+- [x] `vite build` 构建通过
+- [x] 整体视觉效果：背景层次分明，文字清晰可辨，无刺眼或不可见元素

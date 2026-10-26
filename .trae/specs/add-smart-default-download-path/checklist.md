@@ -1,0 +1,12 @@
+- [x] Rust `get_default_download_path` 命令按优先级探测：Chrome下载路径 → Edge下载路径 → D:\下载 → E:\下载 → F:\下载 → C:\下载
+- [x] Chrome Preferences 解析：读取 `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Preferences` 中 `download.default_directory` 字段
+- [x] Edge Preferences 解析：读取 `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Preferences` 中 `download.default_directory` 字段
+- [x] 盘符探测使用 `std::path::Path::new("D:\\").exists()` 检测盘符存在性
+- [x] 文件夹创建使用 `std::fs::create_dir_all` 确保目录可用
+- [x] 所有探测失败时返回 null，前端回退到手动选择
+- [x] `lib.rs` 的 `invoke_handler` 中注册新命令
+- [x] 前端 `downloadManager.ts` 初始化时自动调用探测并持久化到 localStorage
+- [x] 已有保存路径时不触发探测
+- [x] DownloadSettings 组件 placeholder 文案更新为反映自动探测行为
+- [x] 清除设置后下次启动可重新触发自动探测
+- [x] `cargo check` 编译通过

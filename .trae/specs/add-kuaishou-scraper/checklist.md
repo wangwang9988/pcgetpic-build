@@ -1,0 +1,47 @@
+- [x] ksUtils.ts 定义了 URL_BLACKLIST 和 IMAGE_EXTENSIONS 常量
+- [x] ksUtils.ts 实现了 cleanKuaishouImageUrl()（截取到扩展名位置，补全协议，去查询参数）
+- [x] ksUtils.ts 实现了 isKuaishouProductImage()（仅 item_image，排除 sku_image，黑名单过滤）
+- [x] ksUtils.ts 实现了 isKuaishouDetailImage()（接受 item_image/sku_image/item_detail_image，黑名单过滤）
+- [x] ksUtils.ts 实现了 isKuaishouSkuImage()（仅 sku_image，黑名单过滤）
+- [x] ksUtils.ts 实现了 extractUrlFromBackgroundImage()（从 CSS background-image 提取 URL）
+- [x] ksUtils.ts 实现了 deduplicateKsUrls()（基于 cleanKuaishouImageUrl 去重）
+- [x] ksGetMain.ts 实现了 Swiper 轮播区域三种方法提取主图（img.css-9pa8cd、background-image、wrapper 备用）
+- [x] ksGetMain.ts 使用 ksUtils 中的 isKuaishouProductImage/cleanKuaishouImageUrl/deduplicateKsUrls
+- [x] ksGetMain.ts 实现了重试机制（100次/500ms）和额外抓取（3轮）
+- [x] ksGetMain.ts 使用共享 sleep()，未定义本地 sleep
+- [x] ksGetMain.ts 初始空上报 MainPic: []，最终通过 tauriBridge.send('MainPic', images) 上报
+- [x] ksGetDetail.ts 实现了三种方法提取详情图（background-image、img.css-9pa8cd、大尺寸容器），均排除 Swiper
+- [x] ksGetDetail.ts 使用 ksUtils 中的 isKuaishouDetailImage/cleanKuaishouImageUrl/extractUrlFromBackgroundImage/deduplicateKsUrls
+- [x] ksGetDetail.ts 实现了多轮提取（3轮/2s间隔），使用共享 sleep()
+- [x] ksGetDetail.ts 初始空上报 DetailPic: []，最终通过 tauriBridge.send('DetailPic', urls) 上报
+- [x] ksGetSku.ts 实现了三种方法提取 SKU 图（img、background-image、tabindex 容器），均排除 Swiper
+- [x] ksGetSku.ts 使用 ksUtils 中的 isKuaishouSkuImage/cleanKuaishouImageUrl/extractUrlFromBackgroundImage/deduplicateKsUrls
+- [x] ksGetSku.ts MutationObserver 精确监听 SKU 容器（非 document.body），监听 childList+subtree+attributes(src,data-src)
+- [x] ksGetSku.ts 实现了轮询兜底（10次/3s间隔）
+- [x] ksGetSku.ts 返回清理函数，同时清理 Observer 和 pollTimer
+- [x] ksGetSku.ts 初始空上报 SkuPic: []，增量上报通过 tauriBridge.send('SkuPic', urls)
+- [x] ksGetVideo.ts 实现了 XHR/Fetch 拦截
+- [x] ksGetVideo.ts 实现了 Performance API 增量监控（rAF 循环 + 游标）
+- [x] ksGetVideo.ts 实现了 MutationObserver 监听 video 和 script 新增
+- [x] ksGetVideo.ts 实现了 DOM 扫描和 JSON 数据解析（含快手特有全局变量）
+- [x] ksGetVideo.ts 实现了双重去重（URL + normalizedVideoId）
+- [x] ksGetVideo.ts 采用先读后写策略上报 VideoUrls
+- [x] ksGetVideo.ts 上报格式为 { url, type, timestamp, pageUrl }
+- [x] ksGetHylinkTitle.ts 实现了多选择器标题提取和 document.title 降级（去除网站名称后缀）
+- [x] ksGetHylinkTitle.ts 实现了商品ID提取（/goods/{id}、/item/{id}、查询参数）
+- [x] ksGetHylinkTitle.ts 实现了 URL 清洗（保留 /goods/{id} 或 /item/{id} 格式）
+- [x] ksGetHylinkTitle.ts 输出全部四个字段：productTitle、productLink、productId、visitTime
+- [x] ksGetHylinkTitle.ts 初始空上报后等待动态内容加载，使用共享 sleep()
+- [x] index.ts 实现了 iframe 防护（window !== window.top 检查）
+- [x] index.ts 视频模块立即启动，其余模块 DOM 就绪后并行运行
+- [x] index.ts 实现了登录检测（probeAndReportLogin + 快手选择器）
+- [x] index.ts 实现了验证码监控（MutationObserver + 节流）
+- [x] index.ts 实现了模块并行调度（withTimeout 15s 上限），收集清理函数
+- [x] index.ts 实现了数据静默完成判定（waitForCompletion + 7s 静默 + 15s 最大等待 + 3s 最小停留）
+- [x] index.ts 完成后调用清理函数 + completeTask
+- [x] index.ts 实现了异常处理（有数据 completeTask，无数据 failTask）
+- [x] index.ts 严格遵循 docs/平台抓取脚本开发指南.md 标准模板
+- [x] build-scraper.mjs 已注册 kuaishou 平台入口
+- [x] login/mod.rs 已注册快手 DefaultLoginStrategy（login.kuaishou.com、passport.kuaishou.com）
+- [x] node scripts/build-scraper.mjs 构建成功生成 kuaishou.bundle.js
+- [x] cargo check 编译通过无错误

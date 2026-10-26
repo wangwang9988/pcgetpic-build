@@ -1,0 +1,47 @@
+- [x] dhgateGetMain.ts 实现了三方案提取（JSON-LD → Next.js prodImg → DOM imagelist），与原插件逻辑对齐
+- [x] dhgateGetMain.ts 的高清原图还原函数正确替换 `/webp/m/\d+x\d+/` 为 `/webp/m/0x0/` 和 `/\d+x\d+/` 为 `/0x0/`
+- [x] dhgateGetMain.ts 的 Unicode URL 解码函数正确处理 `\uXXXX` 转义序列
+- [x] dhgateGetMain.ts 的 DOM 备用方案覆盖 `.masterMap_smallMapList__JTkBX img` 和 `img[src*="dhresource.com"]` 选择器
+- [x] dhgateGetMain.ts 使用共享 `sleep`（`import { sleep } from '../shared/utils'`），未定义本地 sleep
+- [x] dhgateGetMain.ts 使用共享 `deduplicateUrls` 进行去重
+- [x] dhgateGetMain.ts 遵循 GetMain 模板：初始空上报 → 重试获取 → 额外探测 → 最终上报
+- [x] dhgateGetSku.ts 实现了 Next.js prodSku 数据提取（picUrl/pic0x0Url + attachImgVo + prodSku 块 + attrValName 上下文）
+- [x] dhgateGetSku.ts 实现了 `div[spm-c="sku"]` DOM 容器提取
+- [x] dhgateGetSku.ts 实现了 7 个 SKU 通用选择器的 DOM 备用方案
+- [x] dhgateGetSku.ts 的 MutationObserver 精确监听 SKU 容器（`div[spm-c="sku"]` 等），而非 `document.body`
+- [x] dhgateGetSku.ts 的 MutationObserver 同时监听 attributes 变化（src、data-src），捕获图片属性变更
+- [x] dhgateGetSku.ts 的 `run()` 返回清理函数，同时清理 Observer 和定时器（`observer.disconnect(); clearInterval(pollTimer)`）
+- [x] dhgateGetSku.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] dhgateGetDetail.ts 实现了 URL 编码图片提取（4 个正则模式 + decodeURIComponent 解码）
+- [x] dhgateGetDetail.ts 实现了 DOM 容器提取（`.product-details`、`#descWrap`）和 `descriptionFirstImgUrl` 备用
+- [x] dhgateGetDetail.ts 的 `cleanAndNormalizeDetailUrl` 正确截断扩展名后多余内容并应用高清还原
+- [x] dhgateGetDetail.ts 的 `getDhgateOriginalUrl` 正确替换尺寸参数和移除缩放后缀
+- [x] dhgateGetDetail.ts 优先使用共享 `cleanImageUrl()`，仅敦煌网特有清洗在模块内自定义
+- [x] dhgateGetDetail.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] dhgateGetDetail.ts 遵循 GetDetail 模板：初始空上报 → 重试等待容器 → 多轮提取 → 去重清洗 → 最终上报
+- [x] dhgateGetVideo.ts 实现了 XHR/Fetch 拦截 + JSON 响应体递归搜索
+- [x] dhgateGetVideo.ts 实现了 Performance API 增量监控（游标增量检测 + `requestAnimationFrame` 持续轮询）
+- [x] dhgateGetVideo.ts 实现了 MutationObserver 动态监听（`<video>` + `<script>` 新增）
+- [x] dhgateGetVideo.ts 实现了 JSON 嗅探器注入（扫描 window 全局变量）
+- [x] dhgateGetVideo.ts 的视频分类识别敦煌网特有路径（`cloudv-transfer`、`product-videos`）
+- [x] dhgateGetVideo.ts 的视频过滤排除了广告（advertisement、banner、commercial、promo）
+- [x] dhgateGetVideo.ts 实现了视频增量上报（"先读后写"策略：`tauriBridge.get` → 去重 → `tauriBridge.send`）
+- [x] dhgateGetVideo.ts 遵循 GetVideo 模板：立即启动层（XHR/Fetch/PerformanceAPI）→ DOMContentLoaded 后启动层（Observer + 梯度扫描）
+- [x] dhgateGetHylinkTitle.ts 从 `#productTitle` 优先提取标题，回退到 `head title` 并移除 DHgate 后缀
+- [x] dhgateGetHylinkTitle.ts 正确提取商品 ID（URL 路径 `/product/xxx/(\d+).html` + URL 参数 + DOM input）
+- [x] dhgateGetHylinkTitle.ts 的 `cleanDhgateProductUrl` 仅保留 `origin + pathname`
+- [x] dhgateGetHylinkTitle.ts 输出四字段：`productTitle`、`productLink`、`productId`、`visitTime`（格式 `YYYY-MM-DD HH:mm`）
+- [x] dhgateGetHylinkTitle.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 登录探针使用 DHGATE_LOGIN_SELECTORS
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定（7s 无新数据 → 完成；15s 最大超时 → 强制完成）
+- [x] index.ts 实现了验证码检测（MutationObserver + 节流上限 3 次）
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] 所有模块移除了原插件的 `defineContentScript` 包装、`INACTIVITY_TIMEOUT`、`isScriptStopped`/`handlePageInactive` 逻辑
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 dhgate 入口
+- [x] src-tauri/src/login/mod.rs 使用 DefaultLoginStrategy 注册了 dhgate 平台（login.dhgate.com）
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/dhgate.bundle.js
+- [x] cargo check 编译通过

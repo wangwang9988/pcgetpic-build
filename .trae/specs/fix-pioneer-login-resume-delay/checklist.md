@@ -1,0 +1,5 @@
+- [x] is_still_on_platform_non_product 分支：主动导航到目标商品 URL 而非被动等待
+- [ ] 验证场景：探路者 Worker 登录成功后跳转到首页时，自动导航到商品页，延迟显著降低
+- [ ] 验证场景：跟随者 Worker 正常抓取不受影响
+- [ ] 验证场景：LoginIntermediate 中间页仍保持被动等待（不破坏 SSO Cookie 写入）
+- [x] cargo build 编译通过，无新增 error

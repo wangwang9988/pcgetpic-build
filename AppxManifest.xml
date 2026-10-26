@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10" xmlns:desktop7="http://schemas.microsoft.com/appx/manifest/desktop/windows10/7" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:win32dependencies="http://schemas.microsoft.com/appx/manifest/externaldependencies" IgnorableNamespaces="uap uap10 desktop7 rescap win32dependencies">
+  <!--Package created by MSIX Packaging Tool version: 1.2024.405.0-->
+  <Identity Name="ThomasCareT.TuGet-" Publisher="CN=E8115DF3-4877-4AA3-B8BE-34D093AB0630" Version="1.2.2.0" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>图个吉利/TuGet-图片批量下载</DisplayName>
+    <PublisherDisplayName>ThomasCareT</PublisherDisplayName>
+    <Description>图个吉利/TuGet 是一款支持网页图片、视频、音频等资源批量采集与下载的桌面工具。</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:PackageIntegrity>
+      <uap10:Content Enforcement="on" />
+    </uap10:PackageIntegrity>
+  </Properties>
+  <Resources>
+    <Resource Language="zh-Hans" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22000.1" />
+      <win32dependencies:ExternalDependency Name="Microsoft.WebView2" Publisher="CN=Microsoft Windows, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" MinVersion="99.0.1150.36" Optional="false" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+<Applications><Application Id="TUGETCLIENT" Executable="VFS\Local AppData\TuGet\tuget-client.exe" EntryPoint="Windows.FullTrustApplication"><uap:VisualElements BackgroundColor="transparent" DisplayName="图个吉利/TuGet-图片批量下载" Square150x150Logo="Assets\TUGETCLIENT-Square150x150Logo.png" Square44x44Logo="Assets\TUGETCLIENT-Square44x44Logo.png" Description="图个吉利/TuGet 是一款支持网页图片、视频、音频等资源批量采集与下载的桌面工具。"><uap:DefaultTile Wide310x150Logo="Assets\TUGETCLIENT-Wide310x150Logo.png" Square310x310Logo="Assets\TUGETCLIENT-Square310x310Logo.png" Square71x71Logo="Assets\TUGETCLIENT-Square71x71Logo.png" /></uap:VisualElements></Application></Applications></Package>

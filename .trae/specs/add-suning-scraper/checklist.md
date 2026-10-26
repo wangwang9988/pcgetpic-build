@@ -1,0 +1,15 @@
+- [x] snGetMain.ts 实现了 src-large 属性提取、使用共享 cleanImageUrl 清洗URL（去查询参数/过滤.svg/黑名单）、deduplicateUrls 去重、共享 sleep 轮询重试逻辑
+- [x] snGetSku.ts 实现了指定容器扫描（#J-TZM/#colorItemList/.clr-item）、imgservice.suning.cn 域名过滤、共享 cleanImageUrl + 平台尺寸参数清洗、deduplicateUrls 去重、MutationObserver 精确监听（含 data-original 属性）、返回清理函数（Observer+定时器+防抖）
+- [x] snGetDetail.ts 实现了多容器扫描、苏宁CDN域名校验、共享 cleanImageUrl + 平台尺寸参数清洗、icon-img/blank.gif过滤、容器等待+多轮提取+MutationObserver、返回清理函数、deduplicateUrls 去重
+- [x] snGetVideo.ts 实现了视频URL归一化去重、DOM扫描+Script JSON解析+XHR/Fetch拦截+Performance API+MutationObserver、模拟交互触发懒加载
+- [x] snGetHylinkTitle.ts 实现了标题等待加载（苏宁特征校验）、URL路径商品ID提取（.html前数字+备用路径段）、标题/链接/ID/访问时间上报
+- [x] index.ts 实现了模块编排（Video立即/其他等DOMContentLoaded）、登录检测、验证码监控、任务完成判定，无多余 beforeunload 监听
+- [x] build-scraper.mjs 注册了 suning 平台入口，构建可生成 suning.bundle.js
+- [x] 所有模块使用 tauriBridge.send 替代 browser.runtime.sendMessage，无浏览器插件API残留
+- [x] 所有模块移除了插件特有的页面可见性/焦点/SPA导航检测逻辑（由Tauri宿主接管）
+- [x] 代码风格与现有 jd/taobao 模块保持一致（TypeScript、tauriBridge通信层）
+- [x] 新平台强制使用共享 sleep（替代本地定义）
+- [x] 优先使用共享 cleanImageUrl 作为基础清洗，仅在平台特有需求时自定义扩展
+- [x] 优先使用共享 deduplicateUrls 进行去重
+- [x] GetSku 返回清理函数，同时清理 Observer + setInterval + debounceTimer
+- [x] GetDetail 返回清理函数，清理 Observer

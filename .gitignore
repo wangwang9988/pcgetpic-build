@@ -1,0 +1,104 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-scripts/
+*-deploy.zip
+
+
+# Client (桌面客户端已迁移至此目录)
+client/node_modules/
+client/dist/
+client/src-tauri/target/
+
+# Tauri
+src-tauri/target/
+
+# IDE
+.vscode/
+.idea/
+.vs/
+
+# CatPaw AI assistant (project-level skills, tracked for team sharing)
+# .catpaw/ 目录包含项目专属技能配置，跟踪后团队成员可共享
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Server
+server/node_modules/
+server/data/
+
+# 服务器与存储凭据（切勿提交）
+.env
+.env.local
+.env.*.local
+deploy/.server-config.json
+deploy/.r2-config.json
+server/dist/
+server/server.zip
+
+# Admin Panel
+admin-panel/node_modules/
+admin-panel/dist/
+
+# Store (收银台)
+store/node_modules/
+store/dist/
+
+# Ad Site (推广广告嵌入站)
+ad-site/node_modules/
+ad-site/dist/
+
+# GetPic (浏览器插件版)
+GetPic/node_modules/
+GetPic/dist/
+GetPic/.output/
+
+# Website (官网)
+website/node_modules/
+website/dist/
+website/.output/
+
+# Temp / scratch files
+.cache/
+.workbuddy-ai/
+*.tmp
+*.bak
+temp_*.rs
+tmp_*.rs
+diff*.txt
+diff_*.txt
+*.patch
+.uploads/
+/temp-scratch/
+/scratch/
+/_probe_serde/
+
+# Microsoft Store Screenshots
+docs/microsoft-store/screenshots/*.png
+
+# WorkBuddy AI assistant workspace memory & scratch
+.workbuddy/
+.workbuddy-scratch/
+
+# JoyCode AI assistant workspace memory
+.joycode/
+
+# Agent planning / spec artifacts
+.trae/
+
+# Keep the complete Trae skill set available on other computers.
+# 只忽略 .trae 下的规划/规格产物，skills/ 全量跟踪（否则新克隆机器上
+# Trae 侧 skill 会缺 references/ 与 scripts/ 而无法执行）。
+!/.trae/
+/.trae/*
+!/.trae/skills/
+/.trae/skills/*
+!/.trae/skills/*/

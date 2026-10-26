@@ -1,0 +1,5 @@
+- [x] 1688 Worker 打开后立即开始自动滚动（无 10 秒延迟）
+- [x] 其他平台（淘宝、京东等）正常 Worker 也受益于提前注入
+- [x] 登录页/验证码页/中间页的 Started 事件仍跳过（等待 Finished）
+- [x] `__SCRAPER_INJECTED__` 防重复注入机制正常工作
+- [x] `cargo build` 编译通过

@@ -1,0 +1,183 @@
+name: Build DangTu Multi-Platform Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_signing:
+        description: 'Skip code signing and notarization (debug/test builds)'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    tags:
+      - 'dangtu-v*'
+
+jobs:
+  build-dangtu:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: DangTu-Windows-x64
+            # 以下各端统一产物名均由构建末尾执行的 client/scripts/copy-desktop-installer.mjs 归一化生成
+            bundle_glob: 'client/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/dangtu.exe'
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: DangTu-macOS-arm64
+            bundle_glob: 'client/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/dangtu-macos-arm64.dmg'
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: DangTu-macOS-x64
+            bundle_glob: 'client/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/dangtu-macos-x64.dmg'
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact_name: DangTu-Linux-x64
+            bundle_glob: |
+              client/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/dangtu-linux-x64.deb
+              client/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm/dangtu-linux-x64.rpm
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Rewrite Gitee SSH URLs to HTTPS & checkout required submodules
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          if [ -z "$GITEE_TOKEN" ]; then
+            echo "::error::未配置 secrets.GITEE_TOKEN，无法检出 Gitee 私有子仓库（client / browser / website / tools）"
+            exit 1
+          fi
+          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "git@gitee.com:"
+          git submodule sync
+          git submodule update --init client browser website tools
+
+      - name: Install Linux System Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            patchelf \
+            rpm \
+            unzip \
+            curl \
+            wget \
+            file
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Override Cargo mirror config for GitHub Actions US runners
+        shell: bash
+        run: |
+          # 项目本地 .cargo/config.toml 配置了国内 rsproxy 镜像，在 GitHub Actions 美国机房访问较慢，
+          # 因此在云端 Runner 上覆写为直连官方 crates.io
+          cat > client/src-tauri/.cargo/config.toml << 'EOF'
+          [target.x86_64-pc-windows-gnu]
+          rustflags = ["-C", "link-arg=-Wl,--exclude-libs,ALL"]
+
+          [net]
+          git-fetch-with-cli = true
+          EOF
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            client/src-tauri -> target
+
+      - name: Run Cross-Platform Unit Tests & Type Checks
+        shell: bash
+        run: |
+          npm --prefix client ci
+          npm --prefix client run build:scraper
+          npm --prefix client run test:scraper-build
+          npm --prefix client run test:1688
+          npm --prefix client run test:extract
+          npm --prefix client run typecheck
+          CARGO_TEST_EXTRA=""
+          if [ "${{ runner.os }}" = "macOS" ] && [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            CARGO_TEST_EXTRA="--no-run"
+          fi
+          cargo test --manifest-path client/src-tauri/Cargo.toml --target ${{ matrix.target }} --lib $CARGO_TEST_EXTRA
+
+      - name: Import Apple Certificate to Temporary Keychain
+        if: runner.os == 'macOS' && inputs.skip_signing != 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "No APPLE_CERTIFICATE secret provided; skipping keychain import."
+            exit 0
+          fi
+          KEYCHAIN_PATH="$RUNNER_TEMP/dangtu-signing.keychain-db"
+          KEYCHAIN_PASS="$(uuidgen)"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          rm -f "$RUNNER_TEMP/certificate.p12"
+
+      - name: Build DangTu Release Package
+        shell: bash
+        env:
+          DANGTU_SIGN_CERT_BASE64: ${{ secrets.DANGTU_SIGN_CERT_BASE64 }}
+          DANGTU_SIGN_CERT_PATH: ${{ secrets.DANGTU_SIGN_CERT_PATH }}
+          DANGTU_SIGN_CERT_PASSWORD: ${{ secrets.DANGTU_SIGN_CERT_PASSWORD }}
+          DANGTU_SIGN_CERT_SHA1: ${{ secrets.DANGTU_SIGN_CERT_SHA1 }}
+          DANGTU_SIGN_EXPECTED_THUMBPRINT: ${{ secrets.DANGTU_SIGN_EXPECTED_THUMBPRINT }}
+          TUGET_SIGN_CERT_BASE64: ${{ secrets.TUGET_SIGN_CERT_BASE64 }}
+          TUGET_SIGN_CERT_PATH: ${{ secrets.TUGET_SIGN_CERT_PATH }}
+          TUGET_SIGN_CERT_PASSWORD: ${{ secrets.TUGET_SIGN_CERT_PASSWORD }}
+          TUGET_SIGN_CERT_SHA1: ${{ secrets.TUGET_SIGN_CERT_SHA1 }}
+          TUGET_SIGN_EXPECTED_THUMBPRINT: ${{ secrets.TUGET_SIGN_EXPECTED_THUMBPRINT }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          CERT_B64="${DANGTU_SIGN_CERT_BASE64:-$TUGET_SIGN_CERT_BASE64}"
+          if [ "${{ runner.os }}" = "Windows" ] && [ -n "$CERT_B64" ] && [ -z "$DANGTU_SIGN_CERT_PATH" ] && [ -z "$TUGET_SIGN_CERT_PATH" ]; then
+            TEMP_PFX_PATH="$RUNNER_TEMP/dangtu-signing.pfx"
+            echo "$CERT_B64" | base64 --decode > "$TEMP_PFX_PATH"
+            export TUGET_SIGN_CERT_PATH="$TEMP_PFX_PATH"
+            trap 'rm -f "$TEMP_PFX_PATH"' EXIT
+          fi
+          EXTRA_ARGS="--skip-ci"
+          if [ "${{ inputs.skip_signing }}" = "true" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --skip-signing"
+          fi
+          node scripts/clients/dangtu/build-release.mjs --target ${{ matrix.target }} $EXTRA_ARGS
+
+      - name: Upload Installer Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.bundle_glob }}
+          if-no-files-found: error

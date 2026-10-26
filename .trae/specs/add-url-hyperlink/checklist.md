@@ -1,0 +1,4 @@
+- [x] 结果面板中的 URL 文本可点击，点击后在新标签页打开对应商品页面
+- [x] 超链接样式与原有 NText depth="3" 视觉风格保持一致
+- [x] 悬停时显示手型光标，提供交互提示
+- [x] 链接使用 target="_blank" 和 rel="noopener noreferrer" 确保安全打开

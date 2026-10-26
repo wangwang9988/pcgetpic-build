@@ -1,0 +1,27 @@
+- [x] wfGetMain.ts 实现了 3 策略并行提取（ProductDetailImageCarousel / MediaTray / WaymoreModulesContainer）
+- [x] wfGetMain.ts 的 extractBestUrlFromImg 正确解析 srcset 最大尺寸，MIN_WIDTH_THRESHOLD=400 过滤缩略图
+- [x] wfGetMain.ts 的 URL 清洗去除查询参数、过滤 .svg 和黑名单 URL、去重
+- [x] wfGetMain.ts 通过 tauriBridge.send('MainPic', urls) 上报数据
+- [x] wfGetDetail.ts 实现了 highlights / BlockBuilderHighlights / modules-container / WaymoreModulesContainer 4 选择器优先级
+- [x] wfGetDetail.ts 仅保留 assets.wfcdn.com 域名图片，过滤占位图
+- [x] wfGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报数据
+- [x] wfGetSku.ts 全量扫描 img 标签 srcset，MIN_WIDTH_THRESHOLD=700 过滤小图
+- [x] wfGetSku.ts 实现 MutationObserver + 轮询兜底机制
+- [x] wfGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报数据
+- [x] wfGetVideo.ts 实现 __NEXT_DATA__ JSON 解析（videoMap / videos / hero + 递归搜索）
+- [x] wfGetVideo.ts 实现 XHR/Fetch 拦截 + Performance API 监控 + MutationObserver
+- [x] wfGetVideo.ts 实现视频去重（normalizeVideoUrl 规范化）
+- [x] wfGetVideo.ts 通过 tauriBridge.send('VideoUrls', videos) 上报数据
+- [x] wfGetHylinkTitle.ts 实现标题等待（document.title 有效内容检测）
+- [x] wfGetHylinkTitle.ts 实现 piid 参数 + -w{sku}.html 双路径商品 ID 提取
+- [x] wfGetHylinkTitle.ts 通过 tauriBridge.send 上报 productTitle / productLink / productId / visitTime
+- [x] index.ts 实现 iframe 防护（window !== window.top 退出）
+- [x] index.ts 视频模块立即启动，数据模块 DOMContentLoaded 后并行启动
+- [x] index.ts 实现登录检测 + 验证码监控 + 数据静默完成判定
+- [x] index.ts 异常处理正确（有数据 completeTask / 无数据 failTask）
+- [x] build-scraper.mjs 已注册 wayfair 入口
+- [x] 所有 TypeScript 文件无类型错误（npm run typecheck 通过）
+- [x] 构建成功生成 dist-scripts/wayfair.bundle.js（npm run build:scraper 通过）
+- [x] 代码风格与现有 taobao/jd 模块一致（tauriBridge 通信、deduplicateUrls 去重、simulateScroll 滚动等）
+- [x] 无 browser.runtime 调用残留（全部替换为 tauriBridge）
+- [x] 无页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主管理）

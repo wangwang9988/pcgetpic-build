@@ -1,0 +1,4 @@
+- [x] `REFERER_MAP` 仅包含 5 个 CDN 域名映射（360buyimg.com、jdimg.com、sinaimg.cn、weibocdn.com、photo.yupoo.com），不再包含 wbbasket.ru 和 wildberries.ru
+- [x] Wildberries 图片下载使用 URL 自身域名作为 Referer（回退逻辑），不使用 `https://www.wildberries.ru/`
+- [x] 京东、微博、Yupoo 的 Referer 映射不受影响
+- [x] Rust 项目编译通过（`cargo check` 无错误）

@@ -1,0 +1,152 @@
+/* ========== 全局样式 — 苹果极简浅色 Glassmorphism 主题 ========== */
+
+:root {
+  /* 基础背景色 */
+  --bg-base: #f5f5f7;                    /* 苹果次级浅灰系统背景 */
+  --bg-card: rgba(255, 255, 255, 0.8);    /* 半透明纯白卡片背景 */
+  --bg-pure-white: #ffffff;              /* 绝对纯白背景 (二维码容器/角标文字底色) */
+  --bg-subtle: rgba(0, 0, 0, 0.02);       /* 极浅冷灰背景 (如步骤说明面板) */
+  
+  /* 品牌强调色 (苹果蓝) */
+  --color-primary: #0071e3;              /* 主强调色 */
+  --color-primary-hover: #0077ed;        /* 悬停高亮 */
+  --color-primary-pressed: #0062cc;      /* 点击激活 */
+  --color-primary-suppl: rgba(0, 113, 227, 0.12); /* 淡蓝半透明底色 */
+  
+  /* 渐变强调色 (注意：渐变变量必须应用于 background 或 background-image，不可用于 background-color 降级) */
+  --color-primary-gradient: linear-gradient(135deg, #0071e3, #005bb7); /* 推荐角标渐变 */
+  
+  /* 苹果蓝发光阴影 (Glow) */
+  --color-primary-glow: rgba(0, 113, 227, 0.15); /* 选中卡片的外发光 */
+  --color-primary-glow-soft: rgba(0, 113, 227, 0.08); /* 推荐卡片的常态外发光 */
+  --color-primary-glow-strong: rgba(0, 113, 227, 0.12); /* 推荐卡片悬停的外发光 */
+  
+  /* 文本颜色 */
+  --text-primary: #1d1d1f;                /* 苹果黑 (大标题/主套餐价) */
+  --text-secondary: #86868b;              /* 次级灰 (辅文案/表单标签) */
+  --text-muted: #515154;                  /* 弱化灰 (功能点文字/步骤描述) */
+  --text-placeholder: rgba(0, 0, 0, 0.45);/* 占位符灰 (表单 Tagline) */
+
+  /* 状态指示色 */
+  --color-success: #34c759;              /* 系统成功绿 */
+  --color-success-bg: rgba(52, 199, 89, 0.15); /* 成功绿半透明背景 (步骤数字圈) */
+  --color-error: #ff3b30;                /* 系统危险红 (倒计时告急/校验错误) */
+  
+  /* 边框与阴影 */
+  --border-color: rgba(0, 0, 0, 0.08);    /* 浅灰色细边框 (常规卡片) */
+  --border-color-hover: rgba(0, 113, 227, 0.3); /* 蓝色悬停边框 */
+  --border-subtle: rgba(0, 0, 0, 0.04);   /* 极浅灰分割边框 (步骤面板边框) */
+  --divider-color: rgba(0, 0, 0, 0.1);    /* 列表间斑马线或垂直分割符色 */
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04); /* 卡片默认微弱阴影 */
+  --shadow-card-hover: 0 8px 32px rgba(0, 0, 0, 0.06); /* 卡片悬停弥散阴影 */
+
+  /* 滚动条 */
+  --scrollbar-thumb: rgba(0, 0, 0, 0.12); /* 滚动条滑块常态 */
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.24); /* 滚动条滑块悬停态 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  width: 100%;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* 全局滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* 玻璃拟态卡片基础样式 */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+
+/* 动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 无障碍 / 搜索引擎可识别但视觉隐藏的辅助文本或直链 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

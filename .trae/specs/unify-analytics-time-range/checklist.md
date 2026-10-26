@@ -1,0 +1,14 @@
+- [ ] 服务端 plugin-analytics 路由支持 range 参数（today/yesterday/7d/30d/all），并兼容旧 days 参数
+- [ ] 服务端 plugin-newtab 路由支持 range 参数，并兼容旧 days 参数
+- [ ] 服务端 plugin-uninstall 路由支持 range 参数，并兼容旧 days 参数
+- [ ] 服务端 client-analytics 路由支持 range 参数，并兼容旧 days 参数
+- [ ] 前端 pluginAnalytics.ts API 函数支持 range 字符串参数
+- [ ] 前端 pluginNewtab.ts API 函数支持 range 字符串参数
+- [ ] 前端 pluginUninstall.ts API 函数支持 range 字符串参数
+- [ ] 前端 clientAnalytics.ts API 函数支持 range 字符串参数
+- [ ] PluginAnalytics.vue 选择器改为今天/昨天/7天/30天/累计，切换后图表与分布数据自动更新
+- [ ] PluginNewtab.vue 选择器改为今天/昨天/7天/30天/累计，切换后图表与分布数据自动更新
+- [ ] PluginUninstall.vue 选择器改为今天/昨天/7天/30天/累计，趋势与分布图自动更新，最近卸载记录不受影响
+- [ ] ClientAnalytics.vue 选择器改为今天/昨天/7天/30天/累计，切换后图表与分布数据自动更新
+- [ ] 四个页面的 Summary 卡片保持固定（不随选择器变化）
+- [ ] 切换时间范围后页面不重新加载，仅重新请求明细数据

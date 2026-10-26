@@ -1,0 +1,14 @@
+- [x] `scraper-scripts/redbook/rbGetMain.ts` 已创建，实现重试获取 + 额外探测模式（精准容器提取 + 黑名单过滤 + 完整URL保留 + 初始空上报 + 共享 sleep/deduplicateUrls）
+- [x] `scraper-scripts/redbook/rbGetSku.ts` 已创建，实现 MutationObserver 动态监听 + 返回清理函数模式（双策略提取 + 精确监听目标容器 + 属性变化监听 + 轮询兜底 + 数据保护 + 清理函数同时清理 Observer 和定时器）
+- [x] `scraper-scripts/redbook/rbGetDetail.ts` 已创建，实现重试等待容器 + 多轮遍历模式（初始空上报 + 容器重试 + 多轮提取 + 背景图提取）
+- [x] `scraper-scripts/redbook/rbGetVideo.ts` 已创建，实现多手段尽早介入模式（Performance API 增量监控 + MutationObserver + JSON解析 + DOM提取 + 正则匹配 + 视频/图片CDN精确区分 + 双重去重 + 视频分类上报 + 先读后写策略）
+- [x] `scraper-scripts/redbook/rbGetHylinkTitle.ts` 已创建，实现基础信息聚合模式（初始清空四字段 + 等待动态内容 + 多策略标题提取 + 笔记ID提取 + 链接清洗 + **visitTime 字段**）
+- [x] `scraper-scripts/redbook/index.ts` 已创建，对齐开发指南标准模板（视频立即启动 + 其余并行 + 登录检测 + 验证码监控 + 数据驱动完成判定 + 超时保护 + 异常降级）
+- [x] 所有模块使用 `tauriBridge.send()` 上报数据，未使用 `browser.runtime.sendMessage`
+- [x] 所有模块已移除浏览器插件特有的页面可见性/焦点/SPA导航检测/不活动定时器逻辑
+- [x] 所有模块使用 `shared/utils.ts` 的 `sleep`，未定义本地 `sleep`
+- [x] 所有模块入口处先清空旧数据（`tauriBridge.send(key, [])` 或 `tauriBridge.send(key, '')`）
+- [x] 使用 MutationObserver/setInterval 的模块返回清理函数，清理函数同时清理 Observer 和定时器
+- [x] `scripts/build-scraper.mjs` 已注册 `redbook` 构建入口
+- [x] 构建验证通过：`dist-scripts/redbook.bundle.js` 正确生成，无构建报错
+- [x] 代码风格与现有 `scraper-scripts/taobao/`、`scraper-scripts/douyin/` 保持一致

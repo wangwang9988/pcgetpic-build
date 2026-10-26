@@ -1,0 +1,10 @@
+- [x] pddpfGetMain.ts 实现了 5 策略容器选择器 + SSR 数据提取，URL 清洗去除查询参数还原原图
+- [x] pddpfGetDetail.ts 实现了 4 策略详情图提取，优先 data-bimg-src 属性，MutationObserver 动态监听
+- [x] pddpfGetSku.ts 实现了 3 选择器 SKU 图提取，支持 background-image 提取，MutationObserver + 轮询双保险
+- [x] pddpfGetVideo.ts 实现了多源视频提取（DOM/iframe/Shadow DOM/JSON/XHR/fetch/Performance API/MutationObserver），视频去重和分类
+- [x] pddpfGetHylinkTitle.ts 实现了 3 级降级标题提取，URL 清洗只保留 gid 参数，商品 ID 提取
+- [x] index.ts 视频模块 document_start 启动，其他模块 DOMContentLoaded 后并行运行，iframe 防护，登录检测，数据驱动完成判定
+- [x] build-scraper.mjs 注册了 pddpf 构建入口，构建成功生成 pddpf.bundle.js (26.62 kB)
+- [x] 所有模块使用 tauriBridge.send() 通信，移除了插件特有逻辑（SPA 导航/页面可见性/不活动超时/状态保存恢复）
+- [x] TypeScript 类型安全，无 any 滥用
+- [x] 中文注释覆盖业务逻辑和正则算法

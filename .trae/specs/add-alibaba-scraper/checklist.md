@@ -1,0 +1,21 @@
+- [x] abGetUtils.ts 提供 normalizeUrl、cleanThumbnailSuffix、isPlaceholderUrl、isFlagOrIconImage、normalizeCdnUrl、extractAlibabaVideoId、extractVideoQuality 函数
+- [x] abGetMain.ts 初始空上报 MainPic，从 JSON-LD 提取主图 URL，清洗缩略图后缀，deduplicateUrls 去重后上报
+- [x] abGetMain.ts 实现重试机制（1s 间隔，最多 20 次）+ 额外抓取（3 轮，500ms 间隔）
+- [x] abGetSku.ts 初始空上报 SkuPic，从 data-testid SKU 容器提取图片 URL，清洗后上报
+- [x] abGetSku.ts MutationObserver 精确监听 SKU 容器（attributes: src, data-src），防抖重新扫描
+- [x] abGetSku.ts 返回清理函数，同时清理 MutationObserver 和轮询定时器
+- [x] abGetDetail.ts 初始空上报 DetailPic，重试等待容器出现（20 次，1s 间隔）
+- [x] abGetDetail.ts 三种并行提取方式（iframe/主文档/观察器），过滤占位图和标志图
+- [x] abGetDetail.ts CDN 域名归一化去重，多轮提取（5 轮，2s 间隔），增量上报
+- [x] abGetDetail.ts 返回清理函数，同时清理 MutationObserver、IntersectionObserver 和轮询定时器
+- [x] abGetVideo.ts 立即启动层：XHR/Fetch 拦截 + Performance API 增量监控（rAF 循环）
+- [x] abGetVideo.ts DOMContentLoaded 后启动层：MutationObserver + 延时梯度扫描 + iframe 提取 + JSON 嗅探
+- [x] abGetVideo.ts 清晰度优先去重（hd > sd > ld），双重去重（原始 URL + 归一化视频 ID）
+- [x] abGetVideo.ts 返回清理函数，清理 MutationObserver、rAF 循环、恢复 XHR/Fetch 原始方法
+- [x] abGetHylinkTitle.ts 初始空上报 productTitle/productLink/productId
+- [x] abGetHylinkTitle.ts 从 JSON-LD 提取标题和 ID，降级使用 DOM/document.title
+- [x] abGetHylinkTitle.ts 输出全部四个字段：productTitle、productId、productLink、visitTime
+- [x] index.ts 遵循开发指南标准模板：iframe 防护、视频先行、登录/验证码检测、模块并行、完成判定
+- [x] build-scraper.mjs 注册 alibaba 平台入口
+- [x] login/mod.rs 注册 alibaba 登录策略
+- [x] 构建成功：`node scripts/build-scraper.mjs` 生成 `dist-scripts/alibaba.bundle.js`

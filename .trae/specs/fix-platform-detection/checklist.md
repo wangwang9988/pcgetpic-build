@@ -1,0 +1,10 @@
+- [x] pddpf 平台已添加到 PLATFORM_PATTERNS、PLATFORM_LABELS、PLATFORM_ICONS
+- [x] xiaohongshu 平台 key 已改为 redbook，所有引用处已同步更新
+- [x] walmart 平台已添加 sku.ninja 域名匹配
+- [x] kuaishou 的 xmmicvfxi.com 正则已支持 http 协议
+- [x] sina 平台已添加 weibo.com 裸域名匹配
+- [x] mydepot 平台已添加裸域名 mydepot.com 匹配
+- [x] etsy 平台正则已替换为参考项目的精确国家级域名列表
+- [x] pddpf 在 PLATFORM_ORDER 中排在 pdd 之前
+- [x] TypeScript 类型检查通过，无编译错误
+- [x] 所有平台的正则表达式与参考项目 matches 完全对齐

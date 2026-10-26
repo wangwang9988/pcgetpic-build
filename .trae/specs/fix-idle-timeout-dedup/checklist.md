@@ -1,0 +1,9 @@
+- [x] scrape_handler.rs 中 update_data_change_time 仅在 is_substantial 为 true 时调用
+- [x] tauri-bridge.ts 中 lastAnyDataChangeAt 有基于 key+序列化值的去重保护，重复数据不刷新时间戳
+- [x] tauri-bridge.ts 中 IMAGE_DATA_KEYS 的图片数据仍使用 uploadedImageKeys 做 URL 级精确去重
+- [x] tauri-bridge.ts 中 isNewSubstantialData 对图片数据的判定与 uploadedImageKeys 去重结果一致（有新 URL 才为 true）
+- [x] tauri-bridge.ts 中 resetUploadedDataFlag() 正确清空 prevAnyDataValues
+- [x] waitForCompletion 取图片和通用数据中较晚的变化时间作为有效判定依据
+- [x] waitForCompletion 的 maxWaitMs 兜底有硬性截止时间，不会被宽限期无限延长
+- [x] jdGetVideo 的 onVideoFound 重复调用不会绕过去重刷新 lastAnyDataChangeAt
+- [x] taobao/tbGetVideo 如有同样问题也被覆盖

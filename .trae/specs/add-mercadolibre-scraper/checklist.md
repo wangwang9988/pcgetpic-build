@@ -1,0 +1,24 @@
+- [x] mlGetMain.ts 实现了从 __PRELOADED_STATE__ 和 __NORDIC_RENDERING_CTX__ 提取主图，生成 D_NQ_NP_2X_{id}-F.webp 格式高清 URL
+- [x] mlGetMain.ts 重试逻辑正确：100次/500ms 重试 + 3轮增量抓取
+- [x] mlGetDetail.ts 实现了 JSON enhanced_content 提取 + DOM 容器兜底
+- [x] mlGetDetail.ts URL 清洗逻辑正确：尺寸后缀 -B/-L/-O/-V/-C/-I → -F，D_NQ_NP_ → D_NQ_NP_2X_
+- [x] mlGetDetail.ts 容器重试逻辑正确：5次/1s
+- [x] mlGetSku.ts 使用精准选择器提取 SKU 变体图
+- [x] mlGetSku.ts URL 转换正确：D_Q_NP_ → D_NQ_NP_2X_，-R → -F
+- [x] mlGetSku.ts 重试和增量更新逻辑正确
+- [x] mlGetVideo.ts 实现了 JSON 提取（标准 URL + Unicode 转义 + _n.ctx 格式）
+- [x] mlGetVideo.ts 实现了 XHR/Fetch 网络拦截
+- [x] mlGetVideo.ts 实现了 M3U8 Master Playlist 解析（通过 tauriBridge 代理 fetch）
+- [x] mlGetVideo.ts 视频分类（main/detail）和双重去重正确
+- [x] mlGetHylinkTitle.ts 标题提取优先级正确：h1.ui-pdp-title → meta → document.title
+- [x] mlGetHylinkTitle.ts 商品 ID 提取正确：input[name="itemId"] → URL 正则
+- [x] mlGetHylinkTitle.ts URL 清洗仅保留 origin + pathname
+- [x] index.ts iframe 防护正确
+- [x] index.ts 视频模块立即启动，其余模块 DOMContentLoaded 后并行启动
+- [x] index.ts 使用 waitForCompletion() 判定完成
+- [x] index.ts 登录检测通过 probeAndReportLogin() 实现
+- [x] build-scraper.mjs 已注册 mercadolibre 入口
+- [x] login/mod.rs 已注册 MercadoLibre 默认登录策略
+- [x] 所有模块使用 tauriBridge.send() 替代 browser.runtime.sendMessage()
+- [x] 所有模块移除了浏览器插件特有的页面可见性/焦点/SPA 检测代码
+- [x] 构建成功：npm run build:scraper 生成 dist-scripts/mercadolibre.bundle.js

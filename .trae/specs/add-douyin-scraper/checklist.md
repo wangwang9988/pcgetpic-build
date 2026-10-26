@@ -1,0 +1,50 @@
+- [x] dyUtils.ts 导出了 cleanDouyinImageUrl/isValidDouyinImageUrl/getOriginalDouyinImageUrl/DOUYIN_IMAGE_DOMAINS
+- [x] dyUtils.ts 的 cleanDouyinImageUrl 正确补全 `//` → `https:`
+- [x] dyUtils.ts 的 isValidDouyinImageUrl 仅接受 5 个抖音 CDN 域名，过滤 Base64（data: 开头）
+- [x] dyUtils.ts 的 getOriginalDouyinImageUrl 正确替换 resize:\d+:\d+ 为 resize:0:0
+- [x] dyGetMain.ts 实现了双渠道提取（Swiper img 标签 + background-image 样式），与原插件逻辑对齐
+- [x] dyGetMain.ts 的域名验证使用 dyUtils.isValidDouyinImageUrl()
+- [x] dyGetMain.ts 过滤了 Base64 图片（data:image 开头）
+- [x] dyGetMain.ts 的 background-image 提取处理了 HTML 实体转义（&quot; → "）
+- [x] dyGetMain.ts 使用共享 sleep/deduplicateUrls（非本地定义）
+- [x] dyGetSku.ts 通过 resize:300 参数区分 SKU 图和主图
+- [x] dyGetSku.ts 的原图还原使用 dyUtils.getOriginalDouyinImageUrl()
+- [x] dyGetSku.ts 实现了商品弹窗检测（弹窗存在但无 SKU 图时清空旧数据）
+- [x] dyGetSku.ts 精确监听目标容器（非 document.body）+ 属性变化监听（src/data-src/data-original）
+- [x] dyGetSku.ts 返回清理函数，同时清理 Observer 和 pollTimer
+- [x] dyGetDetail.ts 实现了 9 个详情图选择器的查找
+- [x] dyGetDetail.ts 的 getImageUrlFromElement 从 src/data-src/data-original/currentSrc 四种属性提取
+- [x] dyGetDetail.ts 的原图还原使用 dyUtils.getOriginalDouyinImageUrl()
+- [x] dyGetDetail.ts 实现了商品弹窗检测（弹窗存在但无详情图时清空旧数据）
+- [x] dyGetVideo.ts 实现了 XHR/Fetch 拦截 + JSON 响应体递归搜索
+- [x] dyGetVideo.ts 实现了 Performance API 增量监控（游标增量检测 + requestAnimationFrame）
+- [x] dyGetVideo.ts 实现了 MutationObserver 动态监听
+- [x] dyGetVideo.ts 实现了 __INITIAL_STATE__ 数据提取（c.shop.videourl、c.shop.videoFaceUrl）
+- [x] dyGetVideo.ts 的直播流过滤排除了 douyinliving.com/.flv/.m3u8/stream- 等直播流 URL
+- [x] dyGetVideo.ts 的黑名单过滤排除了 avatar/comment/ugc/ad/loading/placeholder/emoji/sticker/watermark/blob: 等
+- [x] dyGetVideo.ts 支持 mime_type=video 参数检测
+- [x] dyGetVideo.ts 的 DOM 视频检测过滤了过小（宽/高 < 50px）和过短（时长 < 1s）的视频
+- [x] dyGetVideo.ts 使用延时梯度扫描（1s/3s/5s/10s）
+- [x] dyGetHylinkTitle.ts 按优先级尝试了多个标题选择器（好物联盟/商品弹窗/商品详情/商品列表）
+- [x] dyGetHylinkTitle.ts 的 extractProductId 支持 id/product_id/promotion_id 参数和 /live/{id} 路径格式
+- [x] dyGetHylinkTitle.ts 的 cleanProductUrl 移除查询参数和 Hash，保留 origin + pathname
+- [x] dyGetHylinkTitle.ts 输出全部四个字段：productTitle/productLink/productId/visitTime
+- [x] dyGetHylinkTitle.ts 的 visitTime 格式为 YYYY-MM-DD HH:mm
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 登录探针使用 DOUYIN_LOGIN_SELECTORS（.login-panel/.qrcode-login/.scan-login/.login-switch/.mod-login）
+- [x] index.ts 验证码检测使用 CAPTCHA_SELECTORS（#captcha_container/.captcha-verify-container/#captcha-verify-image），节流上限 3 次
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] 所有模块使用共享 sleep（非本地定义）
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 douyin 入口
+- [x] src-tauri/src/login/douyin.rs 实现了 DouyinLoginStrategy（自定义实现，因为需要 extract_product_id）
+- [x] DouyinLoginStrategy 的 check_login 正确区分 LoginRequired（login.douyin.com/sso.douyin.com）/ Captcha（captcha URL）
+- [x] DouyinLoginStrategy 的 extract_product_id 正确提取商品 ID（URL 参数 + 路径匹配）
+- [x] DouyinLoginStrategy 的 is_still_on_platform_non_product 正确判断 douyin.com/jinritemai.com/snssdk.com 域名下非商品页
+- [x] DouyinLoginStrategy 的 captcha_selectors 返回 #captcha_container/.captcha-verify-container/#captcha-verify-image
+- [x] src-tauri/src/login/mod.rs 注册了 douyin::DouyinLoginStrategy
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/douyin.bundle.js
+- [x] cargo check 编译通过

@@ -1,0 +1,59 @@
+# Tasks
+
+- [x] Task 1: 创建义乌购平台共享工具 `scraper-scripts/yiwugo/ywUtils.ts`
+  - [x] 实现 `decodeEscapedUrl()` — Unicode 转义解码（\u002F → /）
+  - [x] 实现 `cleanYiwugoImageUrl()` — 义乌购专用 URL 清洗（Unicode 解码 + 补全协议 + 截断到扩展名 + 去查询参数），优先使用共享 `cleanImageUrl()` 处理通用清洗
+  - [x] 实现 `isUrlBlacklisted()` — 黑名单过滤（严格级：static.yiwugo.com/stall-recommend/main-download//resource/img/；扩展级增加 /img/none.）
+- [x] Task 2: 创建义乌购主图提取模块 `scraper-scripts/yiwugo/ywGetMain.ts`
+  - [x] 实现 `extractFromInitialState()` — 从 `window.__INITIAL_STATE__` 提取 productDetailVO.picture/picture1-4 和 sdiProductsPicList
+  - [x] 实现 `extractFromScriptTag()` — 从 script 标签解析 __INITIAL_STATE__，JSON 解析失败则正则匹配 alicdn URL
+  - [x] 实现 `extractFromDOM()` — 按优先级遍历 8 个选择器提取 img 元素 URL
+  - [x] 实现 `gatherAllImages()` — 三路合并 + deduplicateUrls 去重
+  - [x] 实现 `run()` — 初始空上报 + 重试循环（MAX_RETRIES=20, RETRY_INTERVAL=500ms，使用共享 sleep）+ 追加轮询（MAX_EXTRA_FETCHES=3）+ tauriBridge.send 上报
+- [x] Task 3: 创建义乌购详情图提取模块 `scraper-scripts/yiwugo/ywGetDetail.ts`
+  - [x] 实现 `extractFromInitialState()` — 从 `c.detail.productDetailVO.detaill` HTML 中正则提取 img src
+  - [x] 实现 `extractFromScriptTag()` — 匹配 "detaill" 字段，解码后提取图片 URL；失败则宽松正则；再失败则全脚本匹配
+  - [x] 实现 `extractFromDOM()` — 10 个优先级选择器，优先取 data-lazyload-src > data-src > src
+  - [x] 实现 MutationObserver 持续监听 — 精确监听详情图容器（.tab-detail/.cpxq/.content-detail），监听 childList+subtree+attributes（src/data-src/data-lazyload-src），防抖后增量上报
+  - [x] 实现 `run()` — 初始空上报 + 重试循环（MAX_RETRIES=20，使用共享 sleep）+ 追加轮询（MAX_EXTRA_FETCHES=3, 间隔 1000ms）+ MutationObserver 持续监听 + **返回清理函数**（同时清理 Observer 和 pollTimer）
+- [x] Task 4: 创建义乌购 SKU 图提取模块 `scraper-scripts/yiwugo/ywGetSku.ts`
+  - [x] 实现 `extractFromInitialState()` — 从 `c.detail.productPropertySkuBoList[].picture` 提取
+  - [x] 实现 `extractFromScriptTag()` — 匹配 "picture" 字段，仅提取 ywgimg.yiwugo.com 域名图片
+  - [x] 实现 `extractFromDOM()` — 10 个优先级选择器（specification-box、sku-item 等）
+  - [x] 实现 `scanSkuContainers()` — 统一扫描函数，合并三路提取结果
+  - [x] 实现 MutationObserver 精确监听 — 监听目标容器（.specification-box/.calculator）而非 document.body，监听 childList+subtree+attributes（src/data-src），防抖后增量上报
+  - [x] 实现 `run()` — 初始空上报 + 首轮扫描 + MutationObserver 精确监听 + pollTimer 轮询兜底（MAX_POLL_RETRIES=15, POLL_INTERVAL=500ms）+ **返回清理函数**（同时清理 Observer 和 pollTimer）
+- [x] Task 5: 创建义乌购视频提取模块 `scraper-scripts/yiwugo/ywGetVideo.ts`
+  - [x] 实现视频去重机制（URL 精确匹配 + normalizeVideoUrl 规范化 ID 去重）
+  - [x] 实现 `extractVideoFromYiwugoInitialState()` — 从 `c.shop.videourl` 和 `c.shop.videoFaceUrl` 提取
+  - [x] 实现 XHR/Fetch 拦截 + JSON 递归查找视频 URL
+  - [x] 实现 Performance API 增量监控（requestAnimationFrame 循环 + 游标增量检测）
+  - [x] 实现 MutationObserver 监听 <video> 和 <script> 新增
+  - [x] 实现 DOM 扫描（video 元素 + data-video-url 属性元素）+ 页面内嵌 JSON 提取 + window 全局变量检查
+  - [x] 实现 `run()` — 立即启动层（清空状态+XHR/Fetch 拦截+Performance API 监控）+ DOMContentLoaded 后启动层（MutationObserver+延时梯度扫描 1s/3s/5s/10s+义乌购 __INITIAL_STATE__ 提取）+ tauriBridge.send 上报（先读后写策略）
+- [x] Task 6: 创建义乌购标题/链接提取模块 `scraper-scripts/yiwugo/ywGetHylinkTitle.ts`
+  - [x] 实现 `extractYiwugoProductId()` — 从 URL 匹配 /product/detail/{id} 和 /productdetail/{id}
+  - [x] 实现 `extractYiwugoProductTitle()` — 9 个选择器优先级 + document.title 降级（去除"义乌购"后缀）
+  - [x] 实现 `cleanYiwugoProductUrl()` — 清洗 URL 保留 /product/detail/{id}.html 格式
+  - [x] 实现 `generateVisitTime()` — 格式 YYYY-MM-DD HH:mm
+  - [x] 实现 `run()` — 初始空上报 + waitForDynamicContent + tauriBridge.send 上报 productTitle/productLink/productId/visitTime 四个字段
+- [x] Task 7: 创建义乌购入口脚本 `scraper-scripts/yiwugo/index.ts`
+  - [x] 严格遵循开发指南标准模板
+  - [x] 导入 5 个模块的 run 函数 + shared 工具函数（simulateScroll、waitForCompletion、sleep、tauriBridge、probeAndReportLogin）
+  - [x] 配置 LOGIN_SELECTORS=[]（义乌购无需登录）+ CAPTCHA_SELECTORS=[]（无验证码）
+  - [x] 实现 `main()` — iframe 防护 + 视频模块立即启动 + DOMContentLoaded 后 runModulesOnIdle
+  - [x] 实现 `runModulesOnIdle()` — probeAndReportLogin + simulateScroll + 模块并行启动 + waitTaskCompletion
+  - [x] 实现 `waitTaskCompletion()` — 使用 waitForCompletion 数据驱动判定（7s 静默 / 15s 最大等待 / 3s 最小停留 / 硬性截止 maxWaitMs+5s / baseline 机制）
+  - [x] 实现 `withTimeout()` — 单模块 15s 超时保护
+  - [x] 实现异常降级 — 有数据 completeTask / 无数据 failTask
+  - [x] 清理函数统一管理 — 各模块返回的 cleanup function 由 waitTaskCompletion 统一调用
+- [x] Task 8: 注册构建入口 `scripts/build-scraper.mjs`
+  - [x] 在 PLATFORMS 对象中添加 `yiwugo: resolve(projectRoot, 'scraper-scripts/yiwugo/index.ts')`
+  - [x] 运行构建验证 `node scripts/build-scraper.mjs` 确认生成 `dist-scripts/yiwugo.bundle.js`
+
+# Task Dependencies
+
+- Task 7 依赖 Task 1-6（index.ts 导入各模块和 ywUtils）
+- Task 8 依赖 Task 7（构建入口需要 index.ts 存在）
+- Task 1（ywUtils）被 Task 2-4 依赖
+- Task 2-6 之间无依赖，可并行开发（但 Task 2-4 都依赖 Task 1）

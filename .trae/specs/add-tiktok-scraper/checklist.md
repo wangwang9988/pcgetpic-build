@@ -1,0 +1,56 @@
+- [x] tkGetMain.ts 初始空上报：`await tauriBridge.send('MainPic', [])` 清空旧数据
+- [x] tkGetMain.ts 实现了双方案提取（__MODERN_ROUTER_DATA__ JSON → DOM 选择器），与原插件逻辑对齐
+- [x] tkGetMain.ts 的 __MODERN_ROUTER_DATA__ 解析实现了三策略路由键遍历（page_config.components_map → components_map → 旧结构 component_data）
+- [x] tkGetMain.ts 从 product_info 组件的 product_base.images[].url_list[0] 正确提取主图
+- [x] tkGetMain.ts 的 DOM 备用方案覆盖了 .slick-slider-container img、.w-66.h-66 img、img.cursor-zoom-in 选择器
+- [x] tkGetMain.ts 使用共享 `sleep`（`import { sleep } from '../shared/utils'`），未定义本地 sleep
+- [x] tkGetSku.ts 初始空上报：`await tauriBridge.send('SkuPic', [])` 清空旧数据
+- [x] tkGetSku.ts 实现了 __MODERN_ROUTER_DATA__ sale_props 提取（has_image 属性组的 sale_prop_values[].image.url_list[0]）
+- [x] tkGetSku.ts 实现了 DOM 备用方案（div.overflow-x-auto.flex-wrap > div > img、img[width='68'][height='68']、div.cursor-pointer > img）
+- [x] tkGetSku.ts 实现了 MutationObserver 精确监听：对 SKU 容器精确挂载（非 document.body），监听 childList/subtree/attributes（src、data-src），图片数量增加时防抖后重新扫描上报
+- [x] tkGetSku.ts 实现了轮询兜底：首轮无结果时启动定时轮询，获取到结果后停止轮询
+- [x] tkGetSku.ts 的 run() 返回清理函数，同时清理 MutationObserver（observer.disconnect()）和轮询定时器（clearInterval(pollTimer)）
+- [x] tkGetSku.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] tkGetDetail.ts 初始空上报：`await tauriBridge.send('DetailPic', [])` 清空旧数据
+- [x] tkGetDetail.ts 实现了 desc_detail JSON 字符串解析（type === "image" 项的 image.url_list[0]）
+- [x] tkGetDetail.ts 实现了 __MODERN_ROUTER_DATA__ 三策略提取详情图（product_base.desc_detail）
+- [x] tkGetDetail.ts 实现了 DOM 备用方案（div[class^="expandableSection"] div[class^="sectionContent"] img、div[class^="sectionContent"] img.w-full）
+- [x] tkGetDetail.ts 实现了多轮提取：EXTRACTION_PASSES=3，间隔 PASS_DELAY_MS=1000，每轮合并去重后增量上报
+- [x] tkGetDetail.ts 实现了 MutationObserver 持续监听：监听详情容器，发现新图片时增量上报
+- [x] tkGetDetail.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] tkGetVideo.ts 实现了 TikTok 视频 CDN 识别（tiktokcdn-us.com、tiktokcdn.com、tiktokv.com、ttcdn-us.com 域名 + /video/ 路径 + mime_type=video + video_mp4）
+- [x] tkGetVideo.ts 实现了 __MODERN_ROUTER_DATA__ 视频提取（product_base.video + 递归搜索 product_info）
+- [x] tkGetVideo.ts 实现了 DOM video 元素提取（src、currentSrc、source 子元素，仅保留 TikTok CDN 视频）
+- [x] tkGetVideo.ts 实现了 XHR/Fetch 拦截 + TikTok 视频 URL 正则匹配（tiktokcdn.*\/video\/）+ 传统格式匹配
+- [x] tkGetVideo.ts 实现了 Performance API 增量监控（游标增量检测 + requestAnimationFrame 持续轮询）
+- [x] tkGetVideo.ts 实现了 MutationObserver 动态监听（监听 video 和 script 标签新增）
+- [x] tkGetVideo.ts 实现了延时梯度扫描：1s/3s/5s/10s 延时执行全量视频检测（提取页面内嵌 JSON + 检查 window 全局变量 + 扫描视频容器 DOM），首次执行时模拟用户交互触发懒加载
+- [x] tkGetVideo.ts 实现了双重去重：原始 URL 集合（foundVideoUrls）+ 归一化视频 ID 集合（normalizedVideoIds）
+- [x] tkGetVideo.ts 实现了视频增量上报：采用"先读后写"策略（tauriBridge.get('VideoUrls') → 去重追加 → tauriBridge.send('VideoUrls', ...)）
+- [x] tkGetVideo.ts 的视频分类将 TikTok 商品页视频默认视为主图视频，过滤了广告/评论/UGC/头像
+- [x] tkGetVideo.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] tkGetHylinkTitle.ts 初始空上报：`await tauriBridge.send('productTitle', '')`、`await tauriBridge.send('productLink', '')`、`await tauriBridge.send('productId', '')` 清空旧数据
+- [x] tkGetHylinkTitle.ts 从 .mainTitle--R75fTcZL 优先提取标题，回退到 head title 和 __MODERN_ROUTER_DATA__ product_base.title
+- [x] tkGetHylinkTitle.ts 正确提取商品 ID（/shop/pdp/ 路径段中的纯数字段）
+- [x] tkGetHylinkTitle.ts 生成 origin + pathname 格式的清洁链接
+- [x] tkGetHylinkTitle.ts 生成 visitTime 字段（YYYY-MM-DD HH:mm 格式）
+- [x] tkGetHylinkTitle.ts 上报四个字段：productTitle、productLink、productId、visitTime
+- [x] tkGetHylinkTitle.ts 使用共享 `sleep`，未定义本地 sleep
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 登录探针使用 TIKTOK_LOGIN_SELECTORS（.login-container、.login-form、.login-wrapper、[class*="login"]、.passport-login）
+- [x] index.ts 验证码检测使用 CAPTCHA_SELECTORS（.captcha-verify-container、#captcha-verify-image、.verify-bar-close），节流上限 3 次
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定（7s 无新数据 → 完成；15s 最大超时 → 强制完成）
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 tiktok 入口
+- [x] src-tauri/src/login/tiktok.rs 实现了 TiktokLoginStrategy（自定义实现，非 DefaultLoginStrategy，因为需要 extract_product_id）
+- [x] TiktokLoginStrategy 的 check_login 正确区分 LoginRequired（login.tiktok、passport.tiktok、accounts.tiktok）/ LoginIntermediate / Captcha（captcha、verify）
+- [x] TiktokLoginStrategy 的 extract_product_id 正确提取商品 ID（/shop/pdp/(\d+)）
+- [x] TiktokLoginStrategy 的 is_still_on_platform_non_product 正确判断 tiktok.com 域名下非商品页
+- [x] TiktokLoginStrategy 的 login_cookie_names 返回 sessionid、sid_tt、sid_guard
+- [x] TiktokLoginStrategy 的 captcha_selectors 返回 .captcha-verify-container、#captcha-verify-image、.verify-bar-close
+- [x] src-tauri/src/login/mod.rs 注册了 tiktok::TiktokLoginStrategy
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/tiktok.bundle.js
+- [x] cargo check 编译通过

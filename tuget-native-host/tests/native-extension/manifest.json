@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "TuGet Native Host E2E Test",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv9k8MxI+xsE00phX5EGRmjf4Y5wbdn2jvx/IRbf6i/2jvvFLAfLP0p5g/MVzuOg44/UAzaluFJoO1IpJBNIREZkoVLOCenbu/bmdsp5y0fTi4egWtQ3yDOSOjEnQkQik87OWs0Js1pVnzd849bCXOMEABSapc9soIUpm1h6eRAyAwfc7XG4wO/SP28LKMyrwIeN7GTrFtXbS1YgNapb8eBo3IBjvmJHhftJTHx34pIDKsEUxb33KtrQ6iWjmoZRM2yn34sPmEPPB914tMNF+i2o/AVdvdtt6IIJoO3DKr7b+aitqWrfc8Sou+hwiKXLFKdN/kNencU9BL8RLuec8lQIDAQAB",
+  "permissions": [
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "TuGet Native Host E2E"
+  }
+}

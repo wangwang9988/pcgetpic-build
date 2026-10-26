@@ -1,0 +1,8 @@
+- [x] on_page_load 守卫：Worker 处于 WaitingForLogin 状态时，on_page_load 跳过所有处理（登录检测、URL 纠偏、脚本注入），直接 return
+- [x] on_navigation 守卫：Worker 处于 WaitingForLogin 状态时，on_navigation 不改变 Worker 状态，仅放行导航
+- [x] scrape-data 防御：WaitingForLogin 状态的 Worker 产出数据时，不触发 mark_platform_verified 和 get_waiting_workers_for_platform
+- [x] active_platforms 扩展：dispatch_to_idle_workers 的 active_platforms 同时统计 WaitingForLogin 状态的 Worker
+- [ ] 验证场景：并发数=2，输入 4 淘宝 + 2 京东链接，第一个淘宝 Worker 正常打开，第二个淘宝 Worker 显示等待页面而非淘宝登录页
+- [ ] 验证场景：探路者淘宝 Worker 登录成功并产出数据后，等待页面的跟随者 Worker 自动跳转到商品页开始抓取
+- [ ] 验证场景：京东同理，第一个京东 Worker 正常打开，第二个显示等待页面
+- [x] cargo build 编译通过，无新增 error

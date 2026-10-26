@@ -1,0 +1,14 @@
+- [x] bao66 主图提取遵循指南 §4.2 唯品会风格（重试循环 + 额外探测 + 增量抓取），6 种选择器与原插件对齐
+- [x] bao66 详情图提取遵循指南 §4.4 模式（重试等待容器 + 多轮遍历），6 种选择器 + data-url 懒加载优先级与原插件对齐
+- [x] bao66 SKU 图提取遵循指南 §4.3 模式（返回清理函数 + 精确监听 + 属性变化监听），6 种选择器 + _310x310→_750x750 大图还原与原插件对齐
+- [x] bao66 视频提取遵循指南 §4.5 模式（XHR/Fetch 拦截 + Performance API 增量监控 + MutationObserver + Prism Player + 阿里云 OSS）
+- [x] bao66 标题/链接/商品ID提取遵循指南 §4.6，必须输出全部四个字段（productTitle/productLink/productId/visitTime）
+- [x] bao66 入口脚本遵循指南 §3.1 标准模板（iframe 防护 + 分组调度 + 登录/验证码检测 + 数据驱动完成判定 + 异常降级）
+- [x] 所有模块使用 tauriBridge 替代 browser.runtime.sendMessage 通信
+- [x] 所有模块移除插件特有的页面可见性/焦点/SPA导航检测逻辑（由 Tauri 宿主接管）
+- [x] 所有模块使用共享 sleep()，禁止本地定义 sleep 函数（指南 §4.1 强制要求）
+- [x] GetSku 返回清理函数同时清理 Observer 和 pollTimer（指南 §4.3 强制要求）
+- [x] GetSku 精确监听 SKU 容器（非 document.body）+ 属性变化监听（指南 §4.3 推荐）
+- [x] build-scraper.mjs 成功构建 bao66.bundle.js
+- [x] Rust 端 login/mod.rs 注册 bao66 DefaultLoginStrategy
+- [x] TypeScript 编译无错误

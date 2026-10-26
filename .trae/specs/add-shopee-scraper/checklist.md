@@ -1,0 +1,15 @@
+- [x] shopeeUtils.ts 实现了 extractImageHash / cleanShopeeImageUrl / isValidShopeeImageUrl 三个函数
+- [x] shopeeUtils.ts 的 cleanShopeeImageUrl 能正确剥离 `@resize_w82_nl.webp` 等缩略图后缀，还原为 `域名/file/哈希.扩展名` 格式
+- [x] shopeeGetMain.ts 导出 run() 函数，扫描 `._OguPS` / `.airUhU` / `.UBG7wZ` 容器，通过 tauriBridge.send('MainPic', urls) 上报
+- [x] shopeeGetSku.ts 导出 run() 函数，扫描 `.W5LiQM` / `.KIoPj6` / `.j7HL5Q` 容器，通过 tauriBridge.send('SkuPic', urls) 上报
+- [x] shopeeGetDetail.ts 导出 run() 函数，扫描 `.product-detail` / `.page-product__detail` / `.QN2lPu` / `.I_DV_3` 容器，通过 tauriBridge.send('DetailPic', urls) 上报
+- [x] shopeeGetVideo.ts 导出 run() 函数，从 DOM video 标签和 Script 标签提取视频 URL，以 [{url: '...'}] 格式通过 tauriBridge.send('VideoUrls', videoObjects) 上报
+- [x] shopeeGetVideo.ts 的视频域名验证覆盖 susercontent.com 和 shopeemobile.com
+- [x] shopeeGetHylinkTitle.ts 导出 run() 函数，提取标题/链接/商品ID 并通过 tauriBridge.send 上报
+- [x] shopeeGetHylinkTitle.ts 的商品ID提取支持 URL 参数 itemid、路径模式 -i.SHOPID.ITEMID、/product/SHOPID/ITEMID 三种模式
+- [x] index.ts 入口编排与 taobao/index.ts 模式一致：视频立即启动 → DOMContentLoaded 后登录检测 → 模拟滚动 → 并行启动模块 → waitForCompletion 判定完成
+- [x] index.ts 包含 Shopee 登录选择器和验证码监控逻辑
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象中包含 shopee 入口
+- [x] 执行构建脚本后产出 dist-scripts/shopee.bundle.js
+- [x] 所有模块使用 tauriBridge 替代 browser.runtime 通信，不包含插件特有的页面可见性/焦点/SPA导航检测/不活动超时/活动监控逻辑
+- [x] 所有 TypeScript 文件无类型错误（通过构建验证）

@@ -1,0 +1,28 @@
+- [x] temuGetMain.ts 实现了双方案提取（主世界脚本注入 rawData → #leftContent DOM 备用），与原插件逻辑对齐
+- [x] temuGetMain.ts 的主世界脚本注入正确访问 window.rawData/leoConfig，从 goods.gallery 等字段提取主图
+- [x] temuGetMain.ts 的主世界脚本注入跳过 type === 2 的视频项
+- [x] temuGetMain.ts 的高清原图还原函数正确移除 _\d+x\d+ 尺寸后缀和 .slim.\w+ 后缀
+- [x] temuGetMain.ts 的无效图片过滤排除了域名黑名单（aimg.kwcdn.com）和路径黑名单（/flags/、/review/ 等）
+- [x] temuGetSku.ts 实现了 #rightContent 容器 DOM 提取
+- [x] temuGetSku.ts 复用了主图模块的 URL 清洗和过滤逻辑
+- [x] temuGetDetail.ts 实现了 #goodsDetail 容器 DOM 提取
+- [x] temuGetDetail.ts 复用了主图模块的 URL 清洗和过滤逻辑
+- [x] temuGetVideo.ts 实现了主世界脚本注入提取视频 URL（从 gallery 中 type === 2 或含 .mp4 的项）
+- [x] temuGetVideo.ts 实现了 MutationObserver 动态监听（防抖 300ms）
+- [x] temuGetVideo.ts 实现了 DOM video/source 标签提取
+- [x] temuGetVideo.ts 排除了 blob: 和 data: 协议的视频 URL
+- [x] temuGetHylinkTitle.ts 实现了标题提取（h1 → document.title → meta[og:title] → class 选择器兜底）
+- [x] temuGetHylinkTitle.ts 实现了商品 ID 提取（goods_id 参数 → -g-(\d+).html 路径 → 15 位纯数字）
+- [x] temuGetHylinkTitle.ts 的 cleanTitle 正确移除了 | Temu / - Temu 后缀
+- [x] temuGetHylinkTitle.ts 实现了 window 对象扫描提取（遍历含 goods/product/data 关键词的全局变量）
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 temu 入口
+- [x] src-tauri/src/login/temu.rs 实现了 TemuLoginStrategy（登录页检测/商品 ID 提取）
+- [x] src-tauri/src/login/mod.rs 注册了 temu::TemuLoginStrategy
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/temu.bundle.js
+- [x] cargo check 编译通过

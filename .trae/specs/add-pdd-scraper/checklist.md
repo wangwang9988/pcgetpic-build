@@ -1,0 +1,41 @@
+- [x] pddGetMain.ts 实现了 rawData 注入脚本读取（viewImageData + topGallery）
+- [x] pddGetMain.ts 实现了 SSR 数据提取（__cava_ssr_data__ → imageUrl + goodsCarouselInfos）
+- [x] pddGetMain.ts 实现了 DOM 扫描（.QFNLpbqP、.mui-mobile-swipe-child）
+- [x] pddGetMain.ts 实现了 URL 清洗（移除 ? 参数、跨 CDN 子域名去重、rawData 优先合并）
+- [x] pddGetMain.ts 实现了重试机制（1s 间隔，最多 20 次）和额外抓取（3 次，500ms）
+- [x] pddGetMain.ts 通过 tauriBridge.send('MainPic', urls) 上报数据
+- [x] pddGetSku.ts 实现了 rawData 提取（skus[].thumbUrl）
+- [x] pddGetSku.ts 实现了 CAVA SSR 数据提取
+- [x] pddGetSku.ts 实现了 DOM 容器扫描（.xkr85Q1j、.beast-mobile-drawer-content、div[role="dialog"]、.IuvVTIp4）
+- [x] pddGetSku.ts 实现了独立选择器（img[aria-label="点击查看大图"]）
+- [x] pddGetSku.ts 实现了占位符 URL 过滤和 /mms-goods-image/ 白名单
+- [x] pddGetSku.ts 实现了 MutationObserver 监听 SKU 图片 src 变化
+- [x] pddGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报数据
+- [x] pddGetDetail.ts 实现了 rawData 提取（detailGallery[].url）
+- [x] pddGetDetail.ts 实现了 CAVA SSR 数据提取
+- [x] pddGetDetail.ts 实现了 DOM 容器扫描（5 个选择器 + aria-label 降级）
+- [x] pddGetDetail.ts 实现了 img 标签提取（data-bimg-src > data-src > src 优先级）
+- [x] pddGetDetail.ts 实现了 CSS 背景图提取
+- [x] pddGetDetail.ts 实现了路径级去重（优先保留 img.pddpic.com 版本）
+- [x] pddGetDetail.ts 实现了 MutationObserver 监听详情容器 DOM 变化
+- [x] pddGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报数据
+- [x] pddGetVideo.ts 实现了 XHR/Fetch 拦截
+- [x] pddGetVideo.ts 实现了 Performance API 轮询监控
+- [x] pddGetVideo.ts 实现了 MutationObserver 监听 video 元素
+- [x] pddGetVideo.ts 实现了视频分类（main/detail）
+- [x] pddGetVideo.ts 实现了去重（URL 级 + 归一化 ID 级）
+- [x] pddGetVideo.ts 通过 tauriBridge.send('VideoUrls', [{url, type, timestamp}]) 上报数据
+- [x] pddGetHylinkTitle.ts 实现了标题提取（5 级选择器优先级 + document.title 兜底）
+- [x] pddGetHylinkTitle.ts 实现了带重试的标题获取（500ms 间隔，最多 10 次）
+- [x] pddGetHylinkTitle.ts 实现了商品 ID 提取（goods_id/goodsId 参数）
+- [x] pddGetHylinkTitle.ts 实现了商品链接清洗（重构为标准 URL）
+- [x] pddGetHylinkTitle.ts 通过 tauriBridge.send 上报 productTitle、productLink、productId
+- [x] index.ts 实现了 iframe 防护（window !== window.top）
+- [x] index.ts 实现了登录检测（probeAndReportLogin）
+- [x] index.ts 实现了数据驱动完成判定（waitForCompletion）
+- [x] index.ts 实现了模块超时保护（withTimeout，15s）
+- [x] index.ts 实现了异常处理（有数据 complete，无数据 fail）
+- [x] index.ts 时序编排正确：Video 立即执行，其余 DOMContentLoaded 后执行
+- [x] build-scraper.mjs 已注册 pdd 平台入口
+- [x] TypeScript 编译无错误（npx tsc --noEmit 通过）
+- [x] 构建脚本成功生成 dist-scripts/pdd.bundle.js

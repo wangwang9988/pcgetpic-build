@@ -1,0 +1,9 @@
+{
+  "name": "com.tuget.desktop",
+  "description": "TuGet desktop Native Messaging bridge",
+  "path": "..\\target\\release\\tuget-native-host.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://dojjjgfogfhepmnoejgaofgooohddlcm/"
+  ]
+}

@@ -1,0 +1,12 @@
+- [x] `scraper-scripts/yupoo/ypGetMain.ts` 文件存在且导出 `run` 函数，能从 Yupoo 相册页面提取主图 URL 并通过 tauriBridge.send 上报
+- [x] `scraper-scripts/yupoo/ypGetDetail.ts` 文件存在且导出 `run` 函数，发送 DetailPic 空数组
+- [x] `scraper-scripts/yupoo/ypGetSku.ts` 文件存在且导出 `run` 函数，发送 SkuPic 空数组
+- [x] `scraper-scripts/yupoo/ypGetVideo.ts` 文件存在且导出 `run` 函数，实现视频 URL 拦截和提取并通过 tauriBridge.send 上报
+- [x] `scraper-scripts/yupoo/ypGetHylinkTitle.ts` 文件存在且导出 `run` 函数，能提取标题、链接、商品 ID 并通过 tauriBridge.send 上报
+- [x] `scraper-scripts/yupoo/index.ts` 文件存在，实现 iframe 防护、模块编排、完成判定逻辑
+- [x] `scripts/build-scraper.mjs` 中包含 yupoo 构建入口
+- [x] `src/utils/platforms/yupoo.ts` 的 cleanUrl 仅保留 origin + pathname，不再使用 gid 参数逻辑
+- [x] `src/utils/platforms/yupoo.ts` 的 extractProductId 从 URL 路径 /albums/ 后提取相册 ID
+- [x] 执行 `npm run build:scraper` 能成功构建 `dist-scripts/yupoo.bundle.js`
+- [x] 所有 TypeScript 文件无类型错误（通过 tsc 检查）
+- [x] 代码风格与现有 scraper-scripts/taobao/ 和 scraper-scripts/vip/ 保持一致

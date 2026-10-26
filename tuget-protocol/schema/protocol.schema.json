@@ -1,0 +1,782 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.tuget.local/protocol/v1/protocol.schema.json",
+  "title": "TuGet Protocol v1 Message",
+  "description": "Messages exchanged between TuGet Client, Native Host and Pro-GetPic desktop extension.",
+  "oneOf": [
+    { "$ref": "#/$defs/HELLO_ACK" },
+    { "$ref": "#/$defs/START_CAPTURE" },
+    { "$ref": "#/$defs/PAUSE_TASK" },
+    { "$ref": "#/$defs/RESUME_TASK" },
+    { "$ref": "#/$defs/CANCEL_TASK" },
+    { "$ref": "#/$defs/FOCUS_TASK_TAB" },
+    { "$ref": "#/$defs/RELOAD_TASK_TAB" },
+    { "$ref": "#/$defs/CLOSE_TASK_TAB" },
+    { "$ref": "#/$defs/GET_ENGINE_STATUS" },
+    { "$ref": "#/$defs/ACK_BATCH" },
+    { "$ref": "#/$defs/DOWNLOAD_RESOURCE_IN_BROWSER" },
+    { "$ref": "#/$defs/RESET_ENGINE_STATE" },
+    { "$ref": "#/$defs/SHUTDOWN_ENGINE" },
+    { "$ref": "#/$defs/HELLO" },
+    { "$ref": "#/$defs/ENGINE_READY" },
+    { "$ref": "#/$defs/ENGINE_STATUS" },
+    { "$ref": "#/$defs/HEARTBEAT" },
+    { "$ref": "#/$defs/TASK_STARTED" },
+    { "$ref": "#/$defs/TASK_PROGRESS" },
+    { "$ref": "#/$defs/RESOURCE_BATCH" },
+    { "$ref": "#/$defs/INTERACTION_REQUIRED" },
+    { "$ref": "#/$defs/INTERACTION_RESOLVED" },
+    { "$ref": "#/$defs/TASK_COMPLETED" },
+    { "$ref": "#/$defs/TASK_FAILED" },
+    { "$ref": "#/$defs/TASK_CANCELLED" },
+    { "$ref": "#/$defs/BROWSER_DOWNLOAD_STARTED" },
+    { "$ref": "#/$defs/BROWSER_DOWNLOAD_COMPLETED" },
+    { "$ref": "#/$defs/BROWSER_DOWNLOAD_FAILED" },
+    { "$ref": "#/$defs/ENGINE_STATE_RESET" },
+    { "$ref": "#/$defs/ENGINE_WARNING" }
+  ],
+  "$defs": {
+    "Identifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+    },
+    "HttpUrl": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 32768,
+      "pattern": "^https?://"
+    },
+    "ResourceUrl": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768,
+      "pattern": "^(https?|blob):"
+    },
+    "CaptureChannel": {
+      "type": "string",
+      "enum": ["specialized", "generic-media", "backup-one"]
+    },
+    "Capability": {
+      "type": "string",
+      "enum": [
+        "capture.specialized",
+        "capture.generic-media",
+        "capture.backup-one",
+        "task.cancel",
+        "task.pause",
+        "task.focus-tab",
+        "interaction.login",
+        "interaction.captcha",
+        "resource.batch-ack",
+        "resource.browser-download-fallback"
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_MESSAGE",
+        "UNSUPPORTED_PROTOCOL_VERSION",
+        "UNSUPPORTED_COMMAND",
+        "UNSUPPORTED_CAPABILITY",
+        "INVALID_URL",
+        "ENGINE_NOT_READY",
+        "TASK_NOT_FOUND",
+        "TASK_CONFLICT",
+        "NAVIGATION_FAILED",
+        "PAGE_LOAD_TIMEOUT",
+        "CAPTURE_FAILED",
+        "INTERACTION_REQUIRED",
+        "NATIVE_HOST_DISCONNECTED",
+        "CANCELLED",
+        "INTERNAL_ERROR"
+      ]
+    },
+    "BaseEnvelope": {
+      "type": "object",
+      "properties": {
+        "version": { "const": 1 },
+        "messageId": { "$ref": "#/$defs/Identifier" },
+        "type": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "sessionId": { "$ref": "#/$defs/Identifier" },
+        "taskId": { "$ref": "#/$defs/Identifier" },
+        "timestamp": { "type": "integer", "minimum": 0 },
+        "payload": { "type": "object" }
+      },
+      "required": ["version", "messageId", "type", "sessionId", "timestamp", "payload"]
+    },
+    "TaskEnvelope": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        {
+          "type": "object",
+          "properties": {
+            "taskId": { "$ref": "#/$defs/Identifier" }
+          },
+          "required": ["taskId"]
+        }
+      ]
+    },
+    "EmptyPayload": {
+      "type": "object",
+      "maxProperties": 0,
+      "additionalProperties": false
+    },
+    "ProtocolError": {
+      "type": "object",
+      "properties": {
+        "code": { "$ref": "#/$defs/ErrorCode" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2048 },
+        "retryable": { "type": "boolean" },
+        "details": {
+          "type": "object",
+          "maxProperties": 32,
+          "additionalProperties": true
+        }
+      },
+      "required": ["code", "message", "retryable"],
+      "additionalProperties": false
+    },
+    "RequestContext": {
+      "type": "object",
+      "properties": {
+        "refererMode": { "type": "string", "enum": ["set", "remove", "none"] },
+        "referer": { "$ref": "#/$defs/HttpUrl" },
+        "origin": { "$ref": "#/$defs/HttpUrl" },
+        "headers": {
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "additionalProperties": { "type": "string", "maxLength": 8192 }
+        },
+        "userAgentRequired": { "type": "boolean" },
+        "browserDownloadRequired": { "type": "boolean" }
+      },
+      "required": ["userAgentRequired", "browserDownloadRequired"],
+      "additionalProperties": false
+    },
+    "PreviewCandidate": {
+      "type": "object",
+      "properties": {
+        "url": { "$ref": "#/$defs/ResourceUrl" },
+        "requestContext": { "$ref": "#/$defs/RequestContext" },
+        "rejectTinyPlaceholder": { "type": "boolean" }
+      },
+      "required": ["url", "requestContext"],
+      "additionalProperties": false
+    },
+    "ResourceDto": {
+      "type": "object",
+      "properties": {
+        "resourceId": { "$ref": "#/$defs/Identifier" },
+        "originalResourceId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "channel": { "$ref": "#/$defs/CaptureChannel" },
+        "sourceLine": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "recognitionKind": { "type": "string", "enum": ["site-rule"] },
+        "pageUrl": { "$ref": "#/$defs/HttpUrl" },
+        "pageTitle": { "type": "string", "maxLength": 2048 },
+        "productTitle": { "type": "string", "maxLength": 2048 },
+        "productId": { "type": "string", "maxLength": 512 },
+        "resourceType": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "stream", "subtitle", "other"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["main", "sku", "detail", "review", "video", "audio", "stream", "subtitle", "other"]
+        },
+        "url": { "$ref": "#/$defs/ResourceUrl" },
+        "thumbnailUrl": { "$ref": "#/$defs/ResourceUrl" },
+        "mimeType": { "type": "string", "maxLength": 256 },
+        "extension": { "type": "string", "maxLength": 32, "pattern": "^[A-Za-z0-9]+$" },
+        "width": { "type": "integer", "minimum": 0 },
+        "height": { "type": "integer", "minimum": 0 },
+        "sizeBytes": { "type": "integer", "minimum": 0 },
+        "durationMs": { "type": "integer", "minimum": 0 },
+        "bitrate": { "type": "integer", "minimum": 0 },
+        "suggestedFilename": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "requestContext": { "$ref": "#/$defs/RequestContext" },
+        "previewCandidates": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/PreviewCandidate" }
+        }
+      },
+      "required": [
+        "resourceId",
+        "channel",
+        "sourceLine",
+        "pageUrl",
+        "resourceType",
+        "category",
+        "url",
+        "requestContext"
+      ],
+      "additionalProperties": false
+    },
+    "HelloAckPayload": {
+      "type": "object",
+      "properties": {
+        "acceptedProtocolVersion": { "const": 1 },
+        "clientVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Capability" },
+          "uniqueItems": true,
+          "maxItems": 32
+        }
+      },
+      "required": ["acceptedProtocolVersion", "clientVersion", "capabilities"],
+      "additionalProperties": false
+    },
+    "StartCapturePayload": {
+      "type": "object",
+      "properties": {
+        "url": { "$ref": "#/$defs/HttpUrl" },
+        "channels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CaptureChannel" },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "captureDepth": { "type": "string", "enum": ["light", "deep"] },
+        "keepTabOpen": { "type": "boolean" },
+        "captureMode": { "type": "string", "enum": ["single", "batch"] },
+        "maxVisitSeconds": { "type": "integer", "minimum": 30, "maximum": 600 },
+        "scrollPolicy": { "type": "object", "additionalProperties": false, "required": ["maxScreens", "maxSeconds"], "properties": {
+          "maxScreens": { "type": "integer", "minimum": 1, "maximum": 100 },
+          "maxSeconds": { "type": "integer", "minimum": 1, "maximum": 120 }
+        } },
+        "reusePreopenedTab": { "type": "boolean" }
+      },
+      "required": ["url", "channels", "captureDepth", "keepTabOpen"],
+      "additionalProperties": false
+    },
+    "ReasonPayload": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string", "maxLength": 1024 }
+      },
+      "additionalProperties": false
+    },
+    "TaskCancelledPayload": {
+      "type": "object",
+      "properties": {
+        "reason": { "type": "string", "maxLength": 1024 },
+        "alreadyClosed": { "type": "boolean" },
+        "source": { "type": "string", "maxLength": 64 }
+      },
+      "additionalProperties": false
+    },
+    "AckBatchPayload": {
+      "type": "object",
+      "properties": {
+        "batchId": { "$ref": "#/$defs/Identifier" }
+      },
+      "required": ["batchId"],
+      "additionalProperties": false
+    },
+    "DownloadResourceInBrowserPayload": {
+      "type": "object",
+      "properties": {
+        "resource": { "$ref": "#/$defs/ResourceDto" }
+      },
+      "required": ["resource"],
+      "additionalProperties": false
+    },
+    "HelloPayload": {
+      "type": "object",
+      "properties": {
+        "extensionId": { "type": "string", "pattern": "^[a-p]{32}$" },
+        "extensionVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "supportedProtocolVersions": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "contains": { "const": 1 },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "browserVersion": { "type": "string", "maxLength": 128 },
+        "capabilities": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Capability" },
+          "uniqueItems": true,
+          "maxItems": 32
+        }
+      },
+      "required": ["extensionId", "extensionVersion", "supportedProtocolVersions", "capabilities"],
+      "additionalProperties": false
+    },
+    "EngineReadyPayload": {
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 128 }
+      },
+      "additionalProperties": false
+    },
+    "PageActivitySnapshot": {
+      "type": "object",
+      "properties": {
+        "documentKey": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "url": { "$ref": "#/$defs/HttpUrl" },
+        "observedAt": { "type": "integer", "minimum": 0 },
+        "ready": { "type": "boolean" },
+        "scrollY": { "type": "number", "minimum": 0 },
+        "scrollHeight": { "type": "number", "minimum": 0 },
+        "viewportHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "userActive": { "type": "boolean" }
+      },
+      "required": ["documentKey", "url", "observedAt", "ready", "scrollY", "scrollHeight", "viewportHeight", "userActive"],
+      "additionalProperties": false
+    },
+    "EngineTaskStatus": {
+      "type": "object",
+      "properties": {
+        "taskId": { "$ref": "#/$defs/Identifier" },
+        "parentTaskId": { "$ref": "#/$defs/Identifier" },
+        "url": { "$ref": "#/$defs/HttpUrl" },
+        "channel": { "$ref": "#/$defs/CaptureChannel" },
+        "captureDepth": { "type": "string", "enum": ["light", "deep"] },
+        "keepTabOpen": { "type": "boolean" },
+        "captureMode": { "type": "string", "enum": ["single", "batch"] },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "navigating", "capturing", "publishing", "cancel-requested", "cancelled", "completed", "failed"]
+        },
+        "paused": { "type": "boolean" },
+        "tabId": { "type": "integer", "minimum": 0 },
+        "discoveredResourceCount": { "type": "integer", "minimum": 0 },
+        "deliveredResourceCount": { "type": "integer", "minimum": 0 },
+        "pageActivity": { "$ref": "#/$defs/PageActivitySnapshot" },
+        "createdAt": { "type": "integer", "minimum": 0 },
+        "updatedAt": { "type": "integer", "minimum": 0 },
+        "error": { "type": "string", "maxLength": 2048 }
+      },
+      "required": [
+        "taskId", "url", "channel", "captureDepth", "keepTabOpen", "status", "paused",
+        "discoveredResourceCount", "deliveredResourceCount", "createdAt", "updatedAt"
+      ],
+      "additionalProperties": false
+    },
+    "EngineStatusPayload": {
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "tasks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EngineTaskStatus" },
+          "maxItems": 1000
+        }
+      },
+      "required": ["profileId", "tasks"],
+      "additionalProperties": false
+    },
+    "HeartbeatPayload": {
+      "type": "object",
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 0 },
+        "activeTaskCount": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["sequence", "activeTaskCount"],
+      "additionalProperties": false
+    },
+    "TaskStartedPayload": {
+      "type": "object",
+      "properties": {
+        "url": { "$ref": "#/$defs/HttpUrl" },
+        "tabId": { "type": "integer", "minimum": 0 },
+        "parentTaskId": { "$ref": "#/$defs/Identifier" },
+        "pageTasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "taskId": { "$ref": "#/$defs/Identifier" },
+              "channel": { "$ref": "#/$defs/CaptureChannel" }
+            },
+            "required": ["taskId", "channel"],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 3
+        }
+      },
+      "required": ["url"],
+      "additionalProperties": false
+    },
+    "TaskProgressPayload": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["queued", "navigating", "capturing", "waiting-interaction", "publishing", "paused"]
+        },
+        "activeChannel": { "$ref": "#/$defs/CaptureChannel" },
+        "completedChannels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CaptureChannel" },
+          "uniqueItems": true,
+          "maxItems": 3
+        },
+        "discoveredResourceCount": { "type": "integer", "minimum": 0 },
+        "message": { "type": "string", "maxLength": 2048 }
+      },
+      "required": ["phase", "discoveredResourceCount"],
+      "additionalProperties": false
+    },
+    "ResourceBatchPayload": {
+      "type": "object",
+      "properties": {
+        "batchId": { "$ref": "#/$defs/Identifier" },
+        "batchIndex": { "type": "integer", "minimum": 0 },
+        "isLastBatch": { "type": "boolean" },
+        "resources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ResourceDto" },
+          "maxItems": 300
+        }
+      },
+      "required": ["batchId", "batchIndex", "isLastBatch", "resources"],
+      "additionalProperties": false
+    },
+    "InteractionKind": {
+      "type": "string",
+      "enum": ["login", "captcha", "consent", "navigation-blocked", "other"]
+    },
+    "InteractionRequiredPayload": {
+      "type": "object",
+      "properties": {
+        "kind": { "$ref": "#/$defs/InteractionKind" },
+        "url": { "$ref": "#/$defs/HttpUrl" },
+        "tabId": { "type": "integer", "minimum": 0 },
+        "message": { "type": "string", "maxLength": 2048 }
+      },
+      "required": ["kind", "url"],
+      "additionalProperties": false
+    },
+    "InteractionResolvedPayload": {
+      "type": "object",
+      "properties": {
+        "kind": { "$ref": "#/$defs/InteractionKind" },
+        "url": { "$ref": "#/$defs/HttpUrl" }
+      },
+      "additionalProperties": false
+    },
+    "TaskCompletedPayload": {
+      "type": "object",
+      "properties": {
+        "resourceCount": { "type": "integer", "minimum": 0 },
+        "completedChannels": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/CaptureChannel" },
+          "uniqueItems": true,
+          "maxItems": 3
+        },
+        "tabClosed": { "type": "boolean" }
+      },
+      "required": ["resourceCount", "completedChannels"],
+      "additionalProperties": false
+    },
+    "TaskFailedPayload": {
+      "type": "object",
+      "properties": {
+        "error": { "$ref": "#/$defs/ProtocolError" }
+      },
+      "required": ["error"],
+      "additionalProperties": false
+    },
+    "EngineWarningPayload": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 2048 }
+      },
+      "required": ["code", "message"],
+      "additionalProperties": false
+    },
+    "EngineStateResetPayload": {
+      "type": "object",
+      "properties": {
+        "requestMessageId": { "$ref": "#/$defs/Identifier" },
+        "deletedTaskCount": { "type": "integer", "minimum": 0 },
+        "clearedStorageKeyCount": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["requestMessageId", "deletedTaskCount", "clearedStorageKeyCount"],
+      "additionalProperties": false
+    },
+    "BrowserDownloadStartedPayload": {
+      "type": "object",
+      "properties": {
+        "resourceId": { "$ref": "#/$defs/Identifier" },
+        "downloadId": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["resourceId", "downloadId"],
+      "additionalProperties": false
+    },
+    "BrowserDownloadCompletedPayload": {
+      "type": "object",
+      "properties": {
+        "resourceId": { "$ref": "#/$defs/Identifier" },
+        "downloadId": { "type": "integer", "minimum": 0 },
+        "filename": { "type": "string", "minLength": 1, "maxLength": 32768 },
+        "bytesReceived": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["resourceId", "downloadId", "filename"],
+      "additionalProperties": false
+    },
+    "BrowserDownloadFailedPayload": {
+      "type": "object",
+      "properties": {
+        "resourceId": { "$ref": "#/$defs/Identifier" },
+        "downloadId": { "type": "integer", "minimum": 0 },
+        "error": { "$ref": "#/$defs/ProtocolError" }
+      },
+      "required": ["resourceId", "error"],
+      "additionalProperties": false
+    },
+    "HELLO_ACK": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "HELLO_ACK" }, "payload": { "$ref": "#/$defs/HelloAckPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "START_CAPTURE": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "START_CAPTURE" }, "payload": { "$ref": "#/$defs/StartCapturePayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "PAUSE_TASK": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "PAUSE_TASK" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "RESUME_TASK": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "RESUME_TASK" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "CANCEL_TASK": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "CANCEL_TASK" }, "payload": { "$ref": "#/$defs/ReasonPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "FOCUS_TASK_TAB": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "FOCUS_TASK_TAB" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "RELOAD_TASK_TAB": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "RELOAD_TASK_TAB" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "CLOSE_TASK_TAB": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "CLOSE_TASK_TAB" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "GET_ENGINE_STATUS": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "GET_ENGINE_STATUS" }, "payload": { "$ref": "#/$defs/EmptyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ACK_BATCH": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "ACK_BATCH" }, "payload": { "$ref": "#/$defs/AckBatchPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "DOWNLOAD_RESOURCE_IN_BROWSER": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "DOWNLOAD_RESOURCE_IN_BROWSER" }, "payload": { "$ref": "#/$defs/DownloadResourceInBrowserPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "SHUTDOWN_ENGINE": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "SHUTDOWN_ENGINE" }, "payload": { "$ref": "#/$defs/ReasonPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "RESET_ENGINE_STATE": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "RESET_ENGINE_STATE" }, "payload": { "$ref": "#/$defs/ReasonPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "HELLO": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "HELLO" }, "payload": { "$ref": "#/$defs/HelloPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ENGINE_READY": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "ENGINE_READY" }, "payload": { "$ref": "#/$defs/EngineReadyPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ENGINE_STATUS": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "ENGINE_STATUS" }, "payload": { "$ref": "#/$defs/EngineStatusPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "HEARTBEAT": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "HEARTBEAT" }, "payload": { "$ref": "#/$defs/HeartbeatPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TASK_STARTED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "TASK_STARTED" }, "payload": { "$ref": "#/$defs/TaskStartedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TASK_PROGRESS": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "TASK_PROGRESS" }, "payload": { "$ref": "#/$defs/TaskProgressPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "RESOURCE_BATCH": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "RESOURCE_BATCH" }, "payload": { "$ref": "#/$defs/ResourceBatchPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "INTERACTION_REQUIRED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "INTERACTION_REQUIRED" }, "payload": { "$ref": "#/$defs/InteractionRequiredPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "INTERACTION_RESOLVED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "INTERACTION_RESOLVED" }, "payload": { "$ref": "#/$defs/InteractionResolvedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TASK_COMPLETED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "TASK_COMPLETED" }, "payload": { "$ref": "#/$defs/TaskCompletedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TASK_FAILED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "TASK_FAILED" }, "payload": { "$ref": "#/$defs/TaskFailedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "TASK_CANCELLED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "TASK_CANCELLED" }, "payload": { "$ref": "#/$defs/TaskCancelledPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "BROWSER_DOWNLOAD_STARTED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "BROWSER_DOWNLOAD_STARTED" }, "payload": { "$ref": "#/$defs/BrowserDownloadStartedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "BROWSER_DOWNLOAD_COMPLETED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "BROWSER_DOWNLOAD_COMPLETED" }, "payload": { "$ref": "#/$defs/BrowserDownloadCompletedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "BROWSER_DOWNLOAD_FAILED": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/TaskEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "BROWSER_DOWNLOAD_FAILED" }, "payload": { "$ref": "#/$defs/BrowserDownloadFailedPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ENGINE_WARNING": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "ENGINE_WARNING" }, "payload": { "$ref": "#/$defs/EngineWarningPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "ENGINE_STATE_RESET": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/BaseEnvelope" },
+        { "type": "object", "properties": { "type": { "const": "ENGINE_STATE_RESET" }, "payload": { "$ref": "#/$defs/EngineStateResetPayload" } } }
+      ],
+      "unevaluatedProperties": false
+    }
+  }
+}

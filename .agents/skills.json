@@ -1,0 +1,15 @@
+{
+  "entries": [
+    { "path": "./.catpaw/skills" },
+    { "path": "./.codebuddy/skills" },
+    { "path": "./.trae/skills" },
+    { "path": "./browser/.catpaw/skills" },
+    { "path": "./client/.catpaw/skills" },
+    { "path": "./cps-server/.catpaw/skills" },
+    { "path": "./ec-nuxt/.catpaw/skills" },
+    { "path": "./GetPic/.catpaw/skills" },
+    { "path": "./Pro-GetPic/.catpaw/skills" },
+    { "path": "./server/.catpaw/skills" },
+    { "path": "./website/.catpaw/skills" }
+  ]
+}

@@ -1,0 +1,12 @@
+- [x] 后端 GET / 接口支持所有新增查询参数 (orderNo, tradeNo, email, packageId, amount, activationCode, paidAtStart, paidAtEnd, createdAtStart, createdAtEnd)
+- [x] 后端 COUNT 查询始终包含 LEFT JOIN packages 和 activation_codes，确保按 JOIN 表字段筛选时总数正确
+- [x] 后端 GET /export 接口同步所有新增筛选参数
+- [x] 后端旧的 keyword 参数已移除（被 orderNo + tradeNo 替代）
+- [x] 前端 OrderListParams 类型包含所有新增字段
+- [x] 前端 exportOrders 函数支持传递所有筛选参数
+- [x] 前端筛选区域默认折叠，展开后显示所有筛选条件
+- [x] 套餐下拉选择器从 getPackages API 动态获取数据
+- [x] 时间选择器使用 daterange 模式（非 datetimerange）
+- [x] "查询"按钮触发筛选并重置分页到第 1 页
+- [x] "重置"按钮清空所有筛选条件并刷新列表
+- [x] 导出 CSV 时携带当前所有筛选条件

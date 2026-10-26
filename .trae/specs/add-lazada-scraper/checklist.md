@@ -1,0 +1,37 @@
+- [x] lazadaUtils.ts 实现了 `cleanLazadaImageUrl()` 缩略图后缀清理（_thumbnail_ / _square_thumbnail_ / 双扩展名 / 尾部尺寸 / 查询字符串）
+- [x] lazadaUtils.ts 实现了 `isValidLazadaImageUrl()` 图片 URL 验证（有效扩展名 + 排除小图标）
+- [x] lazadaUtils.ts 实现了 `tryParseNestedObject()` 大括号计数法 JSON 提取
+- [x] lazadaUtils.ts 实现了 `extractImageHash()` 图片哈希去重
+- [x] lazadaUtils.ts 实现了 `cleanLazadaDetailImageUrl()` 详情图专用清洗
+- [x] lazadaGetMain.ts 实现了 skuGalleries 数据提取（tryParseNestedObject → 遍历 SKU → 过滤 video → 取 src/poster）
+- [x] lazadaGetMain.ts 实现了 JSON-LD 数据提取（application/ld+json → 递归搜索 image 字段）
+- [x] lazadaGetMain.ts 合并两种来源并清洗/验证/去重后上报 MainPic
+- [x] lazadaGetMain.ts 的重试机制正确（100 次/500ms 重试 + 3 次额外抓取）
+- [x] lazadaGetSku.ts 实现了 skuInfos 数据提取（遍历 SKU ID → 取 image 字段）
+- [x] lazadaGetSku.ts 实现了 productOption 数据提取（skuBase.properties[].values[] → image/hoverImage）
+- [x] lazadaGetSku.ts 合并两种来源并清洗/验证/哈希去重后上报 SkuPic
+- [x] lazadaGetDetail.ts 实现了 product.desc HTML 提取（tryParseNestedObject + 正则回退 + HTML img src 提取）
+- [x] lazadaGetDetail.ts 实现了 DOM 容器提取（8 个选择器 + data-src/data-original/data-lazySrc/src 属性）
+- [x] lazadaGetDetail.ts 使用详情图专用清洗函数处理后上报 DetailPic
+- [x] lazadaGetVideo.ts 实现了 gbRawData 视频提取（正则 + JSON 解析多路径）
+- [x] lazadaGetVideo.ts 实现了 DOM video/source 标签提取（排除 blob:/data: 协议）
+- [x] lazadaGetVideo.ts 实现了 HTML 正则全文搜索视频 URL
+- [x] lazadaGetVideo.ts 实现了 MutationObserver 动态监听（防抖 300ms）
+- [x] lazadaGetVideo.ts 视频数据转换为 `{url: '...'}` 对象数组格式上报 VideoUrls
+- [x] lazadaGetHylinkTitle.ts 从 document.title/h1/meta og:title/选择器提取标题
+- [x] lazadaGetHylinkTitle.ts 从 URL（goods_id/-p-XXX.html）和 script 标签提取商品 ID
+- [x] lazadaGetHylinkTitle.ts 商品链接仅保留 origin + pathname
+- [x] lazadaGetHylinkTitle.ts 通过 tauriBridge.send 上报 productTitle/productLink/productId
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 登录探针检测 Lazada 登录选择器
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定
+- [x] index.ts 异常处理正确（有数据 → completeTask / 无数据 → failTask）
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 lazada 入口
+- [x] src-tauri/src/login/lazada.rs 实现了 LazadaLoginStrategy（登录页/验证码/商品 ID 提取）
+- [x] src-tauri/src/login/mod.rs 注册了 lazada::LazadaLoginStrategy
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/lazada.bundle.js
+- [x] cargo check 编译通过

@@ -1,0 +1,2 @@
+- [x] ImageDisplay.vue 的 getImageSrc() 中不再存在冗余的内层 `if (!proxiedUrls.has(originalUrl))` 检查
+- [x] 修改后的 getImageSrc() 逻辑与 VideoDisplay.vue 的 getVideoSrc() 结构一致

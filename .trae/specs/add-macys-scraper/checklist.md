@@ -1,0 +1,34 @@
+- [x] `scraper-scripts/macys/macysGetMain.ts` 存在且导出 `run()` 函数
+- [x] macysGetMain 从 `.main-image-carousel` 和 `.alt-desktop-images` 选择器提取图片
+- [x] macysGetMain 对 macysassets.com 图片 URL 执行 `?wid=1200&fmt=jpeg` 高清还原
+- [x] macysGetMain 实现轮询等待（MAX_RETRIES=100, RETRY_INTERVAL=500ms）和额外轮询
+- [x] macysGetMain 通过 `tauriBridge.send('MainPic', images)` 上报数据
+- [x] `scraper-scripts/macys/macysGetSku.ts` 存在且导出 `run()` 函数
+- [x] macysGetSku 从 Stylitics 穿搭模块和原生轮播图提取 SKU 图片
+- [x] macysGetSku 实现 `processToLargeImage`：Adobe Scene7 URL 清洗（wid=1500/fmt=jpeg/qlt=90）和 Stylitics URL 保持原样
+- [x] macysGetSku 通过 `tauriBridge.send('SkuPic', images)` 上报数据
+- [x] `scraper-scripts/macys/macysGetDetail.ts` 存在且导出 `run()` 函数
+- [x] macysGetDetail 从 `.syndigo-powerpage-grid` 容器和 Shadow DOM 提取详情图
+- [x] macysGetDetail 实现 `getHighestResUrl` srcset 最高分辨率解析
+- [x] macysGetDetail 通过 `tauriBridge.send('DetailPic', images)` 上报数据
+- [x] `scraper-scripts/macys/macysGetVideo.ts` 存在且导出 `run()` 函数
+- [x] macysGetVideo 从 `__MODERN_ROUTER_DATA__` JSON 和 DOM `<video>` 元素提取视频
+- [x] macysGetVideo 实现 Macy's 视频 CDN 识别（macyscdn-us.com/ttcdn-us.com + /video/）
+- [x] macysGetVideo 实现 XHR/Fetch 拦截和 MutationObserver 动态监听
+- [x] macysGetVideo 实现双重去重（原始 URL + 归一化视频 ID）
+- [x] macysGetVideo 通过 `tauriBridge.send('VideoUrls', videos)` 上报数据
+- [x] `scraper-scripts/macys/macysGetHylinkTitle.ts` 存在且导出 `run()` 函数
+- [x] macysGetHylinkTitle 从 URL `?ID=` 参数和 `/shop/pdp/` 路径提取商品 ID
+- [x] macysGetHylinkTitle 实现 URL 清洗（保留 origin+pathname+?ID=productId）
+- [x] macysGetHylinkTitle 通过 `tauriBridge.send` 上报 productTitle/productLink/productId/visitTime
+- [x] `scraper-scripts/macys/index.ts` 存在且实现入口编排
+- [x] index.ts 实现 iframe 防护（window !== window.top 时退出）
+- [x] index.ts 在 document_start 阶段立即启动视频模块
+- [x] index.ts 在 DOMContentLoaded 后启动 Main/Sku/Detail/HylinkTitle 模块
+- [x] index.ts 实现任务完成判定（waitForCompletion + completeTask）
+- [x] index.ts 实现异常处理（模块超时、流程异常时完成或失败上报）
+- [x] `scripts/build-scraper.mjs` 的 PLATFORMS 对象中包含 macys 入口
+- [x] 执行构建脚本后 `dist-scripts/macys.bundle.js` 生成成功
+- [x] 所有新增 TypeScript 文件无类型错误
+- [x] 所有模块使用 `tauriBridge` 通信层，不使用 `browser.runtime`
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）

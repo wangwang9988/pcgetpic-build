@@ -1,0 +1,176 @@
+name: Build TuGet Multi-Platform Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_signing:
+        description: 'Skip code signing and notarization (debug/test builds)'
+        required: false
+        default: 'false'
+        type: boolean
+      thin_bundle:
+        description: 'Build thin installer without bundled Chromium engine'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    tags:
+      - 'tuget-v*'
+
+jobs:
+  build-tuget:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact_name: TuGet-Windows-x64
+            bundle_glob: 'TuGet-Client/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/TuGet-Setup.exe'
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact_name: TuGet-macOS-arm64
+            bundle_glob: 'TuGet-Client/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/TuGet-macOS-arm64.dmg'
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact_name: TuGet-macOS-x64
+            bundle_glob: 'TuGet-Client/src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/TuGet-macOS-x64.dmg'
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact_name: TuGet-Linux-x64
+            bundle_glob: |
+              TuGet-Client/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/TuGet-Linux-x64.deb
+              TuGet-Client/src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/rpm/TuGet-Linux-x64.rpm
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Rewrite Gitee SSH URLs to HTTPS & checkout required submodules
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          if [ -z "$GITEE_TOKEN" ]; then
+            echo "::error::未配置 secrets.GITEE_TOKEN，无法检出 Gitee 私有子仓库（Pro-GetPic / browser / TuGet-Client / website / tools）"
+            exit 1
+          fi
+          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "git@gitee.com:"
+          git submodule sync
+          git submodule update --init Pro-GetPic browser TuGet-Client website tools
+
+      - name: Install Linux System Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libxdo-dev \
+            libssl-dev \
+            patchelf \
+            rpm \
+            unzip \
+            curl \
+            wget \
+            file
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            browser -> target
+            tuget-native-host -> target
+            TuGet-Client/src-tauri -> target
+
+      - name: Run Cross-Platform Unit Tests & Type Checks
+        shell: bash
+        run: |
+          npm --prefix tuget-protocol ci
+          npm --prefix tuget-protocol run build
+          CARGO_TEST_EXTRA=""
+          if [ "${{ runner.os }}" = "macOS" ] && [ "${{ matrix.target }}" = "x86_64-apple-darwin" ]; then
+            CARGO_TEST_EXTRA="--no-run"
+          fi
+          cargo test --manifest-path tuget-native-host/Cargo.toml --target ${{ matrix.target }} --all-targets $CARGO_TEST_EXTRA
+          cargo test --manifest-path browser/Cargo.toml --target ${{ matrix.target }} --all-targets $CARGO_TEST_EXTRA
+          npm --prefix TuGet-Client ci
+          npm --prefix TuGet-Client run check
+          npm --prefix TuGet-Client run check:tests
+          npm --prefix TuGet-Client run test:frontend
+          cargo test --manifest-path TuGet-Client/src-tauri/Cargo.toml --target ${{ matrix.target }} --lib $CARGO_TEST_EXTRA
+
+      - name: Import Apple Certificate to Temporary Keychain
+        if: runner.os == 'macOS' && inputs.skip_signing != 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "No APPLE_CERTIFICATE secret provided; skipping keychain import."
+            exit 0
+          fi
+          KEYCHAIN_PATH="$RUNNER_TEMP/tuget-signing.keychain-db"
+          KEYCHAIN_PASS="$(uuidgen)"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          rm -f "$RUNNER_TEMP/certificate.p12"
+
+      - name: Build TuGet Release Package
+        shell: bash
+        env:
+          TUGET_LICENSE_HMAC_SECRET: ${{ secrets.TUGET_LICENSE_HMAC_SECRET }}
+          TUGET_SIGN_CERT_BASE64: ${{ secrets.TUGET_SIGN_CERT_BASE64 }}
+          TUGET_SIGN_CERT_PATH: ${{ secrets.TUGET_SIGN_CERT_PATH }}
+          TUGET_SIGN_CERT_PASSWORD: ${{ secrets.TUGET_SIGN_CERT_PASSWORD }}
+          TUGET_SIGN_CERT_SHA1: ${{ secrets.TUGET_SIGN_CERT_SHA1 }}
+          TUGET_SIGN_EXPECTED_THUMBPRINT: ${{ secrets.TUGET_SIGN_EXPECTED_THUMBPRINT }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && [ -n "$TUGET_SIGN_CERT_BASE64" ] && [ -z "$TUGET_SIGN_CERT_PATH" ]; then
+            TEMP_PFX_PATH="$RUNNER_TEMP/tuget-signing.pfx"
+            echo "$TUGET_SIGN_CERT_BASE64" | base64 --decode > "$TEMP_PFX_PATH"
+            export TUGET_SIGN_CERT_PATH="$TEMP_PFX_PATH"
+            trap 'rm -f "$TEMP_PFX_PATH"' EXIT
+          fi
+          EXTRA_ARGS=""
+          if [ "${{ inputs.skip_signing }}" = "true" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --skip-signing"
+          fi
+          if [ "${{ inputs.thin_bundle }}" = "true" ]; then
+            EXTRA_ARGS="$EXTRA_ARGS --thin"
+          fi
+          node scripts/clients/tuget/build-release.mjs --target ${{ matrix.target }} $EXTRA_ARGS
+
+      - name: Upload Installer Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.bundle_glob }}
+          if-no-files-found: error

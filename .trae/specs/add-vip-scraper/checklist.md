@@ -1,0 +1,34 @@
+- [x] vipGetMain.ts 实现了 `#J-img-content` 容器查找与重试机制
+- [x] vipGetMain.ts 实现了 `data-original` 优先 → `src` 回退的图片 URL 提取
+- [x] vipGetMain.ts 实现了 URL 清洗（`//` 补全 `https:`、移除缩略图尺寸后缀 `_\d+x\d+_\d+\.(ext)`）
+- [x] vipGetMain.ts 实现了容器出现后 3 次定时抓取
+- [x] vipGetMain.ts 通过 `tauriBridge.send('MainPic', urls)` 上传数据
+- [x] vipGetSku.ts 实现了 `#J_detail_color` 和 `#J_detail_size` 双容器查找
+- [x] vipGetSku.ts 实现了 `data-original` 优先 → `src` 回退的图片 URL 提取
+- [x] vipGetSku.ts 实现了 URL 清洗（与主图相同逻辑）
+- [x] vipGetSku.ts 实现了重试机制和 MutationObserver 增量更新
+- [x] vipGetSku.ts 通过 `tauriBridge.send('SkuPic', urls)` 上传数据
+- [x] vipGetDetail.ts 实现了 `.dc-img-detail` 容器查找与重试
+- [x] vipGetDetail.ts 实现了 `data-original` 优先 → `src` 回退的图片 URL 提取
+- [x] vipGetDetail.ts 实现了 URL 清洗（补全协议、移除尺寸后缀、移除反引号）
+- [x] vipGetDetail.ts 实现了多轮提取和图片数量变化检测
+- [x] vipGetDetail.ts 通过 `tauriBridge.send('DetailPic', urls)` 上传数据
+- [x] vipGetVideo.ts 实现了 XHR/Fetch 拦截和 Performance API 监控
+- [x] vipGetVideo.ts 实现了 MutationObserver 监听 `<video>` 标签
+- [x] vipGetVideo.ts 实现了从 JSON 数据和 `window` 对象提取视频 URL
+- [x] vipGetVideo.ts 实现了视频分类和去重机制
+- [x] vipGetVideo.ts 通过 `tauriBridge.send('VideoUrls', videoObjects)` 上传数据
+- [x] vipGetHylinkTitle.ts 实现了 `.pib-title-detail` 元素查找与等待
+- [x] vipGetHylinkTitle.ts 实现了标题提取降级链（title 属性 → textContent → head title）
+- [x] vipGetHylinkTitle.ts 实现了商品 ID 从 URL 提取（正则 `/-(\d+)\.html$/`）
+- [x] vipGetHylinkTitle.ts 通过 `tauriBridge.send()` 上传 productTitle/productLink/productId
+- [x] index.ts 实现了 iframe 防护
+- [x] index.ts 实现了视频模块立即启动
+- [x] index.ts 实现了 runModulesOnIdle()（登录检测 → 滚动 → 并行模块 → 静默判定）
+- [x] index.ts 实现了模块超时保护和异常处理
+- [x] index.ts 架构模式与淘宝/京东入口完全一致
+- [x] build-scraper.mjs 注册了 vip 构建入口
+- [x] 执行 `node scripts/build-scraper.mjs` 成功生成 `dist-scripts/vip.bundle.js`
+- [x] 所有模块使用 TypeScript 类型安全，无 `any` 滥用
+- [x] 所有模块仅通过 `tauriBridge` 通信，不使用 `browser.runtime` 或 `localStorage`
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA导航检测逻辑（由 Tauri 宿主接管）

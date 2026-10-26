@@ -1,0 +1,15 @@
+- [x] gfGetMain.ts 能从 `[class*="item-main-window-list-item"] img` 提取主图 URL，URL 已去除缩略图后缀和查询参数
+- [x] gfGetDetail.ts 能从 `[class*="feeds-image"]` 容器提取详情图 URL，排除 `.icon-img` 装饰图标
+- [x] gfGetSku.ts 发送空数组 `SkuPic: []`，防止数据污染
+- [x] gfGetVideo.ts 能通过 XHR/Fetch 拦截、MutationObserver、Performance API、DOM 扫描四种方式捕获视频 URL
+- [x] gfGetVideo.ts 的 MutationObserver 监听 video/source 元素的 src 和 data-src 属性变化
+- [x] gfGetHylinkTitle.ts 能从 document.title 提取有效标题（排除默认标题），从 URL 参数 `id=` 提取商品 ID
+- [x] gfGetHylinkTitle.ts 在标题为默认值时等待最多 15 秒（轮询 + MutationObserver）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余 4 模块在 DOMContentLoaded 后并行运行，配合数据静默完成判定
+- [x] index.ts 包含登录检测（probeAndReportLogin）和验证码监控（setupCaptchaWatcher）
+- [x] 所有模块使用 tauriBridge.send 上报数据，不使用 browser.runtime.sendMessage
+- [x] 所有模块移除了浏览器插件特有的页面可见性/焦点/SPA导航/不活动检测逻辑
+- [x] build-scraper.mjs 已注册 goofish 入口，构建产出 dist-scripts/goofish.bundle.js
+- [x] TypeScript 类型安全：无 any 滥用，所有数据有明确类型
+- [x] 中文注释：所有业务逻辑、正则算法、数据清洗的注释使用中文

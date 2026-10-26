@@ -1,0 +1,13 @@
+{
+  "desktopVersion": "1.2.21",
+  "desktopFilename": "TuGet-Setup.exe",
+  "desktopDownloadUrl": "https://dl.webtongbu.com/TuGet-Client/TuGet-Setup.exe",
+  "macArm64DownloadUrl": "https://dl.webtongbu.com/TuGet-Client/TuGet-macOS-arm64.dmg",
+  "macX64DownloadUrl": "https://dl.webtongbu.com/TuGet-Client/TuGet-macOS-x64.dmg",
+  "linuxDebDownloadUrl": "https://dl.webtongbu.com/TuGet-Client/TuGet-Linux-x64.deb",
+  "linuxRpmDownloadUrl": "https://dl.webtongbu.com/TuGet-Client/TuGet-Linux-x64.rpm",
+  "microsoftStoreVersion": "1.2.21",
+  "microsoftStoreUrl": "ms-windows-store://pdp/?productid=9N5Q5LHZ5R8H",
+  "microsoftStoreWebUrl": "https://apps.microsoft.com/detail/9N5Q5LHZ5R8H",
+  "_说明": "microsoftStoreVersion 在微软商店提审通过并正式上架后更新；MSIX 客户端优先通过 WinRT StoreContext 实时查询微软商店。"
+}

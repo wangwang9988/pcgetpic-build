@@ -1,0 +1,9 @@
+- [x] 订单列表查询返回 coupon_expired 字段，过期优惠券正确标记为 1
+- [x] 订单详情查询返回 coupon_expired 字段
+- [x] POST /api/admin/orders/:id/create-coupon 接口：正常创建、订单不存在/未支付校验
+- [x] generateCustomCoupon 函数支持自定义面值和有效期天数
+- [x] Admin 前端 OrderRecord 类型包含 coupon_expired 字段
+- [x] Admin 订单列表：优惠券过期时"重发优惠券"和"重发邮件"按钮变红
+- [x] Admin 订单列表：点击红色"重发优惠券"弹出新建优惠券对话框
+- [x] Admin 订单列表：新建优惠券成功后自动重发邮件，按钮恢复正常颜色
+- [x] Admin 订单列表：点击正常颜色"重发优惠券"直接重发

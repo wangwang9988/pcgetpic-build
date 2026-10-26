@@ -1,0 +1,33 @@
+{
+  "name": "pcgetpic-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PcGetPic 工作区根目录，提供统一的快捷启动命令。",
+  "scripts": {
+    "build:tuget": "pwsh -NoProfile -File ./scripts/clients/tuget/build-release.ps1",
+    "package:extensions": "npm --prefix ./GetPic run switch:official && npm --prefix ./GetPic run package:all:official && npm --prefix ./Pro-GetPic run switch:1 && npm --prefix ./Pro-GetPic run package:all:official && npm --prefix ./next-GetPic run switch:official && npm --prefix ./next-GetPic run package:all:official",
+    "clean:tuget-data": "pwsh -NoProfile -File ./TuGet-Client/scripts/clear-installed-data.ps1",
+    "fix:tuget-msix": "npm --prefix ./TuGet-Client run fix:msix",
+    "clean:tuget-release": "pwsh -NoProfile -File ./scripts/clients/tuget/clean-release-environment.ps1",
+    "dev": "pwsh -NoProfile -File ./TuGet-Client/dev.ps1 -DirectClient",
+    "dev:all": "node ./scripts/clients/tuget/run-dev-with-file-size-advisory.mjs",
+    "dev:plugin": "node ./scripts/clients/tuget/run-dev-with-file-size-advisory.mjs -UpdatePlugin",
+    "dev:rebuild": "node ./scripts/clients/tuget/run-dev-with-file-size-advisory.mjs -Rebuild",
+    "report:tuget-file-size": "node ./scripts/clients/tuget/file-size-advisory.mjs",
+    "watch:tuget-file-size": "node ./scripts/clients/tuget/file-size-advisory.mjs --watch",
+    "test:tuget-file-size": "node --test ./scripts/clients/tuget/file-size-advisory.test.mjs",
+    "dev:check": "pwsh -NoProfile -File ./scripts/clients/tuget/启动完整开发环境.ps1 -Check",
+    "check:lines": "node ./scripts/check-file-lines.mjs",
+    "check:lines:strict": "node ./scripts/check-file-lines.mjs --strict --changed HEAD",
+    "check:lines:tests": "node ./scripts/check-file-lines.mjs --include-tests",
+    "check:lines:scopes": "node ./scripts/check-file-lines.mjs --list-scopes",
+    "check:lines:client": "node ./scripts/check-file-lines.mjs --scope client",
+    "check:lines:tuget": "node ./scripts/check-file-lines.mjs --scope TuGet-Client",
+    "check:lines:oneget": "node ./scripts/check-file-lines.mjs --scope next-GetPic",
+    "check:lines:getpic": "node ./scripts/check-file-lines.mjs --scope GetPic",
+    "check:lines:pro-getpic": "node ./scripts/check-file-lines.mjs --scope Pro-GetPic",
+    "check:lines:server": "node ./scripts/check-file-lines.mjs --scope server",
+    "env:restore": "pwsh -NoProfile -File ./scripts/restore-all-env.ps1",
+    "env:check": "pwsh -NoProfile -File ./scripts/restore-all-env.ps1 -CheckOnly"
+  }
+}

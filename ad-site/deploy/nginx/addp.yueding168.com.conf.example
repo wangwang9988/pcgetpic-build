@@ -1,0 +1,40 @@
+# addp.yueding168.com 站点配置示例
+#
+# 部署前：
+# 1. 先把现有站点配置和证书配置备份；
+# 2. 将下面的 location/access_log 规则合并到现有 server 块，不要直接覆盖整站配置；
+# 3. log_format 只能放在 nginx.conf 的 http 块；
+# 4. 执行 nginx -t，通过后再 reload。
+
+# ---- nginx.conf 的 http 块 ----
+# 仅保留流量排障所需字段；如 Referer/User-Agent 用于风控，请另开短周期诊断日志。
+log_format addp_minimal '$time_local "$request" $status $body_bytes_sent $request_time';
+map $status $addp_log_asset_request {
+    ~^[23] 0;
+    default 1;
+}
+
+# ---- addp.yueding168.com 的现有 server 块 ----
+access_log /www/wwwlogs/addp.yueding168.com.log addp_minimal;
+
+# rankType 与 _t 由浏览器端读取，返回的页面壳完全相同。
+# 查询字符串不影响 Nginx 精确 location 匹配。
+location = / {
+    try_files /index.html =404;
+    add_header Cache-Control "public, max-age=300" always;
+}
+
+location = /index.html {
+    try_files /index.html =404;
+    add_header Cache-Control "public, max-age=300" always;
+}
+
+# Vite 哈希资源可以长期强缓存；正常访问不再写入 access log。
+# 404/权限等问题仍会进入 Nginx error log。
+location ^~ /assets/ {
+    access_log /www/wwwlogs/addp.yueding168.com.log addp_minimal if=$addp_log_asset_request;
+    add_header Cache-Control "public, max-age=31536000, immutable" always;
+    try_files $uri =404;
+}
+
+# 其他静态文件和 /remote-configs/ 保持现有业务策略，不在本次规则中关闭日志。

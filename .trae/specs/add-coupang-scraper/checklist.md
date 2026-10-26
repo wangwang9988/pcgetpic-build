@@ -1,0 +1,43 @@
+- [x] cpUtils.ts 实现了 getOriginalCoupangUrl（thumbnail→image 域名替换 + /thumbnails/remote/{尺寸}/ 路径段删除 + 查询参数移除）
+- [x] cpUtils.ts 实现了 isValidCoupangImageUrl（图片扩展名检查 + 产品路径验证 + 无效模式过滤）
+- [x] cpUtils.ts 实现了 extractJsonObject（括号匹配法提取 JSON 对象，处理嵌套大括号和字符串内转义）
+- [x] cpUtils.ts 实现了 unescapeNextJsData（Next.js 脚本反转义：\\" → "、\\\\ → \\、\\u003c → < 等）
+- [x] cpGetMain.ts 通过 JSON-LD 提取主图（@type=Product 的 image 字段）
+- [x] cpGetMain.ts 通过 Next.js attributeVendorItemMap 提取主图（使用 cpUtils 的 unescapeNextJsData + extractJsonObject）
+- [x] cpGetMain.ts 通过 Next.js options.optionRows 提取颜色属性图片
+- [x] cpGetMain.ts 实现重试轮询（MAX_RETRIES=100）和额外抓取（3 轮），使用共享 sleep
+- [x] cpGetMain.ts 通过 tauriBridge.send('MainPic', images) 上报数据（使用 deduplicateUrls 去重）
+- [x] cpGetSku.ts 通过 Next.js options.optionRows colorAttribute 提取 SKU 图
+- [x] cpGetSku.ts 通过 DOM .fashion-option 容器提取 SKU 图
+- [x] cpGetSku.ts 实现 MutationObserver 精确监听（[data-widget="webAspects"] 和 .pdp_q6，监听 childList + attributes: src/data-src）
+- [x] cpGetSku.ts 实现轮询兜底（MAX_POLLS=10，使用共享 sleep）
+- [x] cpGetSku.ts 返回清理函数（同时清理 Observer 和 pollTimer）
+- [x] cpGetSku.ts 通过 tauriBridge.send('SkuPic', images) 上报数据
+- [x] cpGetDetail.ts 通过 Next.js 脚本标签正则提取详情图（主正则 + 备用正则，使用 cpUtils 的 unescapeNextJsData）
+- [x] cpGetDetail.ts 通过 DOM 容器提取详情图（.product-detail-content-inside 和 .product-detail-content）
+- [x] cpGetDetail.ts 实现容器查找重试（MAX_CONTAINER_RETRIES=5，使用共享 sleep）
+- [x] cpGetDetail.ts 通过 tauriBridge.send('DetailPic', images) 上报数据
+- [x] cpGetVideo.ts 实现 XHR/Fetch 请求拦截
+- [x] cpGetVideo.ts 实现 video 标签检测
+- [x] cpGetVideo.ts 实现页面 JSON 嗅探（深度限制 15 层 + 循环引用检测）
+- [x] cpGetVideo.ts 实现 data-* 属性和 meta 标签提取
+- [x] cpGetVideo.ts 实现 Performance API 增量监控（游标增量检测 + requestAnimationFrame 循环）
+- [x] cpGetVideo.ts 实现视频双重去重（URL 集合 + 归一化 ID）和分类过滤
+- [x] cpGetVideo.ts 实现视频增量上报（先读后写策略：tauriBridge.get → 去重追加 → tauriBridge.send）
+- [x] cpGetHylinkTitle.ts 从 #productTitle 提取标题并清理站点后缀（쿠팡/Coupang）
+- [x] cpGetHylinkTitle.ts 从 URL 提取商品 ID（/vp/products/(\d+)）
+- [x] cpGetHylinkTitle.ts 通过 tauriBridge.send 上报全部四个字段（productTitle、productLink、productId、visitTime）
+- [x] index.ts 实现 iframe 防护
+- [x] index.ts 立即启动 cpGetVideo 模块
+- [x] index.ts DOMContentLoaded 后执行登录探针
+- [x] index.ts 验证码检测（CAPTCHA_SELECTORS 留空数组，setupCaptchaWatcher 内部守卫自动跳过）
+- [x] index.ts 并行启动 4 个抓取模块（带 15s 超时保护 + 清理函数收集）
+- [x] index.ts 使用 waitForCompletion() 数据静默判定（7s idle + 15s maxWait + 3s minStay）
+- [x] index.ts 实现异常处理（有数据→completeTask，无数据→failTask）
+- [x] build-scraper.mjs 注册了 coupang 平台入口
+- [x] 构建成功生成 dist-scripts/coupang.bundle.js
+- [x] TypeScript 类型检查无报错
+- [x] 所有模块使用 tauriBridge 替代 browser.runtime（无插件 API 残留）
+- [x] 所有模块移除了插件特有逻辑（defineContentScript/页面可见性/URL轮询/不活动超时/状态保存恢复）
+- [x] 所有模块使用共享 sleep（无本地 sleep 定义）
+- [x] Coupang 高清原图还原逻辑正确（thumbnail→image 域名替换 + 路径段删除）

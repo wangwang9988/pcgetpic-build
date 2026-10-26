@@ -1,0 +1,20 @@
+- [ ] useChartLabel composable 已创建且导出 showChartLabels ref 和 getLabelOption 函数
+- [ ] useChartLabel 在数据点 > 31 时自动稀疏 label 显示
+- [ ] PluginUninstall.vue 左右 Y 轴已添加 name 标题和 alignTicks
+- [ ] PluginUninstall.vue 右轴 splitLine 已隐藏
+- [ ] PluginUninstall.vue 已添加千分位格式化（轴标签和 Tooltip）
+- [ ] PluginUninstall.vue 已引入 useChartLabel 并添加显示数值开关
+- [ ] ClientAnalytics.vue 已改为双 Y 轴（左: DAU+激活+未激活堆叠面积，右: 下载文件）
+- [ ] ClientAnalytics.vue 双 Y 轴配置完整（name/alignTicks/splitLine/千分位）
+- [ ] ClientAnalytics.vue 已引入 useChartLabel 并添加显示数值开关
+- [ ] ClientAnalytics.vue Tooltip 区分左右轴单位
+- [ ] PluginAnalytics.vue 已改为双 Y 轴（左: DAU，右: 下载事件）
+- [ ] PluginAnalytics.vue 双 Y 轴配置完整（name/alignTicks/splitLine/千分位）
+- [ ] PluginAnalytics.vue 已引入 useChartLabel 并添加显示数值开关
+- [ ] PluginAnalytics.vue Tooltip 区分左右轴单位
+- [ ] PluginNewtab.vue 已改为双 Y 轴（左: DAU，右: 上报次数）
+- [ ] PluginNewtab.vue 双 Y 轴配置完整（name/alignTicks/splitLine/千分位）
+- [ ] PluginNewtab.vue 已引入 useChartLabel 并添加显示数值开关
+- [ ] PluginNewtab.vue Tooltip 区分左右轴单位
+- [ ] 4 个页面的双 Y 轴网格线对齐，无双重虚线
+- [ ] 管理后台编译通过无报错

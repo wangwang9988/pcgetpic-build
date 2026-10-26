@@ -1,0 +1,13 @@
+- [x] DownloadManager.getDownloadFolderPath() 优先从内存缓存读取，其次从 localStorage 读取并回填
+- [x] DownloadManager.selectDownloadFolder() 弹出目录选择对话框，同时更新内存缓存和 localStorage
+- [x] DownloadManager.resetDownloadFolder() 同时清除内存缓存和 localStorage
+- [x] DownloadManager.startDownload() 使用 getDownloadFolderPath() 获取路径，已保存路径时不再弹窗
+- [x] DownloadSettings.vue 组件已创建，使用 NInput 只读模式显示路径
+- [x] 未设置下载路径时，输入框显示 placeholder "未设置（每次下载将询问）"，提供"选择目录"按钮
+- [x] 已设置下载路径时，提供"更改路径"、"清除设置"、"打开文件夹"按钮
+- [x] "打开文件夹"按钮调用 Tauri 后端 invoke('open_folder') 打开系统文件管理器
+- [x] "清除设置"按钮清除后，输入框恢复为 placeholder 状态
+- [x] 设置面板视觉风格与现有组件一致，遵循深色主题和 Apple 风格
+- [x] App.vue 的 NCollapse 中新增"⚙️ 下载设置"折叠项，与"📋 任务队列"并列
+- [x] 折叠项默认收起，不影响现有布局
+- [x] 设置的下载根目录与下载时的子文件夹创建逻辑互不冲突

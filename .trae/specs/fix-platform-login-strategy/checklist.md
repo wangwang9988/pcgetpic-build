@@ -1,0 +1,34 @@
+- [x] `src-tauri/src/login/mod.rs` 存在，定义了 `LoginStrategy` trait 和 `LoginCheckResult` 枚举
+- [x] `LoginCheckResult` 包含四种变体：`LoginRequired`、`LoginIntermediate`、`Captcha`、`Normal`
+- [x] `LoginStrategyRegistry` 存在，提供 `check_login(url, platform)` 和 `get_strategy(platform)` 方法
+- [x] `LoginStrategyRegistry` 提供 `detect_login_redirect(url)` 兼容方法
+- [x] `JdLoginStrategy` 存在，`check_login` 对 `passport.jd.com/new/login.aspx` 返回 `LoginRequired`
+- [x] `JdLoginStrategy` 对 `passport.jd.com` 下非登录入口页返回 `LoginIntermediate`
+- [x] `JdLoginStrategy` 对 `sec.jd.com`/`verify.jd.com` 返回 `Captcha`
+- [x] `JdLoginStrategy.extract_product_id` 从路径 `/(\d+)\.html` 提取商品 ID
+- [x] `JdLoginStrategy.login_cookie_names` 返回 `["pt_key", "pt_pin", "pin"]`
+- [x] `JdLoginStrategy.captcha_selectors` 返回非空切片
+- [x] `TaobaoLoginStrategy` 存在，`check_login` 对 `login.taobao.com` 返回 `LoginRequired`
+- [x] `TaobaoLoginStrategy.extract_product_id` 从查询参数 `id=xxx` 提取商品 ID
+- [x] `TaobaoLoginStrategy.captcha_selectors` 返回 `["#nocaptcha", ".nc-container", "#nc_1_n1z"]`
+- [x] `DefaultLoginStrategy` 存在，支持构造时传入平台名和 URL 模式列表
+- [x] `DefaultLoginStrategy.check_login` 对匹配登录模式的 URL 返回 `LoginRequired`
+- [x] `DefaultLoginStrategy.check_login` 对不匹配的 URL 返回 `Normal`（无中间页概念）
+- [x] `template.rs` 存在，包含完整的中文注释开发指引
+- [x] 注册表中已注册京东、淘宝、拼多多、唯品会、1688 策略
+- [x] `AppState` 包含 `login_registry` 字段并在初始化时创建
+- [x] `on_navigation` 在 Worker 已处于 `CaptchaBlocked` 状态时跳过登录检测
+- [x] `on_navigation` 使用 `login_registry.check_login` 替代 `cookie::CookieManager::detect_login_redirect`
+- [x] `on_page_load` 对 `CaptchaBlocked` 状态的 Worker 优先执行恢复逻辑
+- [x] `on_page_load` 对 `LoginIntermediate` 结果不触发 `login-required`，耐心等待
+- [x] `on_page_load` 对 `Normal` + 商品 ID 匹配的 URL 恢复 `Working` 状态并重注入
+- [x] `on_page_load` 对 `Normal` + 商品 ID 不匹配的 URL 执行纠偏导航
+- [x] URL 纠偏使用 `extract_product_id` 替代硬编码的 `if pl_platform == "taobao"` 判断
+- [x] `extract_taobao_id` 函数已删除，逻辑迁移到 `TaobaoLoginStrategy`
+- [x] 空闲检测器使用 `login_registry.check_login` 替代 `cookie.rs` 的通用函数
+- [x] 空闲检测器对 `LoginIntermediate` 结果不触发状态变更
+- [x] `cookie.rs` 中 `detect_login_redirect`、`is_captcha_page`、`detect_captcha_in_html`、`login_platforms_static` 已删除
+- [x] `cookie.rs` 仅保留 `CookieManager` 的 `data_dir` 管理功能
+- [x] `scraper-scripts/jd/index.ts` 的 `CAPTCHA_SELECTORS` 不再为空数组
+- [x] `cargo build` 编译通过
+- [x] `npm run build:scraper` 构建通过

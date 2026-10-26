@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "messageId": "msg-batch-1",
+  "type": "RESOURCE_BATCH",
+  "sessionId": "session-1",
+  "taskId": "task-1",
+  "timestamp": 1786464000100,
+  "payload": {
+    "batchId": "batch-1",
+    "batchIndex": 0,
+    "isLastBatch": true,
+    "resources": [
+      {
+        "resourceId": "resource-1",
+        "channel": "specialized",
+        "sourceLine": "getpic",
+        "pageUrl": "https://detail.1688.com/offer/123.html",
+        "productTitle": "示例商品",
+        "productId": "123",
+        "resourceType": "image",
+        "category": "main",
+        "url": "https://example.com/image.jpg",
+        "mimeType": "image/jpeg",
+        "width": 1200,
+        "height": 1200,
+        "suggestedFilename": "主图1.jpg",
+        "requestContext": {
+          "referer": "https://detail.1688.com/",
+          "userAgentRequired": true,
+          "browserDownloadRequired": false
+        }
+      }
+    ]
+  }
+}
+

@@ -1,0 +1,32 @@
+- [x] DesktopHero 徽章含版本号+价值锚点（如"v{version} 全新发布 · 支持 40+ 电商平台"），无 emoji
+- [x] DesktopHero 标题为结果驱动式，无空洞形容词（如"商用级""极速"）
+- [x] DesktopHero 副标题按"哪些平台→抓取什么→核心差异"顺序组织
+- [x] DesktopHero 数据亮点行正确展示 3 个量化数据（40+ 平台 / 4x 并发 / 1000+ 链接）
+- [x] DesktopHero 主按钮为"免费下载 Windows 客户端"（含"免费"、无".exe"）
+- [x] DesktopHero 次按钮为"查看支持平台"（非"获取激活码"）
+- [x] DesktopHero 按钮下方有辅助说明"适用于 Windows 10/11 · 可免费试用"
+- [x] DesktopHero 平台标识条展示 8~10 个主流平台 Logo + "+30 更多平台"链接
+- [x] 平台标识条移动端可横向滑动查看
+- [x] "+30 更多平台"链接点击跳转 `/platforms`
+- [x] 平台 Logo 复用 PlatformSection 已有 SVG 资源
+- [x] DesktopPlatformProof 组件正确展示（数据条 + 平台网格 + 查看全部按钮）
+- [x] DesktopPlatformProof 视觉对齐 PlatformSection（glass-card、auto-fit 网格、48px 图标、悬停上浮）
+- [x] DesktopPlatformProof 数据条展示 4 项指标
+- [x] DesktopPlatformProof 每个平台卡片可点击跳转 `/platforms/{slug}`
+- [x] DesktopAdvantages 组件替代 DesktopCompare + DesktopFeatures
+- [x] DesktopAdvantages 展示 5 项精选优势，无内容重复
+- [x] DesktopAdvantages 差异化布局：前 2 项大卡片 + 后 3 项小卡片横排
+- [x] DesktopAdvantages 每项优势含具体数字或场景描述，无技术术语
+- [x] DesktopAdvantages 不提及插件版，不拉踩免费产品
+- [x] DesktopAdvantages 移动端纵向堆叠正确
+- [x] DesktopTutorial 精简为 3 步（下载安装→粘贴链接→自动下载）
+- [x] DesktopTutorial 激活授权步骤不在教程中出现
+- [x] DesktopDownload 标题突出"为什么下载"，副标题不限定"每天"和"团队"
+- [x] DesktopFAQ 新增 2 个高转化问题（"能先试试吗？" / "下载的是高清原图吗？"）
+- [x] DesktopCompare.vue 和 DesktopFeatures.vue 已删除
+- [x] index.vue 组件引用已更新（6 个区块顺序正确）
+- [x] 废弃的 desktopCompare 和 desktopFeatures i18n key 已清理
+- [x] zh-CN.json 和 en-US.json 所有文案已同步更新
+- [x] 所有新增 UI 在移动端响应式正确
+- [x] 整体设计保持苹果风格（居中布局、黑白灰+少量蓝、Glassmorphism），无过度设计
+- [x] 全站无插件拉踩内容

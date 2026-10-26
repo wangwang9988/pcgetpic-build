@@ -1,0 +1,6 @@
+- [x] 点击"开始抓取当前平台"，1688 处于 externalLoginPending 状态时自动调用 confirmExternalLogin() 导入 Cookie
+- [x] Cookie 导入成功后自动继续抓取流程，显示成功提示
+- [x] Cookie 导入失败时显示错误提示，不启动抓取
+- [x] 点击"全部平台依次抓取"时，自动处理所有 externalLoginPending 状态的平台
+- [x] 非 externalLoginPending 状态的未登录平台保持原有对话框行为不变
+- [x] PlatformDetect.vue 中的手动登录按钮保留，行为不变

@@ -1,0 +1,12 @@
+/* ==========================================================================
+   TuGet Desktop Official Website - Global CSS Entry
+   ========================================================================== */
+
+/* 1. Design Tokens & CSS Variables */
+@import './variables.css';
+
+/* 2. Resets, Base Typography, Section Grids & Layout Utilities */
+@import './base.css';
+
+/* 3. Reusable UI Components (Buttons, Badges, Chips, Info Boxes) */
+@import './components.css';

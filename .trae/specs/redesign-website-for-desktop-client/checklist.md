@@ -1,0 +1,20 @@
+- [ ] `client-version.json` 已创建，包含 version/releaseDate/downloadUrl/minOS/storeUrl 字段
+- [ ] 插件首页完整迁移到 `/extension` 路由，所有功能与改版前一致
+- [ ] DesktopHero.vue 已创建，标题、副标题、CTA 按钮、版本号正确显示
+- [ ] DesktopCompare.vue 已创建，6 项对比表正确，移动端纵向卡片适配
+- [ ] DesktopFeatures.vue 已创建，6 个功能卡片正确展示，Glassmorphism 风格一致
+- [ ] DesktopTutorial.vue 已创建，5 步教程正确展示
+- [ ] DesktopDownload.vue 已创建，EXE 下载按钮 + 版本号 + 系统要求正确显示
+- [ ] DesktopFAQ.vue 已创建，7 个 FAQ 折叠面板交互正常
+- [ ] 新 index.vue 正确组装 6 个 section，顺序无误
+- [ ] 新首页 JSON-LD 为 DesktopApplication schema，SEO meta 聚焦桌面客户端
+- [ ] NavBar.vue 导航重构完成，4 项链接正确，「购买授权」按钮醒目
+- [ ] 首页时「当图客户端」高亮，/extension 时「浏览器插件」高亮
+- [ ] FooterSection.vue 新增客户端链接组，描述文案更新
+- [ ] nuxt.config.ts sitemap 新增 `/extension` 路由
+- [ ] zh-CN.json 中所有新增 i18n key 都已添加
+- [ ] en-US.json 中所有新增 i18n key 都已添加
+- [ ] 52 种非核心语言 locale 文件都已添加空 key，fallback 正常
+- [ ] 插件页 `/extension` 所有现有功能完整保留，无任何回归
+- [ ] 所有新增 UI 在移动端响应式正确
+- [ ] 客户端下载链接和 store 链接从配置文件读取，非硬编码

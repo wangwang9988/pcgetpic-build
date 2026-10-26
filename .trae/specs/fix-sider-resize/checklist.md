@@ -1,0 +1,8 @@
+- [x] NSplit 使用 `default-size` 而非 `:size`（非受控模式）
+- [x] `handleUpdateSize` 正确解析像素字符串参数（如 `"350px"` → 350）
+- [x] 拖拽后宽度值正确写入 localStorage（键名 `dangtu_sider_width`）
+- [x] 刷新/重启后宽度从 localStorage 正确恢复
+- [x] 宽度约束在 300px ~ 600px 范围内
+- [x] 移除了受控模式相关的冗余代码（siderWidth ref、siderSize computed、splitRef ref）
+- [x] `vue-tsc --noEmit` 类型检查通过
+- [x] `vite build` 构建通过

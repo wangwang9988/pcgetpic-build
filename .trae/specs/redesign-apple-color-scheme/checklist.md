@@ -1,0 +1,17 @@
+- [x] style.css 中定义了完整的 `:root`（浅色）和 `:root[data-theme="dark"]`（深色）CSS 变量体系
+- [x] CSS 变量包含：背景色层级（base/card/elevated）、文字色层级（primary/secondary/tertiary/disabled）、边框色、品牌色、状态色（success/warning/error/info/running）
+- [x] NConfigProvider 配置了 theme-overrides，primaryColor 为 `#0071e3`
+- [x] App.vue 边框 fallback 使用 CSS 变量
+- [x] StatusBar.vue 无硬编码颜色
+- [x] ResultPreview.vue 无硬编码颜色
+- [x] ControlBar.vue 无硬编码颜色
+- [x] PlatformDetect.vue 无硬编码颜色
+- [x] TaskQueue.vue 无硬编码颜色
+- [x] WorkerTabs.vue 无硬编码颜色
+- [x] ImageDisplay.vue 无硬编码颜色
+- [x] VideoDisplay.vue 无硬编码颜色
+- [x] Toast.vue 使用苹果风格状态色
+- [x] DownloadStatus.vue 无硬编码颜色
+- [x] 深色模式下所有组件配色协调，无刺眼白色块或不可见文字
+- [x] `vue-tsc --noEmit` 类型检查通过
+- [x] `vite build` 构建通过

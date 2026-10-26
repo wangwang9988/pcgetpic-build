@@ -1,0 +1,7 @@
+- [x] `NInput` 使用 `:input-props="{ autocomplete: 'off' }"` 而非直接 `autocomplete="off"`
+- [x] `onMounted` 中同时包含 `await nextTick()` 和 `setTimeout(100ms)` 两段清空
+- [x] `onMounted` 和 `nextTick` 已从 `vue` 正确导入
+- [x] （如执行）`tauri.conf.json` 中 `--disable-features` 包含 `AutofillServerCommunication`
+- [x] （如执行）`tauri.conf.json` JSON 格式有效
+- [x] `vue-tsc --noEmit` 通过，无类型错误
+- [x] 输入框 `v-model` 绑定不受影响，正常响应用户输入

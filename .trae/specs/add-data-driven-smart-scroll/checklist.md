@@ -1,0 +1,7 @@
+- [ ] `waitForInitialSubstantialData()` 在未收到实质性数据前不执行任何滚动（包括探测滚动）
+- [ ] 收到第一条实质性数据后从页面顶部开始正常步进滚动
+- [ ] 初始数据等待超时（30s）后执行有限探测滚动（50px 步进，最多 3 轮每轮 500px）
+- [ ] 数据静默 10s 后停止滚动（现有逻辑保持不变）
+- [ ] 所有 40 个平台 scraper 脚本调用 `simulateScroll()` 方式无需变更
+- [ ] `tauri-bridge.ts` 的 `lastSubstantialDataChangeAt` 逻辑无需变更
+- [ ] 无 Rust 端代码变更

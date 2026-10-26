@@ -1,0 +1,29 @@
+- [x] zwdUtils.ts 导出了 URL_BLACKLIST、DETAIL_URL_BLACKLIST、isZwdProductImage、convertToOriginalUrl、extractUrlFromImg、deduplicateZwdUrls
+- [x] zwdGetMain.ts 使用 zwdUtils 和 shared/utils（deduplicateUrls、sleep），遵循"重试获取+额外探测"模式
+- [x] zwdGetMain.ts 通过 tauriBridge.send('MainPic', images) 上报数据
+- [x] zwdGetSku.ts 实现了三种 SKU 图提取方法（颜色标签、ant-space、类名模式）
+- [x] zwdGetSku.ts 使用 MutationObserver 精确监听 SKU 容器（childList + subtree + attributes）
+- [x] zwdGetSku.ts 返回清理函数，同时清理 observer.disconnect() 和 clearInterval(pollTimer)
+- [x] zwdGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报数据
+- [x] zwdGetDetail.ts 实现了四种详情图提取方法（宝贝详情标题、类名模式、ant-row兄弟、goodsParamsWrapper兄弟）
+- [x] zwdGetDetail.ts 使用 DETAIL_URL_BLACKLIST 过滤（含 preview_100_100）
+- [x] zwdGetDetail.ts 多轮提取（5轮/1s间隔）+ MutationObserver 持续监听增量上报
+- [x] zwdGetDetail.ts 返回清理函数，同时清理 Observer 和定时器
+- [x] zwdGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报数据
+- [x] zwdGetVideo.ts 实现了 XHR/Fetch 拦截和 Performance API 增量监控（游标 + rAF）
+- [x] zwdGetVideo.ts 实现了 MutationObserver 动态监听和页面 JSON 提取
+- [x] zwdGetVideo.ts 实现了延时梯度扫描（1s/3s/5s/10s）
+- [x] zwdGetVideo.ts 视频上报采用"先读后写"策略（tauriBridge.get → 去重追加 → send）
+- [x] zwdGetVideo.ts 通过 tauriBridge.send('VideoUrls', videos) 上报数据
+- [x] zwdGetHylinkTitle.ts 实现了标题提取（document.title + 后缀清理）
+- [x] zwdGetHylinkTitle.ts 实现了商品 ID 提取（/item/(\d+)）和链接清洗
+- [x] zwdGetHylinkTitle.ts 输出全部四个字段：productTitle、productLink、productId、visitTime
+- [x] zwdGetHylinkTitle.ts 使用 shared/utils 的 sleep（禁止本地定义）
+- [x] index.ts 严格遵循开发指南标准模板
+- [x] index.ts 实现了 iframe 防护和模块编排（视频立即启动，其余 DOMContentLoaded 后并行）
+- [x] index.ts 实现了登录检测和数据驱动完成判定（waitForCompletion）
+- [x] index.ts 异常处理：有数据 completeTask，无数据 failTask
+- [x] index.ts 登录选择器配置了 .login-panel、.qrcode-login、.ant-login-form
+- [x] build-scraper.mjs 注册了 17zwd 平台入口
+- [x] login/mod.rs 注册了 17zwd 的 DefaultLoginStrategy
+- [x] 构建脚本成功生成 dist-scripts/17zwd.bundle.js

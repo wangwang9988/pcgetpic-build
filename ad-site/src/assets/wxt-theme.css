@@ -1,0 +1,224 @@
+/* WXT框架绿色主题色变量定义 */
+:root {
+    /* 主色调 - WXT绿色 */
+    --wxt-primary: #54bc4a;
+    --wxt-primary-hover: #4aad40;
+    --wxt-primary-active: #409e36;
+
+    /* 辅助色调 */
+    --wxt-secondary: #42b883;
+    --wxt-success: #28a745;
+    --wxt-warning: #ffc107;
+    --wxt-danger: #e53e3e;
+
+    /* 中性色调 */
+    --wxt-white: #ffffff;
+    --wxt-light: #f8f9fa;
+    --wxt-light-green: #f0f9f0;
+    --wxt-border-light: #d1f0d1;
+    --wxt-border: #d1d5db;
+    --wxt-gray: #6b7280;
+    --wxt-dark: #374151;
+
+    /* 阴影和透明度 */
+    --wxt-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --wxt-shadow: 0 2px 4px rgba(84, 188, 74, 0.1);
+    --wxt-shadow-md: 0 4px 8px rgba(84, 188, 74, 0.2);
+    --wxt-shadow-lg: 0 8px 25px rgba(84, 188, 74, 0.3);
+    --wxt-shadow-xl: 0 12px 30px rgba(84, 188, 74, 0.4);
+
+    /* 透明度 */
+    --wxt-opacity-10: rgba(84, 188, 74, 0.1);
+    --wxt-opacity-20: rgba(84, 188, 74, 0.2);
+    --wxt-opacity-30: rgba(84, 188, 74, 0.3);
+    --wxt-opacity-40: rgba(84, 188, 74, 0.4);
+    --wxt-opacity-50: rgba(84, 188, 74, 0.5);
+
+    /* 渐变 */
+    --wxt-gradient: linear-gradient(135deg, #54bc4a 0%, #42b883 100%);
+    --wxt-gradient-light: linear-gradient(135deg, #f0f9f0 0%, #e8f5e8 100%);
+
+    /* 圆角 */
+    --wxt-radius-sm: 4px;
+    --wxt-radius: 6px;
+    --wxt-radius-lg: 8px;
+    --wxt-radius-xl: 16px;
+
+    /* 间距 */
+    --wxt-space-xs: 4px;
+    --wxt-space-sm: 8px;
+    --wxt-space: 12px;
+    --wxt-space-md: 16px;
+    --wxt-space-lg: 20px;
+    --wxt-space-xl: 24px;
+
+    /* 字体大小 */
+    --wxt-text-xs: 12px;
+    --wxt-text-sm: 14px;
+    --wxt-text-base: 16px;
+    --wxt-text-lg: 18px;
+    --wxt-text-xl: 20px;
+    --wxt-text-2xl: 24px;
+
+    /* 字体粗细 */
+    --wxt-font-normal: 400;
+    --wxt-font-medium: 500;
+    --wxt-font-semibold: 600;
+    --wxt-font-bold: 700;
+    --wxt-font-extrabold: 800;
+}
+
+/* 基础按钮样式 */
+.wxt-button {
+    padding: var(--wxt-space-sm) var(--wxt-space);
+    border: 1px solid var(--wxt-border);
+    border-radius: var(--wxt-radius);
+    background: var(--wxt-white);
+    color: var(--wxt-dark);
+    font-size: var(--wxt-text-sm);
+    font-weight: var(--wxt-font-medium);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--wxt-shadow-sm);
+}
+
+.wxt-button:hover:not(:disabled) {
+    background: var(--wxt-light-green);
+    border-color: var(--wxt-primary);
+    color: var(--wxt-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--wxt-shadow);
+}
+
+.wxt-button:active {
+    transform: translateY(0);
+    box-shadow: var(--wxt-shadow-sm);
+}
+
+.wxt-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #e0e0e0;
+    border-color: #ccc;
+    color: #666;
+}
+
+/* 主按钮样式 */
+.wxt-button-primary {
+    background: var(--wxt-primary);
+    color: var(--wxt-white);
+    border: none;
+    box-shadow: var(--wxt-shadow);
+}
+
+.wxt-button-primary:hover:not(:disabled) {
+    background: var(--wxt-primary-hover);
+    color: var(--wxt-white);
+    transform: translateY(-1px);
+    box-shadow: var(--wxt-shadow-md);
+}
+
+/* 卡片样式 */
+.wxt-card {
+    background: var(--wxt-white);
+    border: 1px solid var(--wxt-border);
+    border-radius: var(--wxt-radius-lg);
+    box-shadow: var(--wxt-shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.wxt-card:hover {
+    box-shadow: var(--wxt-shadow);
+    transform: translateY(-2px);
+}
+
+/* 输入框样式 */
+.wxt-input {
+    padding: var(--wxt-space-sm) var(--wxt-space);
+    border: 1px solid var(--wxt-border);
+    border-radius: var(--wxt-radius);
+    font-size: var(--wxt-text-sm);
+    transition: all 0.2s ease;
+}
+
+.wxt-input:focus {
+    outline: none;
+    border-color: var(--wxt-primary);
+    box-shadow: 0 0 0 3px var(--wxt-opacity-20);
+}
+
+/* 标签样式 */
+.wxt-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--wxt-light-green);
+    color: var(--wxt-primary);
+    border-radius: var(--wxt-radius-sm);
+    font-size: var(--wxt-text-xs);
+    font-weight: var(--wxt-font-medium);
+}
+
+/* 进度条样式 */
+.wxt-progress {
+    width: 100%;
+    height: 6px;
+    background: var(--wxt-light);
+    border-radius: var(--wxt-radius-sm);
+    overflow: hidden;
+}
+
+.wxt-progress-fill {
+    height: 100%;
+    background: var(--wxt-primary);
+    border-radius: var(--wxt-radius-sm);
+    transition: width 0.3s ease;
+}
+
+/* 工具类 */
+.wxt-text-primary {
+    color: var(--wxt-primary);
+}
+
+.wxt-text-success {
+    color: var(--wxt-success);
+}
+
+.wxt-text-warning {
+    color: var(--wxt-warning);
+}
+
+.wxt-text-danger {
+    color: var(--wxt-danger);
+}
+
+.wxt-bg-primary {
+    background: var(--wxt-primary);
+}
+
+.wxt-bg-success {
+    background: var(--wxt-success);
+}
+
+.wxt-bg-warning {
+    background: var(--wxt-warning);
+}
+
+.wxt-bg-danger {
+    background: var(--wxt-danger);
+}
+
+.wxt-border-primary {
+    border-color: var(--wxt-primary);
+}
+
+.wxt-border-success {
+    border-color: var(--wxt-success);
+}
+
+.wxt-border-warning {
+    border-color: var(--wxt-warning);
+}
+
+.wxt-border-danger {
+    border-color: var(--wxt-danger);
+}

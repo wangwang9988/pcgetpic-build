@@ -1,0 +1,36 @@
+- [x] amGetMain.ts 实现了三方案提取（JSON colorImages → #altImages → .a-spacing-small），与原插件逻辑对齐
+- [x] amGetMain.ts 的高清原图还原函数正确移除 `._[A-Z0-9,._]+_.` 尺寸后缀
+- [x] amGetMain.ts 的无效图片过滤排除了占位图/图标/视频图标/SVG/非 `/images/I/` 路径
+- [x] amGetMain.ts 的 smartQuoteReplacement 函数处理了单引号/逗号缺失/JS 表达式等 Amazon 数据修复
+- [x] amGetSku.ts 实现了 JSON colorImages 颜色变体提取（每变体取首张高清图）
+- [x] amGetSku.ts 实现了 10 个亚马逊 SKU DOM 选择器的备用提取方案
+- [x] amGetSku.ts 的 collectUrlsFromImageElement 从 data-a-dynamic-image/data-a-hires/data-src/src 多属性提取
+- [x] amGetDetail.ts 实现了 12 个 A+ Content 容器选择器的查找（含 5 次重试）
+- [x] amGetDetail.ts 的 getAmazonOriginalUrl 正确移除裁剪后缀 `.__...__.` 和尺寸后缀 `._..._.`
+- [x] amGetDetail.ts 从 img/noscript/background-image/data-a-dynamic-image 四种来源提取图片
+- [x] amGetVideo.ts 实现了 XHR/Fetch 拦截 + JSON 响应体递归搜索
+- [x] amGetVideo.ts 实现了 Performance API 监控 + MutationObserver 动态监听
+- [x] amGetVideo.ts 实现了 JSON 嗅探器注入（扫描 window 全局变量）
+- [x] amGetVideo.ts 的视频分类过滤了广告和 Prime Video 内容
+- [x] amGetVideo.ts 排除了 blob: 协议的视频 URL
+- [x] amGetHylinkTitle.ts 从 #productTitle 优先提取标题，回退到 head title 并移除 Amazon.com: / Amazon.co.jp: 等站点前缀
+- [x] amGetHylinkTitle.ts 正确提取 ASIN（/dp/、/gp/product/、/gp/aw/d/ 三种 URL 格式）
+- [x] shared/utils.ts 的 getProductId() 函数已扩展支持亚马逊 ASIN 提取
+- [x] index.ts 实现了 iframe 防护（window !== window.top 时返回）
+- [x] index.ts 视频模块在 document_start 阶段立即启动
+- [x] index.ts 其余模块在 DOMContentLoaded 后后台并行启动（带超时保护）
+- [x] index.ts 登录探针使用 AMAZON_LOGIN_SELECTORS（#ap_signin1a_pagelet、.a-sign-in、#authportal-main-section、.signin-row、#signInSubmit）
+- [x] index.ts 验证码检测使用 CAPTCHA_SELECTORS（#captchacharacters、.cvf-widget-form、#cvf-input-code），节流上限 3 次
+- [x] index.ts 使用 waitForCompletion() 进行数据静默判定
+- [x] 所有模块使用 tauriBridge.send() 上报数据（非 browser.runtime.sendMessage）
+- [x] 所有模块移除了原插件的页面可见性/焦点/SPA 导航检测逻辑（由 Tauri 宿主接管）
+- [x] scripts/build-scraper.mjs 的 PLATFORMS 对象包含 amazon 入口
+- [x] src-tauri/src/login/amazon.rs 实现了 AmazonLoginStrategy（自定义实现，非 DefaultLoginStrategy，因为需要 extract_product_id）
+- [x] AmazonLoginStrategy 的 check_login 正确区分 LoginRequired（signin.amazon、ap/signin）/ LoginIntermediate（ap/ 非登录页）/ Captcha（captcha、cvf/verification）
+- [x] AmazonLoginStrategy 的 extract_product_id 正确提取 ASIN
+- [x] AmazonLoginStrategy 的 is_still_on_platform_non_product 正确判断 amazon. 域名下非商品页
+- [x] AmazonLoginStrategy 的 login_cookie_names 返回 session-id、ubid-main、x-main
+- [x] AmazonLoginStrategy 的 captcha_selectors 返回 #captchacharacters、.cvf-widget-form、#cvf-input-code
+- [x] src-tauri/src/login/mod.rs 注册了 amazon::AmazonLoginStrategy
+- [x] node scripts/build-scraper.mjs 成功生成 dist-scripts/amazon.bundle.js
+- [x] cargo check 编译通过

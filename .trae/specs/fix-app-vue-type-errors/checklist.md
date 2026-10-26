@@ -1,0 +1,4 @@
+- [x] handleUpdateSize 回调类型签名与 naive-ui NSplit 的 onUpdate:size 事件类型兼容，编辑器不再飘红
+- [x] NSplit 返回数字比例值时，正确转换为像素宽度并保存到 localStorage
+- [x] NSplit 返回字符串像素值时，正确解析并保存到 localStorage
+- [x] vue-tsc --noEmit 通过，无类型错误

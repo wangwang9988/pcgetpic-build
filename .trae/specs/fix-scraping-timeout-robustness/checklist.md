@@ -1,0 +1,4 @@
+- [x] `injector.rs` 中 `load_bundle`：`dev_bundles_dir.is_some()` 时先 `bundle_cache.remove(platform)`；`is_none()` 时检查 `bundle_cache.get(platform)` 命中直接返回
+- [x] `utils.ts` 中 `waitForCompletion`：`maxWaitMs` 分支包含 `timeSinceLastImage = now - rawLastImageChangeAt`，若 `hasImageData && timeSinceLastImage < 3000` 跳过不 resolve
+- [x] `cargo check` 在 `src-tauri` 目录下编译无错误
+- [x] `npx tsc --noEmit` 在项目根目录下编译无 TypeScript 错误

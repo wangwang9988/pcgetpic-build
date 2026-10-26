@@ -1,0 +1,9 @@
+- [x] `AppState` 中 `wait_mode`/`stay_duration` 已替换为 `idle_timeout: u64`（默认7）
+- [x] `set_scraping_config` 命令接收 `idle_timeout` 参数
+- [x] 静默检测线程使用 `s.idle_timeout` 替代硬编码 `from_secs(7)`
+- [x] 初始化脚本不再注入 `__WAIT_MODE__`/`__STAY_DURATION__`
+- [x] `taskQueue.ts` 中 `waitMode`/`stayDuration` 已替换为 `idleTimeout`
+- [x] ControlBar.vue 中"切换策略"+"停留时间"已替换为"静默超时"（5/7/10/15秒）
+- [x] `taobao/index.ts` 中 `fixed` 模式分支已移除
+- [x] `cargo check` 编译通过
+- [x] `npx tsc --noEmit` 编译通过

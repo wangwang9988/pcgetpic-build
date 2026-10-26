@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>当图客户端 - 专业电商图片下载工具 | 官方正版VIP会员授权与购买中心</title>
+    <meta name="description" content="当图 DownPictures 官方正版授权购买与 VIP 会员收银台，支持当图桌面客户端与浏览器插件会员开通、套餐续费及激活码查询。一键批量采集淘宝、天猫、1688、拼多多、京东、抖音等电商商品高清主图、SKU图、详情页长图与商品视频。" />
+    <meta name="keywords" content="当图,当图客户端,当图会员,当图购买,当图激活码,DownPictures,电商图片下载工具,淘宝图片下载,1688图片批量下载,拼多多主图详情图下载" />
+    <link rel="canonical" href="https://store.downpictures.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="当图 DownPictures 官方购买中心" />
+    <meta property="og:title" content="当图客户端 - 专业电商图片下载工具 | 官方正版VIP会员授权与购买中心" />
+    <meta property="og:description" content="当图 DownPictures 官方正版授权购买与 VIP 会员收银台，支持当图桌面客户端与浏览器插件会员开通、套餐续费及激活码查询。" />
+    <meta property="og:url" content="https://store.downpictures.com/" />
+    <meta property="og:image" content="https://store.downpictures.com/logo.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "当图客户端 (DownPictures)",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Windows, Chrome, Edge, Firefox, 360",
+        "url": "https://store.downpictures.com/",
+        "description": "专业电商商品图片与视频批量采集下载工具，支持淘宝、天猫、1688、拼多多、京东、抖音、快手、Temu、Amazon 等主流电商平台高清主图、详情图、SKU图与视频一键打包保存。",
+        "publisher": {
+          "@type": "Organization",
+          "name": "上海跃町网络科技有限公司",
+          "url": "https://downpictures.com/"
+        }
+      }
+    </script>
+    <!-- 首屏零延迟并行预取套餐数据（与主 JS 并行下载，含 8s 超时与异常静默兜底） -->
+    <script>
+      try {
+        var __storePkgCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var __storePkgTimer = __storePkgCtrl ? setTimeout(function () { __storePkgCtrl.abort(); }, 8000) : null;
+        window.__STORE_PACKAGES_PROMISE__ = fetch('/api/v1/payment/packages?product=dangtu', {
+          credentials: 'omit',
+          headers: { Accept: 'application/json' },
+          signal: __storePkgCtrl ? __storePkgCtrl.signal : undefined
+        })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .finally(function () { if (__storePkgTimer) clearTimeout(__storePkgTimer); });
+      } catch (e) {}
+    </script>
+    <!-- 统计脚本延后至首屏 load 后空闲加载，避免抢占首屏并发连接 -->
+    <script>
+      var _hmt = _hmt || [];
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      window.addEventListener('load', function () {
+        var runAnalytics = function () {
+          try {
+            var hm = document.createElement("script");
+            hm.async = true;
+            hm.src = "https://hm.baidu.com/hm.js?45ddbe09192781778ceabe9bd6ccb452";
+            document.head.appendChild(hm);
+
+            var gt = document.createElement("script");
+            gt.async = true;
+            gt.src = "https://www.googletagmanager.com/gtag/js?id=G-LLQEBCVG75";
+            document.head.appendChild(gt);
+            gtag('js', new Date());
+            gtag('config', 'G-LLQEBCVG75');
+          } catch (e) {}
+        };
+        if (typeof requestIdleCallback === 'function') {
+          requestIdleCallback(runAnalytics, { timeout: 2000 });
+        } else {
+          setTimeout(runAnalytics, 200);
+        }
+      }, { once: true });
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <main>
+        <h1>当图客户端（DownPictures）官方正版授权与 VIP 会员购买中心</h1>
+        <p>欢迎访问当图 DownPictures 官方收银台。本页面提供当图桌面客户端及浏览器扩展插件的 VIP 会员在线开通、套餐续费、激活码提取与订单查询服务。</p>
+        <h2>核心功能与支持平台</h2>
+        <ul>
+          <li>支持平台：淘宝、天猫、1688阿里巴巴、拼多多、京东、唯品会、抖音电商、快手小店、小红书、得物、亚马逊 Amazon、速卖通 AliExpress、Temu、Shopee 等 60+ 国内外电商平台。</li>
+          <li>批量采集能力：一键识别并下载商品高清主图、SKU 规格图、详情页大图、主图视频与买家秀评论图，支持自动按目录分类归档、长图拼接与格式转换。</li>
+        </ul>
+        <p>
+          相关入口：
+          <a href="https://downpictures.com/">当图 DownPictures 官方网站</a> |
+          <a href="https://tools.yueding168.com/">上海跃町网络科技产品中心</a> |
+          <a href="https://tuget.yueding168.com/">图个吉利 TuGet 客户端官网</a> |
+          <a href="https://oneget.yueding168.com/">一得 OneGet 浏览器扩展官网</a>
+        </p>
+      </main>
+    </noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

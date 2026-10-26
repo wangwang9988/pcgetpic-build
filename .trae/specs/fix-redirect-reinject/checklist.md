@@ -1,0 +1,13 @@
+- [x] `on_page_load` 回调已添加到 `WebviewWindowBuilder` 链式调用中
+- [x] `on_page_load` 仅在 `PageLoadEvent::Finished` 事件时执行注入逻辑
+- [x] 登录页 URL（`detect_login_redirect` 匹配）时跳过 bundle 注入
+- [x] 验证码页 URL（`is_captcha_page` 匹配）时跳过 bundle 注入并发送 `captcha-detected` 事件
+- [x] 非拦截页自动注入 `__WORKER_TASK_ID__` 和 bundle 脚本
+- [x] 注入前检查 `window.__SCRAPER_INJECTED__` 防止重复注入
+- [x] 注入成功发送 `bundle-injected` 事件，失败发送 `bundle-inject-failed` 事件
+- [x] 旧的 `sleep(5)` + 手动 `eval()` 代码已完全移除
+- [x] `on_navigation` 回调保留不变，仍用于登录检测通知
+- [x] `initialization_script` 中的 `__WORKER_TASK_ID__` 仍在 builder 上配置
+- [x] 编译通过（`cargo build` 无错误）
+- [ ] 手动测试：正常商品页能自动注入并获取数据
+- [ ] 手动测试：登录/验证码重定向后，完成验证能自动重新注入并获取数据

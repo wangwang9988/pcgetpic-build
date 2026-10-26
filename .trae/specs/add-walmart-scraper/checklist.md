@@ -1,0 +1,10 @@
+- [x] wmGetMain.ts 实现主图提取：DOM 容器扫描（vertical-hero-carousel/hero-image-container/media-thumbnail/zoom-panel）+ 商品图片 URL 过滤（/seo/ 或 /asr/）+ URL 清洗（移除查询参数）+ __NEXT_DATA__ JSON 备用方案（默认禁用）
+- [x] wmGetSku.ts 实现 SKU 图提取：DOM 选择器扫描（variantGroup/variant-tile-chip/vt-swatch 背景图）+ __NEXT_DATA__ JSON swatchImageUrl 备用方案（默认禁用）+ URL 清洗
+- [x] wmGetDetail.ts 实现详情图提取：主页面详情容器 + Shadow DOM 递归穿透（syndigo-powerpage）+ 同源 iframe 穿透（#marketing-description-frame）+ URL 验证与清洗
+- [x] wmGetVideo.ts 实现视频提取：__NEXT_DATA__ JSON 视频 + DOM video 元素 + XHR/Fetch 拦截 + Performance API + MutationObserver + Shadow DOM/iframe 穿透 + 视频去重与分类
+- [x] wmGetHylinkTitle.ts 实现标题/链接/ID 提取：document.title 等待加载 + URL 路径数字 ID 提取 + URL 清洗 + tauriBridge.send 上报
+- [x] index.ts 实现统一入口：iframe 防护 + 视频立即启动 + 登录探针 + DOMContentLoaded 后并行启动模块 + waitForCompletion 完成判定 + 异常处理
+- [x] build-scraper.mjs 注册 walmart 平台入口
+- [x] login/mod.rs 注册沃尔玛 DefaultLoginStrategy
+- [x] node scripts/build-scraper.mjs 生成 walmart.bundle.js 成功
+- [x] cargo check Rust 编译通过

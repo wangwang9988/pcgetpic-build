@@ -1,0 +1,278 @@
+/* ==========================================================================
+   Reusable UI Components: Buttons, Badges, Pills & Boxes
+   ========================================================================== */
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.button--primary {
+  color: #ffffff;
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.2);
+}
+
+.button--primary:hover {
+  background-color: var(--brand-hover);
+  border-color: var(--brand-hover);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.button--navy {
+  color: #ffffff;
+  background-color: var(--accent-navy);
+  border-color: var(--accent-navy);
+}
+
+.button--navy:hover {
+  background-color: var(--accent-navy-dark);
+  border-color: var(--accent-navy-dark);
+}
+
+.button--alipay {
+  color: #ffffff;
+  background-color: var(--alipay-blue);
+  border-color: var(--alipay-blue);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.25);
+}
+
+.button--alipay:hover {
+  background-color: var(--alipay-dark);
+  border-color: var(--alipay-dark);
+  box-shadow: 0 4px 14px rgba(22, 119, 255, 0.35);
+}
+
+.button--store {
+  color: #ffffff;
+  background-color: #0078d4;
+  border-color: #0078d4;
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.25);
+}
+
+.button--store:hover {
+  background-color: #006cc1;
+  border-color: #006cc1;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 120, 212, 0.38);
+}
+
+.button--ghost {
+  color: var(--text-primary);
+  background-color: #ffffff;
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-xs);
+}
+
+.button--ghost:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-dark);
+  color: var(--text-primary);
+}
+
+.button--subtle {
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle);
+  border-color: var(--border-light);
+}
+
+.button--subtle:hover {
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.button--gold {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+}
+
+.button--gold:hover {
+  background: linear-gradient(135deg, #b45309, #92400e);
+}
+
+.button--lg {
+  min-height: 48px;
+  padding: 0 26px;
+  font-size: 1.02rem;
+  border-radius: var(--radius-md);
+}
+
+.button--wide {
+  width: 100%;
+}
+
+.button--unavailable {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #94a3b8;
+}
+
+/* Entity Badge & Info Boxes */
+.entity-badge-box {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.entity-badge-box strong {
+  color: var(--text-primary);
+}
+
+/* Tags & Chips */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.chip strong {
+  color: var(--text-primary);
+}
+
+/* ==========================================================================
+   Microsoft Store Plan A - Dual-row Delivery Console Button & Companion Button
+   ========================================================================== */
+.btn-delivery-store {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 58px;
+  background: #0078d4;
+  border: 1px solid rgba(0, 120, 212, 0.4);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  color: #ffffff;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.28);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.btn-delivery-store:hover {
+  background: #006cc1;
+  border-color: #006cc1;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 120, 212, 0.22);
+}
+
+.btn-delivery-store:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+.btn-icon-area {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+}
+
+.btn-text-area {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+}
+
+.btn-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.btn-subtext {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* 伴生次按钮 - 与微软商店主按钮严格等高对齐 (58px) */
+.button--store-companion,
+.hero-actions .button--lg,
+.download-actions-cluster .button--lg,
+.cta-banner-actions .button--lg {
+  min-height: 58px;
+  padding: 0 24px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  box-sizing: border-box;
+}
+
+.button--store-companion:hover,
+.hero-actions .button--lg:hover,
+.download-actions-cluster .button--lg:hover,
+.cta-banner-actions .button--lg:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.button--store-companion:active,
+.hero-actions .button--lg:active,
+.download-actions-cluster .button--lg:active,
+.cta-banner-actions .button--lg:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .btn-delivery-store,
+  .button--store-companion,
+  .hero-actions .button--lg,
+  .download-actions-cluster .button--lg,
+  .cta-banner-actions .button--lg {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+  }
+}

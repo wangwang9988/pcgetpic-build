@@ -1,0 +1,7 @@
+- [x] coupon_expired 逻辑修正：新建有效券后 coupon_expired 变为 0，按钮恢复正常
+- [x] 订单列表查询返回 coupon_count 和 latest_coupon_status 字段
+- [x] 订单详情查询返回 coupon_count 和 latest_coupon_status 字段
+- [x] Admin 前端 OrderRecord 类型包含 coupon_count 和 latest_coupon_status 字段
+- [x] Admin 订单列表新增"优惠券"列，显示状态标签 + 发放次数
+- [x] latest_coupon_status === 'used' 时隐藏"重发优惠券"按钮
+- [x] coupon_count >= 2 时点击"重发优惠券"弹出二次确认

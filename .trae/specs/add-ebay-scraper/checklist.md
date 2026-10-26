@@ -1,0 +1,18 @@
+- [x] eBay 主图提取模块 `ebayGetMain.ts` 实现了从 `$M_96613636_C` 提取 PICTURE 模块主图 URL
+- [x] eBay 主图提取模块实现了备用正则和全页面搜索兜底
+- [x] eBay 详情图提取模块 `ebayGetDetail.ts` 实现了主页面 + iframe 双模式架构
+- [x] eBay 详情图提取模块正确过滤无效图片和清洗 URL
+- [x] eBay SKU 图提取模块 `ebayGetSku.ts` 实现了 MSKU 模块提取和 `menuItemPictureIndexMap` 映射
+- [x] eBay SKU 图提取模块实现了 eBay 官方图归一化为 `s-l1600.webp`
+- [x] eBay 视频提取模块 `ebayGetVideo.ts` 实现了 script 标签提取、网络拦截、DOM 检测
+- [x] eBay 视频提取模块实现了视频去重（基于 videoId）
+- [x] eBay 标题/链接/商品ID模块 `ebayGetHylinkTitle.ts` 实现了三级标题提取
+- [x] eBay 标题/链接/商品ID模块实现了商品 ID 从 `/itm/{id}` 提取和 URL 清洗
+- [x] eBay 入口脚本 `index.ts` 正确编排子模块（视频立即执行、其他 DOM 就绪后并行）
+- [x] eBay 入口脚本实现了 iframe 防护（仅 Detail 模块允许 iframe）
+- [x] eBay 入口脚本实现了数据驱动完成判定和异常处理
+- [x] `build-scraper.mjs` 注册了 `ebay` 构建入口
+- [x] eBay 登录策略 `ebay.rs` 实现了 `signin.ebay.com`/`login.ebay.com` 检测
+- [x] eBay 登录策略在 `login/mod.rs` 中注册
+- [x] `node scripts/build-scraper.mjs` 构建成功生成 `ebay.bundle.js`
+- [x] Rust 编译通过

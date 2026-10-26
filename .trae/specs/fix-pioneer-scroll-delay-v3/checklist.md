@@ -1,0 +1,16 @@
+- [x] on_page_load 同时处理 Started 和 Finished 事件
+- [x] Started + CaptchaBlocked + 商品页 → CaptchaBlockedResume（核心修复）
+- [x] Started + CaptchaBlocked + 非商品页 → InjectUrlWatcher
+- [x] Started + CaptchaBlocked + 登录页/验证码页/中间页 → Skip
+- [x] Started + 非 CaptchaBlocked → Skip（等待 Finished）
+- [x] Finished 路径保持原有逻辑不变
+- [x] URL 监听脚本添加 `__TAURI_INTERNALS__` fallback
+- [x] 超时监控器 CaptchaBlocked Worker URL 轮询（3 秒后开始检测）
+- [x] URL 轮询检测到商品页时恢复 Worker 状态并注入 bundle
+- [x] URL 轮询注入 bundle 时根据平台策略决定是否设置 `__LOGIN_PROBE_SKIP__`
+- [x] on_page_load 回调添加时间戳日志（Started/Finished 间隔）
+- [x] `cargo build` 编译通过，无新增 error 和 warning
+- [x] 京东登录后商品页显示后立即开始滚动（无 10 秒延迟）
+- [x] 淘宝登录后正常工作（不受影响）
+- [ ] 清空缓存后也能正常工作（不依赖缓存加速 Finished）
+- [ ] Worker 3（新 Worker 直接打开商品页）仍然立即滚动

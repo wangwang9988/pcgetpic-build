@@ -1,0 +1,18 @@
+- [x] Rust 端 on_navigation 检测到登录重定向时，Worker 状态正确设为 CaptchaBlocked
+- [x] Rust 端 on_page_load 检测到登录页时，Worker 状态正确设为 CaptchaBlocked
+- [x] Rust 端 on_page_load 检测到验证码页时，Worker 状态正确设为 CaptchaBlocked
+- [x] 看门狗线程跳过 CaptchaBlocked 状态的 Worker，不强制清理
+- [x] 空闲检测器使用 has_produced_data 标记区分零数据和正常超时
+- [x] 空闲检测器零数据保护：has_produced_data=false 且 task_assigned_at 超时后检查页面 URL
+- [x] 空闲检测器能识别登录弹窗场景（无重定向）并正确保护 Worker
+- [x] 登录后页面自动跳回商品页时，抓取脚本自动重新注入
+- [x] 登录后页面停留在非商品页时，URL 纠偏导航回原商品 URL（保持 CaptchaBlocked 直到页面加载完成）
+- [x] 纠偏期间保持 CaptchaBlocked 状态，消除竞态条件 Bug
+- [x] 重注入后 Worker 状态恢复为 Working，last_data_change 时间戳重置
+- [x] 重注入/恢复后前端收到 captcha-resolved 事件，UI 状态正确更新
+- [x] WorkerInfo 新增 captcha_blocked_at 字段，正确记录进入 CaptchaBlocked 状态的时间
+- [x] WorkerInfo 新增 has_produced_data 布尔标记，语义清晰
+- [x] WorkerInfo 新增 task_assigned_at 字段，精确判断零数据超时
+- [x] CaptchaBlocked 状态超过 5 分钟自动标记任务失败并关闭窗口
+- [x] 零数据保护合并到正常超时检测流程，移除冗余轮询
+- [x] 现有正常抓取流程不受影响（已登录用户的体验无变化）

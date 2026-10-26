@@ -1,0 +1,29 @@
+- [x] aeGetMain.ts 实现了 4 种主图提取方式（DCData script / DOM 容器 / __AER_DATA__ JSON / bigpic_floor 容器）
+- [x] aeGetMain.ts 的 URL 清洗函数正确处理 aliexpress.com 格式（截断缩略图后缀）和 aliexpress.ru 格式（保留 _数字x数字 扩展名）
+- [x] aeGetMain.ts 实现了排除规则（flags/avatar/review/icon/logo/sprite/placeholder/loading/default/s.gif/48x48.png/sale_tag）
+- [x] aeGetMain.ts 通过 tauriBridge.send('MainPic', urls) 上报数据
+- [x] aeGetDetail.ts 实现了 Shadow DOM 穿透递归提取
+- [x] aeGetDetail.ts 实现了同源 iframe 内容器提取
+- [x] aeGetDetail.ts 实现了 /kf/ 路径去重逻辑
+- [x] aeGetDetail.ts 通过 tauriBridge.send('DetailPic', urls) 上报数据
+- [x] aeGetSku.ts 实现了双通道提取（sku--wrap 容器 + sku_floor 容器）
+- [x] aeGetSku.ts 正确解析 source[srcset] 多 URL 格式
+- [x] aeGetSku.ts 通过 tauriBridge.send('SkuPic', urls) 上报数据
+- [x] aeGetVideo.ts 实现了三通道提取（runParams / DOM video / __AER_DATA__ JSON）
+- [x] aeGetVideo.ts 上报格式为 { url: string }[] 对象数组
+- [x] aeGetVideo.ts 通过 tauriBridge.send('VideoUrls', videos) 上报数据
+- [x] aeGetHylinkTitle.ts 实现了多渠道标题提取（script 标签 / h1 / title / meta / class 选择器）
+- [x] aeGetHylinkTitle.ts 实现了商品 ID 提取（/item/{id}.html、/i/{id}.html、URL 参数、10 位数字）
+- [x] aeGetHylinkTitle.ts 分别上报 productTitle / productLink / productId
+- [x] index.ts 实现了 iframe 防护（window !== window.top）
+- [x] index.ts 实现了登录检测（probeAndReportLogin）
+- [x] index.ts 实现了验证码监控（MutationObserver + 节流限制）
+- [x] index.ts 实现了模块并行启动（4 模块后台并行 + 视频模块立即启动）
+- [x] index.ts 实现了完成判定（waitForCompletion + completeTask）
+- [x] index.ts 实现了异常处理（有数据 complete / 无数据 fail）
+- [x] scripts/build-scraper.mjs 已注册 aliexpress 平台入口
+- [x] src-tauri/src/login/mod.rs 已注册 AliExpress 登录策略
+- [x] node scripts/build-scraper.mjs 构建成功生成 aliexpress.bundle.js
+- [x] cargo check 编译通过
+- [x] 所有模块代码风格与现有 taobao/jd 模块保持一致（TypeScript 类型安全、中文注释、tauriBridge 通信层）
+- [x] 所有模块移除了浏览器插件特有的页面可见性/焦点/SPA 导航/不活动超时/状态保存恢复逻辑

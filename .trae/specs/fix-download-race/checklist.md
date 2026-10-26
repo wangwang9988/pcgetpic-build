@@ -1,0 +1,11 @@
+- [x] `downloadManager.ts` productMeta 类型包含 `taskId?: string`
+- [x] `waitForProductData` 通过 `store.results.get(taskId)` 查找，不再依赖 `store.currentResult`
+- [x] 轮询等待循环也使用 `taskId` 精确查找
+- [x] `ImageDisplay.vue` 新增 `resultId` prop
+- [x] `ImageDisplay.vue` 3 处 `startDownload` 调用均传入 `taskId`
+- [x] `VideoDisplay.vue` 新增 `resultId` prop
+- [x] `VideoDisplay.vue` 所有 `startDownload` 调用均传入 `taskId`
+- [x] `ResultPreview.vue` 所有 ImageDisplay/VideoDisplay 传入 `:resultId="result.taskId"`
+- [x] `ResultPreview.vue` expandedNames 类型为 `string | null`
+- [x] `vue-tsc --noEmit` 通过
+- [x] `npm run build` 通过

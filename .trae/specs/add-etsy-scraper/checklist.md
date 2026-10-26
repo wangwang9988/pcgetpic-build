@@ -1,0 +1,8 @@
+- [x] etsyGetMain.ts 从 JSON-LD 提取主图 contentURL，URL 清理去查询参数，过滤 .svg 和黑名单，轮询等待数据加载
+- [x] etsyGetDetail.ts 从 DOM 容器提取详情图，支持 iframe 穿透，MutationObserver 增量更新，过滤占位图
+- [x] etsyGetSku.ts 从轮播分页容器提取 SKU 图，URL 高清化 il_fullxfull，过滤视频缩略图，MutationObserver 增量更新
+- [x] etsyGetVideo.ts 从 JSON-LD/__NEXT_DATA__/DOM/网络请求提取视频，XHR/fetch 拦截，Performance API 监控，双重去重
+- [x] etsyGetHylinkTitle.ts 提取标题（去除 Etsy 后缀）、商品 ID（/listing/{id}）、干净链接
+- [x] index.ts 统一入口：Video 立即启动，其余模块 DOM 就绪后并行，数据驱动完成判定，iframe 防护
+- [x] build-scraper.mjs 注册 etsy 平台入口
+- [x] 构建验证：npm run build:scraper 成功生成 dist-scripts/etsy.bundle.js

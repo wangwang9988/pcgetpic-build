@@ -1,0 +1,17 @@
+- [ ] 后端 API 返回 today_sales 字段（今日0点起 paid 订单 amount 之和）
+- [ ] 后端 API 返回 yesterday_sales 字段（昨日 paid 订单 amount 之和）
+- [ ] 后端 API 返回 yesterday_orders 字段（昨日 paid 订单数量）
+- [ ] 后端 API 返回 total_refunds 字段（所有 refunded 订单 amount 之和）
+- [ ] 后端 API 返回 today_refunds 字段（今日 refunded 订单 amount 之和）
+- [ ] 后端 API 返回 sales_trend 字段（近7天每日销售额数组）
+- [ ] 后端 API 返回 orders_trend 字段（近7天每日订单数数组）
+- [ ] 前端 DashboardStats 类型定义补全所有后端返回字段
+- [ ] ECharts 依赖已安装
+- [ ] 仪表盘展示今日销售额、昨日销售额卡片
+- [ ] 仪表盘展示昨日订单数卡片
+- [ ] 仪表盘展示总退款金额、今日退款金额卡片
+- [ ] 总销售额卡片标注"已去除退款"
+- [ ] 销售额近7天趋势折线图正常渲染
+- [ ] 订单数近7天趋势折线图正常渲染
+- [ ] 激活设备数近7天趋势折线图正常渲染
+- [ ] 图表风格与暗色主题一致

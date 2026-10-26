@@ -1,0 +1,10 @@
+- [x] scraper-scripts/sina/index.ts 入口文件实现，包含 iframe 防护、时序分组、完成判定、模块超时保护
+- [x] scraper-scripts/sina/sinaGetMain.ts 实现，发送空 MainPic 防污染
+- [x] scraper-scripts/sina/sinaGetDetail.ts 实现，从详情容器提取图片 URL 并清洗
+- [x] scraper-scripts/sina/sinaGetSku.ts 实现，Woo 组件等多容器扫描 + 缩略图→大图还原 + 去重
+- [x] scraper-scripts/sina/sinaGetVideo.ts 实现，XHR/Fetch 拦截 + MutationObserver + PerformanceObserver + JSON 提取
+- [x] scraper-scripts/sina/sinaGetHylinkTitle.ts 实现，标题提取（去后缀）+ productId 提取（URL 参数/路径）
+- [x] scripts/build-scraper.mjs 已注册 sina 平台入口
+- [x] src-tauri/src/login/mod.rs 已注册 sina 登录策略
+- [x] npm run build:scraper 成功生成 dist-scripts/sina.bundle.js
+- [x] Rust 编译通过（cargo check）
