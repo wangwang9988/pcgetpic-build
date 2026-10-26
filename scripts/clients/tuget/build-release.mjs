@@ -187,6 +187,9 @@ function signMacosChromiumAppBundle(chromiumRoot, signingIdentity, childEntitlem
 
     // 4. Sign outer Chromium .app bundle with child (JIT) entitlements
     runCodesign(appPath, signingIdentity, childEntitlements);
+    execFileSync('codesign', ['--verify', '--deep', '--strict', '--verbose=2', appPath], {
+      stdio: 'inherit',
+    });
   }
 }
 
@@ -490,6 +493,8 @@ if (process.platform === 'win32' && !skipSigning && !winInstallerSigningEnabled)
   );
 }
 let tempWinSigningConfig = null;
+const chromiumHoldDir = path.join(clientTauriDir, 'release-resources', 'chromium-temp-hold');
+const stagedChromiumDir = path.join(browserStageDir, 'chromium');
 try {
   if (winInstallerSigningEnabled) {
     tempWinSigningConfig = path.join(os.tmpdir(), `tuget-signing-${Date.now()}.json`);
@@ -514,9 +519,31 @@ try {
     );
     configArgs.push('--config', tempWinSigningConfig);
   }
-  const tauriArgs = ['run', 'tauri', '--', 'build', ...configArgs, ...signArgs, ...cargoTargetArgs];
-  run(clientDir, 'npm', tauriArgs);
+  if (process.platform === 'darwin' && !thin && fs.existsSync(stagedChromiumDir)) {
+    fs.rmSync(chromiumHoldDir, { recursive: true, force: true });
+    fs.renameSync(stagedChromiumDir, chromiumHoldDir);
+  }
+  const bundleArgs = process.platform === 'darwin' ? ['--bundles', 'app'] : [];
+  const tauriArgs = [
+    'run',
+    'tauri',
+    '--',
+    'build',
+    ...bundleArgs,
+    ...configArgs,
+    ...signArgs,
+    ...cargoTargetArgs,
+  ];
+  const tauriEnv =
+    process.platform === 'darwin'
+      ? { ...process.env, APPLE_ID: '', APPLE_PASSWORD: '', APPLE_TEAM_ID: '' }
+      : process.env;
+  run(clientDir, 'npm', tauriArgs, tauriEnv);
 } finally {
+  if (fs.existsSync(chromiumHoldDir)) {
+    fs.rmSync(stagedChromiumDir, { recursive: true, force: true });
+    fs.renameSync(chromiumHoldDir, stagedChromiumDir);
+  }
   if (tempWinSigningConfig && fs.existsSync(tempWinSigningConfig)) {
     fs.rmSync(tempWinSigningConfig, { force: true });
   }
@@ -539,14 +566,71 @@ if (process.platform === 'win32') {
     toolsDownloadDir,
   );
 } else if (process.platform === 'darwin') {
+  const macosAppPath = path.join(bundleRoot, 'macos', 'TuGet.app');
+  if (!thin && fs.existsSync(stagedChromiumDir)) {
+    const appChromiumDest = path.join(
+      macosAppPath,
+      'Contents',
+      'Resources',
+      'browser-engine',
+      'chromium',
+    );
+    fs.rmSync(appChromiumDest, { recursive: true, force: true });
+    execFileSync('cp', ['-a', stagedChromiumDir, appChromiumDest], { stdio: 'inherit' });
+  }
+  const identity = (process.env.APPLE_SIGNING_IDENTITY || '').trim() || '-';
+  const mainEntitlements = path.join(clientTauriDir, 'macos', 'entitlements.plist');
+  if (!skipSigning) {
+    runCodesign(
+      path.join(macosAppPath, 'Contents', 'MacOS', 'tuget-client'),
+      identity,
+      mainEntitlements,
+    );
+    runCodesign(macosAppPath, identity, mainEntitlements);
+    execFileSync('codesign', ['--verify', '--deep', '--strict', '--verbose=2', macosAppPath], {
+      stdio: 'inherit',
+    });
+  }
   const canonicalDmg =
     chromiumPlatform === 'mac-x64' ? 'TuGet-macOS-x64.dmg' : 'TuGet-macOS-arm64.dmg';
-  copyNewestMatchingInstaller(
-    path.join(bundleRoot, 'dmg'),
-    (name) => name.endsWith('.dmg'),
-    canonicalDmg,
-    toolsDownloadDir,
+  const dmgDir = path.join(bundleRoot, 'dmg');
+  fs.mkdirSync(dmgDir, { recursive: true });
+  const dmgPath = path.join(dmgDir, canonicalDmg);
+  fs.rmSync(dmgPath, { force: true });
+  execFileSync(
+    'hdiutil',
+    ['create', '-volname', 'TuGet', '-srcfolder', macosAppPath, '-ov', '-format', 'UDZO', dmgPath],
+    { stdio: 'inherit' },
   );
+  if (!skipSigning && identity !== '-') {
+    runCodesign(dmgPath, identity, null);
+    const appleId = (process.env.APPLE_ID || '').trim();
+    const applePassword = (process.env.APPLE_PASSWORD || '').trim();
+    const appleTeamId = (process.env.APPLE_TEAM_ID || '').trim();
+    if (appleId && applePassword && appleTeamId) {
+      execFileSync(
+        'xcrun',
+        [
+          'notarytool',
+          'submit',
+          dmgPath,
+          '--apple-id',
+          appleId,
+          '--password',
+          applePassword,
+          '--team-id',
+          appleTeamId,
+          '--wait',
+        ],
+        { stdio: 'inherit' },
+      );
+      execFileSync('xcrun', ['stapler', 'staple', dmgPath], { stdio: 'inherit' });
+    }
+  }
+  if (toolsDownloadDir) {
+    fs.mkdirSync(toolsDownloadDir, { recursive: true });
+    fs.copyFileSync(dmgPath, path.join(toolsDownloadDir, canonicalDmg));
+  }
 } else if (process.platform === 'linux') {
   copyNewestMatchingInstaller(
     path.join(bundleRoot, 'deb'),
