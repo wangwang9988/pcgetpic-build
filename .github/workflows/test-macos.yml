@@ -6,12 +6,12 @@ on:
       timeout_minutes:
         description: '远程桌面保持开启的时长（分钟）'
         required: false
-        default: '45'
+        default: '180'
 
 jobs:
   remote-mac-gui:
     runs-on: macos-latest
-    timeout-minutes: 60
+    timeout-minutes: 200
     permissions:
       actions: read
       contents: read
@@ -46,11 +46,11 @@ jobs:
             hdiutil detach /Volumes/DangTu || true
           fi
 
-          # 默认启动两个客户端窗口到苹果桌面
+          # 默认启动客户端窗口到苹果桌面
           open /Applications/TuGet.app || true
           sleep 2
 
-      - name: 2. 启动 macOS 网页远程图形桌面 (Web GUI + Cloudflare Tunnel)
+      - name: 2. 启动 macOS 网页远程图形桌面服务
         run: |
           cat << 'EOF' > /tmp/mac_web_desktop.py
           import ctypes
@@ -357,16 +357,17 @@ jobs:
           ThreadingHTTPServer(('127.0.0.1', 6080), Handler).serve_forever()
           EOF
 
-          python3 /tmp/mac_web_desktop.py &
-          SERVER_PID=$!
+          export RUNNER_TRACKING_ID=""
+          nohup python3 /tmp/mac_web_desktop.py > /tmp/web.log 2>&1 &
 
           curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz | tar -xz -C /tmp
           chmod +x /tmp/cloudflared
-          /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
+          nohup /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
 
           for i in $(seq 1 30); do
             URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' /tmp/cf.log | head -n 1 || true)
             if [ -n "$URL" ]; then
+              echo "$URL" > /tmp/remote-url.txt
               echo "=================================================================="
               echo "✅ 苹果 macOS 远程图形桌面已就绪！请在浏览器点击以下网址直接操作："
               echo "👉 $URL"
@@ -376,7 +377,20 @@ jobs:
             sleep 1
           done
 
-          MAX_SECONDS=$(( ${{ inputs.timeout_minutes || 45 }} * 60 ))
+      - name: 3. 导出远程桌面链接产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-Remote-Desktop-URL
+          path: /tmp/remote-url.txt
+
+      - name: 4. 保持远程桌面在线 (默认 3 小时，可随时在网页点击关机)
+        run: |
+          URL=$(cat /tmp/remote-url.txt || true)
+          echo "=================================================================="
+          echo "🟢 远程桌面正在运行中，请直接点击以下链接进入苹果电脑桌面："
+          echo "👉 $URL"
+          echo "=================================================================="
+          MAX_SECONDS=$(( ${{ inputs.timeout_minutes || 180 }} * 60 ))
           ELAPSED=0
           while [ $ELAPSED -lt $MAX_SECONDS ]; do
             if [ -f /tmp/stop-remote-mac ]; then
