@@ -63,6 +63,7 @@ jobs:
           git submodule sync
           git submodule update --init Pro-GetPic browser TuGet-Client website tools
           git -C TuGet-Client pull origin master
+          git -C browser pull origin main || git -C browser pull origin master || true
 
       - name: Install Linux System Dependencies
         if: runner.os == 'Linux'
