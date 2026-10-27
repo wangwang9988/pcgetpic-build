@@ -125,7 +125,7 @@ jobs:
 
           mkdir -p /tmp/pkgs
           echo "==> 正在从构建产物拉取 TuGet-macOS-arm64.dmg 与 dangtu-macos-arm64.dmg ..."
-          gh run download 40344164752 --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || true
+          gh run download 40445411545 --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || true
           gh run download 40289734009 --repo wangwang9988/pcgetpic-build -n DangTu-macOS-arm64 -D /tmp/pkgs || true
 
           if [ -f /tmp/pkgs/TuGet-macOS-arm64.dmg ]; then
