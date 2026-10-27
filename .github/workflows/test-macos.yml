@@ -1,0 +1,388 @@
+name: Test macOS Remote Desktop (GUI)
+
+on:
+  workflow_dispatch:
+    inputs:
+      timeout_minutes:
+        description: '远程桌面保持开启的时长（分钟）'
+        required: false
+        default: '45'
+
+jobs:
+  remote-mac-gui:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: 1. 下载并安装 图个吉利 (TuGet) 与 当图 (DangTu) 安装包
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/pkgs
+          echo "==> 正在从构建产物拉取 TuGet-macOS-arm64.dmg 与 dangtu-macos-arm64.dmg ..."
+          gh run download 40344164752 --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || true
+          gh run download 40289734009 --repo wangwang9988/pcgetpic-build -n DangTu-macOS-arm64 -D /tmp/pkgs || true
+          ls -lh /tmp/pkgs
+
+          if [ -f /tmp/pkgs/TuGet-macOS-arm64.dmg ]; then
+            hdiutil attach /tmp/pkgs/TuGet-macOS-arm64.dmg -mountpoint /Volumes/TuGet -nobrowse
+            cp -a "/Volumes/TuGet/TuGet.app" /Applications/
+            cp -a "/Volumes/TuGet/TuGet.app" "$HOME/Desktop/"
+            hdiutil detach /Volumes/TuGet || true
+            echo "==> TuGet.app 公证与 Gatekeeper 状态："
+            spctl --assess --type execute -vv /Applications/TuGet.app 2>&1 | tee /tmp/spctl-tuget.txt || true
+          fi
+
+          if [ -f /tmp/pkgs/dangtu-macos-arm64.dmg ]; then
+            hdiutil attach /tmp/pkgs/dangtu-macos-arm64.dmg -mountpoint /Volumes/DangTu -nobrowse
+            for app in /Volumes/DangTu/*.app; do
+              cp -a "$app" /Applications/
+              cp -a "$app" "$HOME/Desktop/"
+              echo "==> $(basename "$app") 公证与 Gatekeeper 状态："
+              spctl --assess --type execute -vv "/Applications/$(basename "$app")" 2>&1 | tee /tmp/spctl-dangtu.txt || true
+            done
+            hdiutil detach /Volumes/DangTu || true
+          fi
+
+          # 默认启动两个客户端窗口到苹果桌面
+          open /Applications/TuGet.app || true
+          sleep 2
+
+      - name: 2. 启动 macOS 网页远程图形桌面 (Web GUI + Cloudflare Tunnel)
+        run: |
+          cat << 'EOF' > /tmp/mac_web_desktop.py
+          import ctypes
+          import ctypes.util
+          import json
+          import os
+          import subprocess
+          import threading
+          import time
+          from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+          from urllib.parse import parse_qs, urlparse
+
+          cg = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices')
+          cf = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
+
+          class CGPoint(ctypes.Structure):
+              _fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double)]
+
+          cg.CGMainDisplayID.restype = ctypes.c_uint32
+          cg.CGDisplayPixelsWide.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayPixelsWide.restype = ctypes.c_size_t
+          cg.CGDisplayPixelsHigh.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayPixelsHigh.restype = ctypes.c_size_t
+
+          cg.CGEventCreateMouseEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint32, CGPoint, ctypes.c_uint32]
+          cg.CGEventCreateMouseEvent.restype = ctypes.c_void_p
+          cg.CGEventSetIntegerValueField.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_int64]
+          cg.CGEventPost.argtypes = [ctypes.c_uint32, ctypes.c_void_p]
+          cg.CGEventCreateKeyboardEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint16, ctypes.c_bool]
+          cg.CGEventCreateKeyboardEvent.restype = ctypes.c_void_p
+          cg.CGEventSetFlags.argtypes = [ctypes.c_void_p, ctypes.c_uint64]
+          cg.CGEventCreateScrollWheelEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_int32]
+          cg.CGEventCreateScrollWheelEvent.restype = ctypes.c_void_p
+          cf.CFRelease.argtypes = [ctypes.c_void_p]
+
+          kCGEventLeftMouseDown = 1
+          kCGEventLeftMouseUp = 2
+          kCGEventRightMouseDown = 3
+          kCGEventRightMouseUp = 4
+          kCGEventMouseMoved = 5
+          kCGEventLeftMouseDragged = 6
+          kCGMouseButtonLeft = 0
+          kCGMouseButtonRight = 1
+          kCGMouseEventClickState = 1
+          kCGHIDEventTap = 0
+          kCGEventFlagMaskCommand = 1 << 20
+
+          def get_screen_size():
+              did = cg.CGMainDisplayID()
+              w = cg.CGDisplayPixelsWide(did) or 1440
+              h = cg.CGDisplayPixelsHigh(did) or 900
+              return int(w), int(h)
+
+          def post_mouse(ev_type, x, y, button=0, click_count=1):
+              pt = CGPoint(float(x), float(y))
+              ev = cg.CGEventCreateMouseEvent(None, ev_type, pt, button)
+              if ev:
+                  if click_count > 1:
+                      cg.CGEventSetIntegerValueField(ev, kCGMouseEventClickState, click_count)
+                  cg.CGEventPost(kCGHIDEventTap, ev)
+                  cf.CFRelease(ev)
+
+          def post_key(keycode, flags=0):
+              for down in (True, False):
+                  ev = cg.CGEventCreateKeyboardEvent(None, keycode, down)
+                  if ev:
+                      if flags:
+                          cg.CGEventSetFlags(ev, flags)
+                      cg.CGEventPost(kCGHIDEventTap, ev)
+                      cf.CFRelease(ev)
+                  time.sleep(0.02)
+
+          def post_scroll(dy):
+              ev = cg.CGEventCreateScrollWheelEvent(None, 0, 1, int(dy))
+              if ev:
+                  cg.CGEventPost(kCGHIDEventTap, ev)
+                  cf.CFRelease(ev)
+
+          latest_jpg = b''
+          jpg_lock = threading.Lock()
+
+          def capture_loop():
+              global latest_jpg
+              tmp_path = '/tmp/mac_live_screen.jpg'
+              while not os.path.exists('/tmp/stop-remote-mac'):
+                  try:
+                      subprocess.run(['/usr/sbin/screencapture', '-x', '-C', '-t', 'jpg', tmp_path], timeout=2)
+                      if os.path.exists(tmp_path):
+                          with open(tmp_path, 'rb') as f:
+                              data = f.read()
+                          if data:
+                              with jpg_lock:
+                                  latest_jpg = data
+                  except Exception:
+                      pass
+                  time.sleep(0.12)
+
+          threading.Thread(target=capture_loop, daemon=True).start()
+
+          HTML_PAGE = """<!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="utf-8" />
+            <title>macOS 苹果云端真机远程桌面 (Apple Silicon M系列)</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+              .toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; z-index: 10; }
+              .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
+              .btn:hover { background: #1d4ed8; }
+              .btn.green { background: #059669; }
+              .btn.green:hover { background: #047857; }
+              .btn.gray { background: #475569; }
+              .btn.gray:hover { background: #334155; }
+              .btn.red { background: #dc2626; margin-left: auto; }
+              .input-box { flex: 1; min-width: 240px; display: flex; gap: 6px; }
+              .input-box input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+              .screen-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; position: relative; background: #020617; }
+              #screen { max-width: 100%; max-height: 100%; object-fit: contain; cursor: default; user-select: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+              .status { font-size: 12px; color: #94a3b8; }
+            </style>
+          </head>
+          <body>
+            <div class="toolbar">
+              <button class="btn green" onclick="runAction('open_tuget')">🚀 打开/置顶 图个吉利 (TuGet)</button>
+              <button class="btn green" onclick="runAction('open_dangtu')">🚀 打开/置顶 当图 (DangTu)</button>
+              <button class="btn gray" onclick="runAction('open_downloads')">📂 打开苹果下载目录 (Downloads)</button>
+              <div class="input-box">
+                <input id="pasteText" type="text" placeholder="在此粘贴商品链接或输入文字，点击右侧按钮直接送入苹果软件输入框..." onkeydown="if(event.key==='Enter') sendPaste()" />
+                <button class="btn" onclick="sendPaste()">📋 发送并粘贴到 Mac (⌘+V)</button>
+                <button class="btn gray" onclick="sendKey(36)">⏎ 回车</button>
+                <button class="btn gray" onclick="sendKey(51)">⌫ 退格</button>
+              </div>
+              <span class="status" id="status">正在连接画面...</span>
+              <button class="btn red" onclick="if(confirm('确定结束测试并关闭这台云端 Mac 吗？')) runAction('shutdown')">⏹ 结束测试关机</button>
+            </div>
+            <div class="screen-wrap">
+              <img id="screen" draggable="false" alt="macOS Screen" />
+            </div>
+            <script>
+              const img = document.getElementById('screen');
+              const statusEl = document.getElementById('status');
+              let logicalW = 1440, logicalH = 900;
+              fetch('/info').then(r => r.json()).then(d => { logicalW = d.width; logicalH = d.height; });
+
+              let loading = false;
+              function refreshFrame() {
+                if (loading) return;
+                loading = true;
+                const next = new Image();
+                next.onload = () => {
+                  img.src = next.src;
+                  loading = false;
+                  statusEl.textContent = `🟢 实时画面已连接 (${logicalW}x${logicalH})`;
+                  setTimeout(refreshFrame, 80);
+                };
+                next.onerror = () => {
+                  loading = false;
+                  statusEl.textContent = '🟡 正在重连画面...';
+                  setTimeout(refreshFrame, 500);
+                };
+                next.src = '/frame.jpg?t=' + Date.now();
+              }
+              refreshFrame();
+
+              function getCoords(e) {
+                const rect = img.getBoundingClientRect();
+                const x = Math.round(((e.clientX - rect.left) / rect.width) * logicalW);
+                const y = Math.round(((e.clientY - rect.top) / rect.height) * logicalH);
+                return { x: Math.max(0, Math.min(logicalW, x)), y: Math.max(0, Math.min(logicalH, y)) };
+              }
+
+              let isDown = false;
+              img.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                isDown = true;
+                const { x, y } = getCoords(e);
+                const btn = e.button === 2 ? 'right_down' : 'left_down';
+                fetch(`/mouse?type=${btn}&x=${x}&y=${y}`, { method: 'POST' });
+              });
+              img.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const { x, y } = getCoords(e);
+                fetch(`/mouse?type=drag&x=${x}&y=${y}`, { method: 'POST' });
+              });
+              window.addEventListener('mouseup', (e) => {
+                if (!isDown) return;
+                isDown = false;
+                const { x, y } = getCoords(e);
+                const btn = e.button === 2 ? 'right_up' : 'left_up';
+                fetch(`/mouse?type=${btn}&x=${x}&y=${y}`, { method: 'POST' });
+              });
+              img.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                const { x, y } = getCoords(e);
+                fetch(`/mouse?type=dblclick&x=${x}&y=${y}`, { method: 'POST' });
+              });
+              img.addEventListener('contextmenu', (e) => e.preventDefault());
+              img.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const dy = e.deltaY > 0 ? -5 : 5;
+                fetch(`/scroll?dy=${dy}`, { method: 'POST' });
+              }, { passive: false });
+
+              function sendPaste() {
+                const val = document.getElementById('pasteText').value;
+                if (!val) return;
+                fetch('/paste', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ text: val })
+                });
+              }
+              function sendKey(code) {
+                fetch(`/key?code=${code}`, { method: 'POST' });
+              }
+              function runAction(act) {
+                fetch(`/action?name=${act}`, { method: 'POST' });
+              }
+            </script>
+          </body>
+          </html>
+          """
+
+          class Handler(BaseHTTPRequestHandler):
+              def log_message(self, format, *args):
+                  pass
+              def do_GET(self):
+                  u = urlparse(self.path)
+                  if u.path == '/frame.jpg':
+                      with jpg_lock:
+                          data = latest_jpg
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'image/jpeg')
+                      self.send_header('Cache-Control', 'no-store')
+                      self.send_header('Content-Length', str(len(data)))
+                      self.end_headers()
+                      self.wfile.write(data)
+                  elif u.path == '/info':
+                      w, h = get_screen_size()
+                      body = json.dumps({'width': w, 'height': h}).encode()
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'application/json')
+                      self.end_headers()
+                      self.wfile.write(body)
+                  else:
+                      body = HTML_PAGE.encode('utf-8')
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'text/html; charset=utf-8')
+                      self.end_headers()
+                      self.wfile.write(body)
+
+              def do_POST(self):
+                  u = urlparse(self.path)
+                  qs = parse_qs(u.query)
+                  if u.path == '/mouse':
+                      t = qs.get('type', [''])[0]
+                      x = float(qs.get('x', [0])[0])
+                      y = float(qs.get('y', [0])[0])
+                      if t == 'left_down':
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'left_up':
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'right_down':
+                          post_mouse(kCGEventRightMouseDown, x, y, kCGMouseButtonRight, 1)
+                      elif t == 'right_up':
+                          post_mouse(kCGEventRightMouseUp, x, y, kCGMouseButtonRight, 1)
+                      elif t == 'drag':
+                          post_mouse(kCGEventLeftMouseDragged, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'dblclick':
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 1)
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 1)
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 2)
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 2)
+                  elif u.path == '/scroll':
+                      dy = int(qs.get('dy', [0])[0])
+                      post_scroll(dy)
+                  elif u.path == '/key':
+                      code = int(qs.get('code', [36])[0])
+                      post_key(code)
+                  elif u.path == '/paste':
+                      length = int(self.headers.get('Content-Length', 0))
+                      payload = json.loads(self.rfile.read(length).decode('utf-8'))
+                      text = payload.get('text', '')
+                      subprocess.run(['pbcopy'], input=text.encode('utf-8'))
+                      time.sleep(0.05)
+                      post_key(9, kCGEventFlagMaskCommand)
+                  elif u.path == '/action':
+                      name = qs.get('name', [''])[0]
+                      if name == 'open_tuget':
+                          subprocess.Popen(['open', '/Applications/TuGet.app'])
+                      elif name == 'open_dangtu':
+                          for p in os.listdir('/Applications'):
+                              if ('当图' in p or 'dangtu' in p.lower() or 'getpic' in p.lower()) and p.endswith('.app'):
+                                  subprocess.Popen(['open', f'/Applications/{p}'])
+                      elif name == 'open_downloads':
+                          subprocess.Popen(['open', os.path.expanduser('~/Downloads')])
+                      elif name == 'shutdown':
+                          open('/tmp/stop-remote-mac', 'w').close()
+                  self.send_response(200)
+                  self.end_headers()
+                  self.wfile.write(b'ok')
+
+          ThreadingHTTPServer(('127.0.0.1', 6080), Handler).serve_forever()
+          EOF
+
+          python3 /tmp/mac_web_desktop.py &
+          SERVER_PID=$!
+
+          curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz | tar -xz -C /tmp
+          chmod +x /tmp/cloudflared
+          /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
+
+          for i in $(seq 1 30); do
+            URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' /tmp/cf.log | head -n 1 || true)
+            if [ -n "$URL" ]; then
+              echo "=================================================================="
+              echo "✅ 苹果 macOS 远程图形桌面已就绪！请在浏览器点击以下网址直接操作："
+              echo "👉 $URL"
+              echo "=================================================================="
+              break
+            fi
+            sleep 1
+          done
+
+          MAX_SECONDS=$(( ${{ inputs.timeout_minutes || 45 }} * 60 ))
+          ELAPSED=0
+          while [ $ELAPSED -lt $MAX_SECONDS ]; do
+            if [ -f /tmp/stop-remote-mac ]; then
+              echo "收到网页端关机指令，正在退出..."
+              break
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED + 5))
+          done
