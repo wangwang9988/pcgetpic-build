@@ -132,11 +132,102 @@ function collectMatchingPaths(rootDir, predicate, results = []) {
   return results;
 }
 
+function applyMacosChromiumBrandIcon(appBundlePath) {
+  const brandPng = path.join(browserDir, 'assets', 'tuget-browser.png');
+  if (!fs.existsSync(brandPng) || !fs.existsSync(appBundlePath)) {
+    return;
+  }
+  const iconsetDir = path.join(os.tmpdir(), `tuget-browser-${Date.now()}.iconset`);
+  const generatedIcns = path.join(os.tmpdir(), `tuget-browser-${Date.now()}.icns`);
+  fs.rmSync(iconsetDir, { recursive: true, force: true });
+  fs.rmSync(generatedIcns, { force: true });
+  fs.mkdirSync(iconsetDir, { recursive: true });
+
+  const sizes = [
+    [16, 'icon_16x16.png'],
+    [32, 'icon_16x16@2x.png'],
+    [32, 'icon_32x32.png'],
+    [64, 'icon_32x32@2x.png'],
+    [128, 'icon_128x128.png'],
+    [256, 'icon_128x128@2x.png'],
+    [256, 'icon_256x256.png'],
+    [512, 'icon_256x256@2x.png'],
+    [512, 'icon_512x512.png'],
+    [1024, 'icon_512x512@2x.png'],
+  ];
+  for (const [sz, fileName] of sizes) {
+    execFileSync(
+      'sips',
+      ['-z', String(sz), String(sz), brandPng, '--out', path.join(iconsetDir, fileName)],
+      { stdio: 'ignore' },
+    );
+  }
+  execFileSync('iconutil', ['-c', 'icns', iconsetDir, '-o', generatedIcns], { stdio: 'inherit' });
+
+  const replaceIcnsAndPatchApp = (bundleDir) => {
+    const resDir = path.join(bundleDir, 'Contents', 'Resources');
+    if (fs.existsSync(resDir)) {
+      for (const entry of fs.readdirSync(resDir, { withFileTypes: true })) {
+        if (entry.isFile() && entry.name.endsWith('.icns')) {
+          fs.copyFileSync(generatedIcns, path.join(resDir, entry.name));
+        }
+      }
+      fs.copyFileSync(generatedIcns, path.join(resDir, 'app.icns'));
+      const assetsCar = path.join(resDir, 'Assets.car');
+      if (fs.existsSync(assetsCar)) {
+        fs.rmSync(assetsCar, { force: true });
+      }
+    }
+    const infoPlist = path.join(bundleDir, 'Contents', 'Info.plist');
+    if (fs.existsSync(infoPlist)) {
+      try {
+        execFileSync('plutil', ['-remove', 'CFBundleIconName', infoPlist], { stdio: 'ignore' });
+      } catch {
+        // Ignore if key does not exist
+      }
+      try {
+        execFileSync('plutil', ['-replace', 'CFBundleIconFile', '-string', 'app.icns', infoPlist], {
+          stdio: 'ignore',
+        });
+      } catch {
+        // Ignore
+      }
+    }
+  };
+
+  replaceIcnsAndPatchApp(appBundlePath);
+
+  const frameworksDir = path.join(appBundlePath, 'Contents', 'Frameworks');
+  if (fs.existsSync(frameworksDir)) {
+    const walkNested = (dir) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isSymbolicLink()) continue;
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name.endsWith('.app')) {
+            replaceIcnsAndPatchApp(fullPath);
+          } else {
+            walkNested(fullPath);
+          }
+        } else if (entry.isFile() && entry.name.endsWith('.icns')) {
+          fs.copyFileSync(generatedIcns, fullPath);
+        }
+      }
+    };
+    walkNested(frameworksDir);
+  }
+
+  fs.rmSync(iconsetDir, { recursive: true, force: true });
+  fs.rmSync(generatedIcns, { force: true });
+  console.log('Applied TuGet brand icon (tuget-browser.png -> app.icns) to macOS Chromium bundle.');
+}
+
 function signMacosChromiumAppBundle(chromiumRoot, signingIdentity, childEntitlements) {
   if (!fs.existsSync(chromiumRoot)) return;
   for (const entry of fs.readdirSync(chromiumRoot, { withFileTypes: true })) {
     if (!entry.isDirectory() || !entry.name.endsWith('.app')) continue;
     const appPath = path.join(chromiumRoot, entry.name);
+    applyMacosChromiumBrandIcon(appPath);
     const macOsDir = path.join(appPath, 'Contents', 'MacOS');
     if (fs.existsSync(macOsDir)) {
       for (const bin of fs.readdirSync(macOsDir, { withFileTypes: true })) {
