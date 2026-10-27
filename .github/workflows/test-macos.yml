@@ -16,23 +16,123 @@ jobs:
       actions: read
       contents: read
     steps:
-      - name: 1. 下载并安装 图个吉利 (TuGet) 与 当图 (DangTu) 安装包
+      - name: 1. 切换苹果显示器分辨率至 1920x1080 并安装客户端
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          cat << 'EOF' > /tmp/set_res.m
+          #import <Foundation/Foundation.h>
+          #import <CoreGraphics/CoreGraphics.h>
+          #import <objc/runtime.h>
+          #import <objc/message.h>
+
+          @interface CGVirtualDisplayMode : NSObject
+          - (instancetype)initWithWidth:(NSUInteger)w height:(NSUInteger)h refreshRate:(double)r;
+          @end
+          @interface CGVirtualDisplaySettings : NSObject
+          @property (nonatomic, strong) NSArray *modes;
+          @property (nonatomic, assign) unsigned int hiDPI;
+          @end
+          @interface CGVirtualDisplayDescriptor : NSObject
+          @property (nonatomic, strong) NSString *name;
+          @property (nonatomic, assign) NSUInteger maxPixelsWide;
+          @property (nonatomic, assign) NSUInteger maxPixelsHigh;
+          @property (nonatomic, assign) CGSize sizeInMillimeters;
+          @property (nonatomic, assign) unsigned int vendorID;
+          @property (nonatomic, assign) unsigned int productID;
+          @property (nonatomic, assign) unsigned int serialNum;
+          @property (nonatomic, strong) dispatch_queue_t queue;
+          @end
+          @interface CGVirtualDisplay : NSObject
+          @property (nonatomic, readonly) CGDirectDisplayID displayID;
+          - (instancetype)initWithDescriptor:(CGVirtualDisplayDescriptor *)d;
+          - (BOOL)applySettings:(CGVirtualDisplaySettings *)s;
+          @end
+
+          int main(int argc, const char * argv[]) {
+              @autoreleasepool {
+                  CGDirectDisplayID mainID = CGMainDisplayID();
+                  NSDictionary *opts = @{ (__bridge NSString *)kCGDisplayShowDuplicateLowResolutionModes: @YES };
+                  CFArrayRef modes = CGDisplayCopyAllDisplayModes(mainID, (__bridge CFDictionaryRef)opts);
+                  if (modes) {
+                      CFIndex count = CFArrayGetCount(modes);
+                      printf("Existing display modes count: %ld\n", (long)count);
+                      for (CFIndex i = 0; i < count; i++) {
+                          CGDisplayModeRef m = (CGDisplayModeRef)CFArrayGetValueAtIndex(modes, i);
+                          size_t w = CGDisplayModeGetWidth(m);
+                          size_t h = CGDisplayModeGetHeight(m);
+                          printf("  Mode %ld: %zux%zu\n", (long)i, w, h);
+                          if (w >= 1920 && h >= 1080) {
+                              CGDisplayConfigRef cfg;
+                              CGBeginDisplayConfiguration(&cfg);
+                              CGConfigureDisplayWithDisplayMode(cfg, mainID, m, NULL);
+                              CGCompleteDisplayConfiguration(cfg, kCGConfigurePermanently);
+                              printf("Switched native display to %zux%zu\n", w, h);
+                              return 0;
+                          }
+                      }
+                  }
+
+                  Class descCls = objc_getClass("CGVirtualDisplayDescriptor");
+                  Class modeCls = objc_getClass("CGVirtualDisplayMode");
+                  Class setCls  = objc_getClass("CGVirtualDisplaySettings");
+                  Class dispCls = objc_getClass("CGVirtualDisplay");
+                  if (!descCls || !modeCls || !setCls || !dispCls) {
+                      printf("CGVirtualDisplay classes not found\n");
+                      return 1;
+                  }
+
+                  CGVirtualDisplayDescriptor *desc = [[descCls alloc] init];
+                  desc.name = @"Mac-1080p-Display";
+                  desc.maxPixelsWide = 1920;
+                  desc.maxPixelsHigh = 1080;
+                  desc.sizeInMillimeters = CGSizeMake(530, 300);
+                  desc.vendorID = 0x1234;
+                  desc.productID = 0x5678;
+                  desc.serialNum = 1;
+                  desc.queue = dispatch_get_main_queue();
+
+                  CGVirtualDisplay *vDisp = [[dispCls alloc] initWithDescriptor:desc];
+                  CGVirtualDisplaySettings *settings = [[setCls alloc] init];
+                  settings.hiDPI = 0;
+                  CGVirtualDisplayMode *m1080 = [[modeCls alloc] initWithWidth:1920 height:1080 refreshRate:60.0];
+                  CGVirtualDisplayMode *m900  = [[modeCls alloc] initWithWidth:1600 height:900 refreshRate:60.0];
+                  settings.modes = @[m1080, m900];
+                  [vDisp applySettings:settings];
+
+                  CGDirectDisplayID vid = vDisp.displayID;
+                  printf("Created CGVirtualDisplay ID=%u (1920x1080)\n", vid);
+                  if (vid != 0) {
+                      CGDisplayConfigRef cfg;
+                      if (CGBeginDisplayConfiguration(&cfg) == kCGErrorSuccess) {
+                          CGConfigureDisplayOrigin(cfg, vid, 0, 0);
+                          CGConfigureDisplayOrigin(cfg, mainID, 1920, 0);
+                          CGCompleteDisplayConfiguration(cfg, kCGConfigureForSession);
+                      }
+                      FILE *fp = fopen("/tmp/vdisplay_id.txt", "w");
+                      if (fp) { fprintf(fp, "%u", vid); fclose(fp); }
+                  }
+                  [[NSRunLoop mainRunLoop] run];
+              }
+              return 0;
+          }
+          EOF
+          clang -framework Foundation -framework CoreGraphics /tmp/set_res.m -o /tmp/set_res
+          export RUNNER_TRACKING_ID=""
+          nohup /tmp/set_res > /tmp/set_res.log 2>&1 &
+          sleep 3
+          cat /tmp/set_res.log || true
+
           mkdir -p /tmp/pkgs
           echo "==> 正在从构建产物拉取 TuGet-macOS-arm64.dmg 与 dangtu-macos-arm64.dmg ..."
           gh run download 40344164752 --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || true
           gh run download 40289734009 --repo wangwang9988/pcgetpic-build -n DangTu-macOS-arm64 -D /tmp/pkgs || true
-          ls -lh /tmp/pkgs
 
           if [ -f /tmp/pkgs/TuGet-macOS-arm64.dmg ]; then
             hdiutil attach /tmp/pkgs/TuGet-macOS-arm64.dmg -mountpoint /Volumes/TuGet -nobrowse
             cp -a "/Volumes/TuGet/TuGet.app" /Applications/
             cp -a "/Volumes/TuGet/TuGet.app" "$HOME/Desktop/"
             hdiutil detach /Volumes/TuGet || true
-            echo "==> TuGet.app 公证与 Gatekeeper 状态："
-            spctl --assess --type execute -vv /Applications/TuGet.app 2>&1 | tee /tmp/spctl-tuget.txt || true
           fi
 
           if [ -f /tmp/pkgs/dangtu-macos-arm64.dmg ]; then
@@ -40,17 +140,14 @@ jobs:
             for app in /Volumes/DangTu/*.app; do
               cp -a "$app" /Applications/
               cp -a "$app" "$HOME/Desktop/"
-              echo "==> $(basename "$app") 公证与 Gatekeeper 状态："
-              spctl --assess --type execute -vv "/Applications/$(basename "$app")" 2>&1 | tee /tmp/spctl-dangtu.txt || true
             done
             hdiutil detach /Volumes/DangTu || true
           fi
 
-          # 默认启动客户端窗口到苹果桌面
           open /Applications/TuGet.app || true
           sleep 2
 
-      - name: 2. 启动 macOS 网页远程图形桌面服务
+      - name: 2. 启动 macOS 1920x1080 网页远程图形桌面服务
         run: |
           cat << 'EOF' > /tmp/mac_web_desktop.py
           import ctypes
@@ -69,11 +166,16 @@ jobs:
           class CGPoint(ctypes.Structure):
               _fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double)]
 
+          class CGRect(ctypes.Structure):
+              _fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double), ('w', ctypes.c_double), ('h', ctypes.c_double)]
+
           cg.CGMainDisplayID.restype = ctypes.c_uint32
           cg.CGDisplayPixelsWide.argtypes = [ctypes.c_uint32]
           cg.CGDisplayPixelsWide.restype = ctypes.c_size_t
           cg.CGDisplayPixelsHigh.argtypes = [ctypes.c_uint32]
           cg.CGDisplayPixelsHigh.restype = ctypes.c_size_t
+          cg.CGDisplayBounds.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayBounds.restype = CGRect
 
           cg.CGEventCreateMouseEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint32, CGPoint, ctypes.c_uint32]
           cg.CGEventCreateMouseEvent.restype = ctypes.c_void_p
@@ -98,14 +200,26 @@ jobs:
           kCGHIDEventTap = 0
           kCGEventFlagMaskCommand = 1 << 20
 
-          def get_screen_size():
-              did = cg.CGMainDisplayID()
-              w = cg.CGDisplayPixelsWide(did) or 1440
-              h = cg.CGDisplayPixelsHigh(did) or 900
-              return int(w), int(h)
+          def get_target_display_id():
+              if os.path.exists('/tmp/vdisplay_id.txt'):
+                  try:
+                      vid = int(open('/tmp/vdisplay_id.txt').read().strip())
+                      if vid > 0 and cg.CGDisplayPixelsWide(vid) >= 1600:
+                          return vid
+                  except Exception:
+                      pass
+              return cg.CGMainDisplayID()
+
+          def get_screen_bounds():
+              did = get_target_display_id()
+              b = cg.CGDisplayBounds(did)
+              w = int(cg.CGDisplayPixelsWide(did) or 1920)
+              h = int(cg.CGDisplayPixelsHigh(did) or 1080)
+              return int(b.x), int(b.y), w, h
 
           def post_mouse(ev_type, x, y, button=0, click_count=1):
-              pt = CGPoint(float(x), float(y))
+              ox, oy, _, _ = get_screen_bounds()
+              pt = CGPoint(float(ox + x), float(oy + y))
               ev = cg.CGEventCreateMouseEvent(None, ev_type, pt, button)
               if ev:
                   if click_count > 1:
@@ -137,7 +251,11 @@ jobs:
               tmp_path = '/tmp/mac_live_screen.jpg'
               while not os.path.exists('/tmp/stop-remote-mac'):
                   try:
-                      subprocess.run(['/usr/sbin/screencapture', '-x', '-C', '-t', 'jpg', tmp_path], timeout=2)
+                      ox, oy, w, h = get_screen_bounds()
+                      subprocess.run(
+                          ['/usr/sbin/screencapture', '-x', '-C', '-R', f'{ox},{oy},{w},{h}', '-t', 'jpg', tmp_path],
+                          timeout=2
+                      )
                       if os.path.exists(tmp_path):
                           with open(tmp_path, 'rb') as f:
                               data = f.read()
@@ -154,12 +272,12 @@ jobs:
           <html lang="zh-CN">
           <head>
             <meta charset="utf-8" />
-            <title>macOS 苹果云端真机远程桌面 (Apple Silicon M系列)</title>
+            <title>macOS 苹果云端真机远程桌面 (1920x1080 高清版)</title>
             <style>
               * { box-sizing: border-box; }
               body { margin: 0; background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-              .toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 8px 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; z-index: 10; }
-              .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-weight: 500; }
+              .toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 6px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 10; }
+              .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 13px; cursor: pointer; font-weight: 500; }
               .btn:hover { background: #1d4ed8; }
               .btn.green { background: #059669; }
               .btn.green:hover { background: #047857; }
@@ -167,7 +285,7 @@ jobs:
               .btn.gray:hover { background: #334155; }
               .btn.red { background: #dc2626; margin-left: auto; }
               .input-box { flex: 1; min-width: 240px; display: flex; gap: 6px; }
-              .input-box input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+              .input-box input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; padding: 5px 10px; font-size: 13px; }
               .screen-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; position: relative; background: #020617; }
               #screen { max-width: 100%; max-height: 100%; object-fit: contain; cursor: default; user-select: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
               .status { font-size: 12px; color: #94a3b8; }
@@ -193,8 +311,12 @@ jobs:
             <script>
               const img = document.getElementById('screen');
               const statusEl = document.getElementById('status');
-              let logicalW = 1440, logicalH = 900;
-              fetch('/info').then(r => r.json()).then(d => { logicalW = d.width; logicalH = d.height; });
+              let logicalW = 1920, logicalH = 1080;
+              function syncInfo() {
+                fetch('/info').then(r => r.json()).then(d => { logicalW = d.width; logicalH = d.height; });
+              }
+              syncInfo();
+              setInterval(syncInfo, 5000);
 
               let loading = false;
               function refreshFrame() {
@@ -204,7 +326,7 @@ jobs:
                 next.onload = () => {
                   img.src = next.src;
                   loading = false;
-                  statusEl.textContent = `🟢 实时画面已连接 (${logicalW}x${logicalH})`;
+                  statusEl.textContent = `🟢 高清画面已连接 (${logicalW}x${logicalH})`;
                   setTimeout(refreshFrame, 80);
                 };
                 next.onerror = () => {
@@ -290,8 +412,8 @@ jobs:
                       self.end_headers()
                       self.wfile.write(data)
                   elif u.path == '/info':
-                      w, h = get_screen_size()
-                      body = json.dumps({'width': w, 'height': h}).encode()
+                      ox, oy, w, h = get_screen_bounds()
+                      body = json.dumps({'width': w, 'height': h, 'ox': ox, 'oy': oy}).encode()
                       self.send_response(200)
                       self.send_header('Content-Type', 'application/json')
                       self.end_headers()
@@ -369,7 +491,7 @@ jobs:
             if [ -n "$URL" ]; then
               echo "$URL" > /tmp/remote-url.txt
               echo "=================================================================="
-              echo "✅ 苹果 macOS 远程图形桌面已就绪！请在浏览器点击以下网址直接操作："
+              echo "✅ 苹果 macOS (1920x1080) 远程图形桌面已就绪！请在浏览器点击以下网址："
               echo "👉 $URL"
               echo "=================================================================="
               break
