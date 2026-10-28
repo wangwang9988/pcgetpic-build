@@ -183,4 +183,98 @@ try {
 const copyArgs = ['scripts/copy-desktop-installer.mjs', ...cargoTargetArgs];
 run(clientDir, 'node', copyArgs);
 
+// 4. On Linux, ensure Debian control file uses ASCII Package name ('dangtu') while preserving Resource dir
+if (process.platform === 'linux') {
+  const debArchivePath = path.join(
+    workspaceRoot,
+    'tools',
+    'public',
+    'downloads',
+    'clientGetPic',
+    'dangtu-linux-x64.deb',
+  );
+  if (fs.existsSync(debArchivePath)) {
+    const tmpDebDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dangtu-deb-fix-'));
+    try {
+      execFileSync('dpkg-deb', ['-R', debArchivePath, tmpDebDir], { stdio: 'inherit' });
+      const controlPath = path.join(tmpDebDir, 'DEBIAN', 'control');
+      if (fs.existsSync(controlPath)) {
+        const controlText = fs.readFileSync(controlPath, 'utf8');
+        const fixedText = controlText.replace(/^Package:\s*.+$/m, 'Package: dangtu');
+        fs.writeFileSync(controlPath, fixedText, 'utf8');
+        execFileSync('dpkg-deb', ['-Zxz', '-b', tmpDebDir, debArchivePath], { stdio: 'inherit' });
+        console.log('==> Normalized Debian Package field to "dangtu" in dangtu-linux-x64.deb');
+      }
+    } finally {
+      fs.rmSync(tmpDebDir, { recursive: true, force: true });
+    }
+  }
+
+  const rpmArchivePath = path.join(
+    workspaceRoot,
+    'tools',
+    'public',
+    'downloads',
+    'clientGetPic',
+    'dangtu-linux-x64.rpm',
+  );
+  if (fs.existsSync(rpmArchivePath)) {
+    const tmpRpmDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dangtu-rpm-fix-'));
+    try {
+      const rootDir = path.join(tmpRpmDir, 'root');
+      const rpmbuildDir = path.join(tmpRpmDir, 'rpmbuild');
+      fs.mkdirSync(rootDir, { recursive: true });
+      for (const sub of ['BUILD', 'RPMS', 'SOURCES', 'SPECS', 'SRPMS']) {
+        fs.mkdirSync(path.join(rpmbuildDir, sub), { recursive: true });
+      }
+      execFileSync(
+        'bash',
+        ['-e', '-c', `cd "${rootDir}" && rpm2cpio "${rpmArchivePath}" | cpio -idm`],
+        { stdio: 'inherit' },
+      );
+      const specPath = path.join(rpmbuildDir, 'SPECS', 'dangtu.spec');
+      const specContent = [
+        `%define _topdir ${rpmbuildDir}`,
+        '%define _binary_payload w2.xzdio',
+        '%global __strip /bin/true',
+        '%global __os_install_post %{nil}',
+        'AutoReqProv: no',
+        'Name: dangtu',
+        `Version: ${tauriConf.version}`,
+        'Release: 1',
+        'Summary: DangTu desktop client',
+        'License: Proprietary',
+        'Requires: webkit2gtk4.1, gtk3, libappindicator-gtk3, nss, atk, at-spi2-atk, cups-libs, libdrm, libxkbcommon, libXcomposite, libXdamage, libXfixes, libXrandr, mesa-libgbm, alsa-lib, xdg-utils',
+        '',
+        '%description',
+        'DangTu desktop client',
+        '',
+        '%install',
+        `cp -a "${rootDir}"/* %{buildroot}/`,
+        '',
+        '%files',
+        '/usr/bin/dangtu',
+        '/usr/lib/*',
+        '/usr/share/applications/*',
+        '/usr/share/icons/*',
+        '',
+      ].join('\n');
+      fs.writeFileSync(specPath, specContent, 'utf8');
+      execFileSync('rpmbuild', ['-bb', specPath], { stdio: 'inherit' });
+      const builtRpm = path.join(
+        rpmbuildDir,
+        'RPMS',
+        'x86_64',
+        `dangtu-${tauriConf.version}-1.x86_64.rpm`,
+      );
+      if (fs.existsSync(builtRpm)) {
+        fs.copyFileSync(builtRpm, rpmArchivePath);
+        console.log('==> Normalized RPM Name field to "dangtu" in dangtu-linux-x64.rpm');
+      }
+    } finally {
+      fs.rmSync(tmpRpmDir, { recursive: true, force: true });
+    }
+  }
+}
+
 console.log('\nDangTu cross-platform release build completed successfully!');
