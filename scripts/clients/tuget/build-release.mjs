@@ -560,9 +560,22 @@ if (!thin) {
 
   fs.copyFileSync(browserExe, path.join(browserStageDir, `tuget-browser${exeSuffix}`));
   fs.copyFileSync(nativeHostExe, path.join(browserStageDir, `tuget-native-host${exeSuffix}`));
-  fs.copyFileSync(
-    path.join(browserDir, 'chromium-version.json'),
+  const rawChromiumVersion = JSON.parse(
+    fs.readFileSync(path.join(browserDir, 'chromium-version.json'), 'utf8'),
+  );
+  const platformChromiumEntry = rawChromiumVersion.platforms?.[chromiumPlatform] || {};
+  const stagedChromiumVersion = {
+    ...rawChromiumVersion,
+    version: platformChromiumEntry.version || rawChromiumVersion.version,
+    revision: platformChromiumEntry.revision || rawChromiumVersion.revision,
+    platform: chromiumPlatform,
+    url: platformChromiumEntry.url || rawChromiumVersion.url,
+    sha256: platformChromiumEntry.sha256 || rawChromiumVersion.sha256,
+  };
+  fs.writeFileSync(
     path.join(browserStageDir, 'chromium-version.json'),
+    `${JSON.stringify(stagedChromiumVersion, null, 2)}\n`,
+    'utf8',
   );
 
   if (process.platform === 'darwin') {
