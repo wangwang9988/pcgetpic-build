@@ -58,6 +58,8 @@ jobs:
           git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "git@gitee.com:"
           git submodule sync
           git submodule update --init client browser website tools
+          git -C client pull origin master
+          git -C browser pull origin main || git -C browser pull origin master || true
 
       - name: Install Linux System Dependencies
         if: runner.os == 'Linux'
