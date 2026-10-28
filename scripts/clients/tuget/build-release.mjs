@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { applyLinuxBrandIcon } from '../../../browser/scripts/apply-linux-brand-icon.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(__dirname, '..', '..', '..');
@@ -54,6 +55,24 @@ function loadLocalEnvIfPresent() {
       }
     }
   }
+  if (!process.env.TUGET_LICENSE_HMAC_SECRET || !process.env.TUGET_LICENSE_HMAC_SECRET.trim()) {
+    const serverEnvPath = path.join(workspaceRoot, 'server', '.env');
+    if (fs.existsSync(serverEnvPath)) {
+      const lines = fs.readFileSync(serverEnvPath, 'utf8').split(/\r?\n/);
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#')) continue;
+        const eqIdx = line.indexOf('=');
+        if (eqIdx <= 0) continue;
+        const key = line.slice(0, eqIdx).trim();
+        const val = line.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+        if ((key === 'TUGET_LICENSE_HMAC_SECRET' || key === 'HMAC_SECRET_TUGET') && val) {
+          process.env.TUGET_LICENSE_HMAC_SECRET = val;
+          break;
+        }
+      }
+    }
+  }
 }
 
 function run(cwd, cmd, args, env = process.env) {
@@ -66,21 +85,27 @@ function run(cwd, cmd, args, env = process.env) {
   });
 }
 
-function resolveChromiumPlatform(targetTriple) {
+function resolveChromiumPlatform(targetTriple = '') {
+  const triple = String(targetTriple || '');
+  if (triple.includes('-apple-darwin')) {
+    return triple.startsWith('x86_64') ? 'mac-x64' : 'mac-arm64';
+  }
+  if (triple.includes('-linux-')) return 'linux64';
+  if (triple.includes('-windows-')) return 'win64';
   if (process.platform === 'win32') return 'win64';
   if (process.platform === 'darwin') {
-    if (targetTriple.startsWith('x86_64')) return 'mac-x64';
-    if (targetTriple.startsWith('aarch64')) return 'mac-arm64';
+    if (triple.startsWith('x86_64')) return 'mac-x64';
+    if (triple.startsWith('aarch64')) return 'mac-arm64';
     return process.arch === 'arm64' ? 'mac-arm64' : 'mac-x64';
   }
   return 'linux64';
 }
 
-function resolvePlatformTauriConfig() {
-  if (process.platform === 'win32') {
+function resolvePlatformTauriConfig(chromiumPlatform) {
+  if (chromiumPlatform === 'win64') {
     return path.join(clientTauriDir, 'tauri.windows.conf.json');
   }
-  if (process.platform === 'darwin') {
+  if (chromiumPlatform === 'mac-arm64' || chromiumPlatform === 'mac-x64') {
     return path.join(clientTauriDir, 'tauri.macos.conf.json');
   }
   return path.join(clientTauriDir, 'tauri.linux.conf.json');
@@ -222,6 +247,18 @@ function applyMacosChromiumBrandIcon(appBundlePath) {
   console.log('Applied TuGet brand icon (tuget-browser.png -> app.icns) to macOS Chromium bundle.');
 }
 
+function applyLinuxChromiumBrandIcon(chromiumDir = null) {
+  const brandPng = path.join(browserDir, 'assets', 'tuget-browser.png');
+  if (!fs.existsSync(brandPng)) {
+    return;
+  }
+  applyLinuxBrandIcon({
+    brandPng,
+    chromiumDir: chromiumDir && fs.existsSync(chromiumDir) ? chromiumDir : '',
+    tauriLinuxDir: path.join(clientTauriDir, 'linux'),
+  });
+}
+
 function signMacosChromiumAppBundle(chromiumRoot, signingIdentity, childEntitlements) {
   if (!fs.existsSync(chromiumRoot)) return;
   for (const entry of fs.readdirSync(chromiumRoot, { withFileTypes: true })) {
@@ -322,22 +359,96 @@ function copyNewestMatchingInstaller(bundleDir, matcher, canonicalFileName, tool
   }
 }
 
-function syncWebsiteVersionManifests(clientVersion) {
+const ALLOWED_INSTALLER_HOSTS = new Set([
+  'dl.webtongbu.com',
+  'tuget.yueding168.com',
+  'downpictures.com',
+  'www.downpictures.com',
+  'dl.downpictures.com',
+]);
+
+function isValidInstallerUrl(currentUrl, expectedSuffix) {
+  if (typeof currentUrl !== 'string') return false;
+  const trimmed = currentUrl.trim();
+  try {
+    const parsed = new URL(trimmed);
+    return (
+      parsed.protocol === 'https:' &&
+      ALLOWED_INSTALLER_HOSTS.has(parsed.hostname.toLowerCase()) &&
+      parsed.pathname.toLowerCase().endsWith(expectedSuffix)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function ensureValidInstallerUrl(currentUrl, expectedSuffix, fallbackUrl) {
+  return isValidInstallerUrl(currentUrl, expectedSuffix) ? currentUrl.trim() : fallbackUrl;
+}
+
+function syncWebsiteVersionManifests(clientVersion, builtChromiumPlatform) {
+  const defaultPlatformUrls = {
+    desktopDownloadUrl: ['.exe', 'https://dl.webtongbu.com/TuGet-Client/TuGet-Setup.exe'],
+    macArm64DownloadUrl: ['arm64.dmg', 'https://dl.webtongbu.com/TuGet-Client/TuGet-macOS-arm64.dmg'],
+    macX64DownloadUrl: ['x64.dmg', 'https://dl.webtongbu.com/TuGet-Client/TuGet-macOS-x64.dmg'],
+    linuxDebDownloadUrl: ['.deb', 'https://dl.webtongbu.com/TuGet-Client/TuGet-Linux-x64.deb'],
+    linuxRpmDownloadUrl: ['.rpm', 'https://dl.webtongbu.com/TuGet-Client/TuGet-Linux-x64.rpm'],
+  };
+
+  const builtUrlKeysByPlatform = {
+    win64: new Set(['desktopDownloadUrl']),
+    'mac-arm64': new Set(['macArm64DownloadUrl']),
+    'mac-x64': new Set(['macX64DownloadUrl']),
+    linux64: new Set(['linuxDebDownloadUrl', 'linuxRpmDownloadUrl']),
+  };
+  const activeUrlKeys = builtUrlKeysByPlatform[builtChromiumPlatform] || new Set();
+
+  const isWindowsTarget = builtChromiumPlatform === 'win64';
+  const isMacTarget = builtChromiumPlatform === 'mac-arm64' || builtChromiumPlatform === 'mac-x64';
+  const isLinuxTarget = builtChromiumPlatform === 'linux64';
+
+  const applyPlatformUpdates = (manifest, isMarketingSnapshot = false) => {
+    if (isWindowsTarget) {
+      manifest.desktopVersion = clientVersion;
+      if (isMarketingSnapshot) {
+        manifest.version = clientVersion;
+        manifest.desktopUpdatedAt = new Date().toISOString().slice(0, 10);
+      }
+    }
+    if (!isMarketingSnapshot) {
+      if (isMacTarget) {
+        manifest.macVersion = clientVersion;
+      }
+      if (isLinuxTarget) {
+        manifest.linuxVersion = clientVersion;
+      }
+    } else {
+      delete manifest.macVersion;
+      delete manifest.linuxVersion;
+    }
+    for (const [k, [expectedSuffix, fallbackUrl]] of Object.entries(defaultPlatformUrls)) {
+      if (activeUrlKeys.has(k)) {
+        manifest[k] = ensureValidInstallerUrl(manifest[k], expectedSuffix, fallbackUrl);
+      } else if (manifest[k] !== undefined && !isValidInstallerUrl(manifest[k], expectedSuffix)) {
+        delete manifest[k];
+      }
+    }
+  };
+
   const tugetWebsiteVersionPath = path.join(workspaceRoot, 'tuget-website', 'public', 'version.json');
   if (fs.existsSync(tugetWebsiteVersionPath)) {
     const manifest = JSON.parse(fs.readFileSync(tugetWebsiteVersionPath, 'utf8'));
-    manifest.desktopVersion = clientVersion;
+    applyPlatformUpdates(manifest, false);
     fs.writeFileSync(tugetWebsiteVersionPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    console.log(`Updated tuget-website/public/version.json desktopVersion -> ${clientVersion}`);
+    console.log(`Updated tuget-website/public/version.json (${builtChromiumPlatform}) -> ${clientVersion}`);
   }
 
   const mainWebsiteVersionPath = path.join(workspaceRoot, 'website', 'public', 'tuget-version.json');
   if (fs.existsSync(mainWebsiteVersionPath)) {
     const manifest = JSON.parse(fs.readFileSync(mainWebsiteVersionPath, 'utf8'));
-    manifest.version = clientVersion;
-    manifest.desktopUpdatedAt = new Date().toISOString().slice(0, 10);
+    applyPlatformUpdates(manifest, true);
     fs.writeFileSync(mainWebsiteVersionPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-    console.log(`Updated website/public/tuget-version.json version -> ${clientVersion}`);
+    console.log(`Updated website/public/tuget-version.json (${builtChromiumPlatform}) -> ${clientVersion}`);
   }
 }
 
@@ -350,8 +461,8 @@ if (!process.env.TUGET_LICENSE_HMAC_SECRET || !process.env.TUGET_LICENSE_HMAC_SE
   );
 }
 
-const exeSuffix = process.platform === 'win32' ? '.exe' : '';
 const chromiumPlatform = resolveChromiumPlatform(target);
+const exeSuffix = chromiumPlatform === 'win64' ? '.exe' : '';
 const tauriConf = JSON.parse(fs.readFileSync(path.join(clientTauriDir, 'tauri.conf.json'), 'utf8'));
 
 console.log(
@@ -438,7 +549,7 @@ if (!thin) {
   const browserExe = path.join(browserDir, releaseSubDir, `tuget-browser${exeSuffix}`);
   const nativeHostExe = path.join(hostDir, releaseSubDir, `tuget-native-host${exeSuffix}`);
 
-  if (process.platform === 'win32') {
+  if (chromiumPlatform === 'win64') {
     assertNoDynamicMsvcRuntime(browserExe, 'Browser Engine');
     assertNoDynamicMsvcRuntime(nativeHostExe, 'Native Host');
   }
@@ -491,6 +602,8 @@ if (!thin) {
     const mainEntitlements = path.join(clientTauriDir, 'macos', 'entitlements.plist');
     const childEntitlements = path.join(clientTauriDir, 'macos', 'entitlements.child.plist');
     signMacosStagedBinaries(browserStageDir, identity, mainEntitlements, childEntitlements);
+  } else if (process.platform === 'linux') {
+    applyLinuxChromiumBrandIcon(path.join(browserStageDir, 'chromium'));
   }
 
   const winSigningConfigured =
@@ -553,10 +666,13 @@ if (!thin) {
 }
 
 // 6. Build Tauri installer bundle
+if (process.platform === 'linux' && thin) {
+  applyLinuxChromiumBrandIcon(null);
+}
 const cargoTargetArgs = target ? ['--target', target] : [];
 const signArgs = skipSigning ? ['--no-sign'] : [];
 const releaseConfig = path.join(clientTauriDir, 'tauri.release.conf.json');
-const platformConfig = resolvePlatformTauriConfig();
+const platformConfig = resolvePlatformTauriConfig(chromiumPlatform);
 const configArgs = thin
   ? ['--config', platformConfig]
   : ['--config', releaseConfig, '--config', platformConfig];
@@ -652,14 +768,14 @@ const toolsDownloadDir = fs.existsSync(toolsDir)
   ? path.join(toolsDir, 'public', 'downloads', 'TuGet-Client')
   : null;
 
-if (process.platform === 'win32') {
+if (chromiumPlatform === 'win64') {
   copyNewestMatchingInstaller(
     path.join(bundleRoot, 'nsis'),
     (name) => name.endsWith('-setup.exe'),
     'TuGet-Setup.exe',
     toolsDownloadDir,
   );
-} else if (process.platform === 'darwin') {
+} else if (chromiumPlatform === 'mac-arm64' || chromiumPlatform === 'mac-x64') {
   const macosAppPath = path.join(bundleRoot, 'macos', 'TuGet.app');
   if (!thin && fs.existsSync(stagedChromiumDir)) {
     const appChromiumDest = path.join(
@@ -725,7 +841,7 @@ if (process.platform === 'win32') {
     fs.mkdirSync(toolsDownloadDir, { recursive: true });
     fs.copyFileSync(dmgPath, path.join(toolsDownloadDir, canonicalDmg));
   }
-} else if (process.platform === 'linux') {
+} else if (chromiumPlatform === 'linux64') {
   copyNewestMatchingInstaller(
     path.join(bundleRoot, 'deb'),
     (name) => name.endsWith('.deb'),
@@ -740,6 +856,6 @@ if (process.platform === 'win32') {
   );
 }
 
-syncWebsiteVersionManifests(tauriConf.version);
+syncWebsiteVersionManifests(tauriConf.version, chromiumPlatform);
 
 console.log('\nTuGet cross-platform release build completed successfully!');
