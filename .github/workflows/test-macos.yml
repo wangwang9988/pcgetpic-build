@@ -124,9 +124,11 @@ jobs:
           cat /tmp/set_res.log || true
 
           mkdir -p /tmp/pkgs
-          echo "==> 正在从构建产物拉取 TuGet-macOS-arm64.dmg 与 dangtu-macos-arm64.dmg ..."
-          gh run download 40445411545 --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || true
-          gh run download 40289734009 --repo wangwang9988/pcgetpic-build -n DangTu-macOS-arm64 -D /tmp/pkgs || true
+          echo "==> 正在从最新构建产物拉取 TuGet-macOS-arm64.dmg (v1.2.22) 与 dangtu-macos-arm64.dmg (v3.11.132) ..."
+          TUGET_RUN_ID=$(gh api "repos/wangwang9988/pcgetpic-build/actions/artifacts?name=TuGet-macOS-arm64&per_page=1" --jq '.artifacts[0].workflow_run.id // empty' 2>/dev/null || true)
+          DANGTU_RUN_ID=$(gh api "repos/wangwang9988/pcgetpic-build/actions/artifacts?name=DangTu-macOS-arm64&per_page=1" --jq '.artifacts[0].workflow_run.id // empty' 2>/dev/null || true)
+          gh run download "${TUGET_RUN_ID:-40826260087}" --repo wangwang9988/pcgetpic-build -n TuGet-macOS-arm64 -D /tmp/pkgs || curl -fsSL https://dl.webtongbu.com/TuGet-Client/TuGet-macOS-arm64.dmg -o /tmp/pkgs/TuGet-macOS-arm64.dmg || true
+          gh run download "${DANGTU_RUN_ID:-40825395638}" --repo wangwang9988/pcgetpic-build -n DangTu-macOS-arm64 -D /tmp/pkgs || curl -fsSL https://dl.webtongbu.com/clientGetPic/dangtu-macos-arm64.dmg -o /tmp/pkgs/dangtu-macos-arm64.dmg || true
 
           if [ -f /tmp/pkgs/TuGet-macOS-arm64.dmg ]; then
             hdiutil attach /tmp/pkgs/TuGet-macOS-arm64.dmg -mountpoint /Volumes/TuGet -nobrowse
@@ -143,6 +145,19 @@ jobs:
             done
             hdiutil detach /Volumes/DangTu || true
           fi
+
+          echo "==> 正在拉取最新构建的当图 Safari 扩展宿主应用 (DangTu-Safari-macOS) ..."
+          SAFARI_RUN_ID=$(gh run list --repo wangwang9988/pcgetpic-build --workflow build-dangtu-safari.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+          if [ -n "$SAFARI_RUN_ID" ] && [ "$SAFARI_RUN_ID" != "null" ]; then
+            gh run download "$SAFARI_RUN_ID" --repo wangwang9988/pcgetpic-build -n DangTu-Safari-macOS -D /tmp/pkgs || true
+            if [ -f /tmp/pkgs/DownPictures-Safari-macOS.app.zip ]; then
+              ditto -x -k /tmp/pkgs/DownPictures-Safari-macOS.app.zip /Applications/
+              cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
+              pluginkit -a "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+            fi
+          fi
+          defaults write com.apple.Safari IncludeDevelopMenu -bool true || true
+          defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true || true
 
           open /Applications/TuGet.app || true
           sleep 2
@@ -295,6 +310,7 @@ jobs:
             <div class="toolbar">
               <button class="btn green" onclick="runAction('open_tuget')">🚀 打开/置顶 图个吉利 (TuGet)</button>
               <button class="btn green" onclick="runAction('open_dangtu')">🚀 打开/置顶 当图 (DangTu)</button>
+              <button class="btn green" onclick="runAction('open_safari_ext')">🧭 打开 Safari 测试当图插件</button>
               <button class="btn gray" onclick="runAction('open_downloads')">📂 打开苹果下载目录 (Downloads)</button>
               <div class="input-box">
                 <input id="pasteText" type="text" placeholder="在此粘贴商品链接或输入文字，点击右侧按钮直接送入苹果软件输入框..." onkeydown="if(event.key==='Enter') sendPaste()" />
@@ -468,6 +484,10 @@ jobs:
                           for p in os.listdir('/Applications'):
                               if ('当图' in p or 'dangtu' in p.lower() or 'getpic' in p.lower()) and p.endswith('.app'):
                                   subprocess.Popen(['open', f'/Applications/{p}'])
+                      elif name == 'open_safari_ext':
+                          if os.path.exists('/Applications/DownPictures.app'):
+                              subprocess.Popen(['open', '/Applications/DownPictures.app'])
+                          subprocess.Popen(['open', '-a', 'Safari', 'https://www.1688.com'])
                       elif name == 'open_downloads':
                           subprocess.Popen(['open', os.path.expanduser('~/Downloads')])
                       elif name == 'shutdown':
@@ -484,26 +504,35 @@ jobs:
 
           curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz | tar -xz -C /tmp
           chmod +x /tmp/cloudflared
-          nohup /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
 
-          for i in $(seq 1 30); do
-            URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' /tmp/cf.log | head -n 1 || true)
-            if [ -n "$URL" ]; then
-              echo "$URL" > /tmp/remote-url.txt
-              echo "=================================================================="
-              echo "✅ 苹果 macOS (1920x1080) 远程图形桌面已就绪！请在浏览器点击以下网址："
-              echo "👉 $URL"
-              echo "=================================================================="
-              break
-            fi
-            sleep 1
+          URL=""
+          for attempt in 1 2 3; do
+            pkill -f cloudflared || true
+            rm -f /tmp/cf.log
+            nohup /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
+            for i in $(seq 1 25); do
+              URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' /tmp/cf.log | head -n 1 || true)
+              if [ -n "$URL" ]; then
+                echo "$URL" > /tmp/remote-url.txt
+                echo "$URL" > "$GITHUB_WORKSPACE/remote-url.txt"
+                echo "=================================================================="
+                echo "✅ 苹果 macOS (1920x1080) 远程图形桌面已就绪！请在浏览器点击以下网址："
+                echo "👉 $URL"
+                echo "=================================================================="
+                break 2
+              fi
+              sleep 1
+            done
           done
+          cp /tmp/cf.log "$GITHUB_WORKSPACE/cf.log" || true
 
       - name: 3. 导出远程桌面链接产物
         uses: actions/upload-artifact@v4
         with:
           name: macOS-Remote-Desktop-URL
-          path: /tmp/remote-url.txt
+          path: |
+            remote-url.txt
+            cf.log
 
       - name: 4. 保持远程桌面在线 (默认 3 小时，可随时在网页点击关机)
         run: |
