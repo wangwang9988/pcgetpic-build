@@ -221,11 +221,12 @@ if (-not $signingConfigured) { Write-Warning 'No release signing certificate con
 if ($signingConfigured -and -not $expectedSigner) { throw 'Set TUGET_SIGN_EXPECTED_THUMBPRINT when signing with a PFX certificate' }
 
 # 图个吉利 HMAC 密钥：必须与服务端 server/.env 中 HMAC_SECRET_TUGET 的值完全一致。
-# 优先读取当前环境变量；若未设置则尝试从 TuGet-Client/.env.local 或仓库根 .env.local 加载。
+# 优先读取当前环境变量；若未设置则尝试从 TuGet-Client/.env.local、仓库根 .env.local 或 server/.env 加载。
 if ([string]::IsNullOrWhiteSpace($env:TUGET_LICENSE_HMAC_SECRET)) {
   foreach ($candidateEnv in @(
     (Join-Path $clientDir '.env.local'),
-    (Join-Path $workspaceRoot '.env.local')
+    (Join-Path $workspaceRoot '.env.local'),
+    (Join-Path $workspaceRoot 'server\.env')
   )) {
     if (Test-Path -LiteralPath $candidateEnv -PathType Leaf) {
       foreach ($rawLine in (Get-Content -LiteralPath $candidateEnv -Encoding UTF8)) {
@@ -235,7 +236,7 @@ if ([string]::IsNullOrWhiteSpace($env:TUGET_LICENSE_HMAC_SECRET)) {
         if ($eqIdx -le 0) { continue }
         $key = $line.Substring(0, $eqIdx).Trim()
         $val = $line.Substring($eqIdx + 1).Trim().Trim('''', '"')
-        if ($key -eq 'TUGET_LICENSE_HMAC_SECRET' -and -not [string]::IsNullOrWhiteSpace($val)) {
+        if (($key -eq 'TUGET_LICENSE_HMAC_SECRET' -or $key -eq 'HMAC_SECRET_TUGET') -and -not [string]::IsNullOrWhiteSpace($val)) {
           $env:TUGET_LICENSE_HMAC_SECRET = $val
           break
         }
@@ -306,12 +307,13 @@ try {
 }
 
 Write-Step "6/9 Clean and rebuild Browser Engine"
-Invoke-Checked $browserDir "cargo" "clean" "--manifest-path" (Join-Path $browserDir "Cargo.toml")
+Invoke-Checked $browserDir "node" (Join-Path $browserDir "scripts\apply-brand-strings.mjs") "--chromium-dir" (Join-Path $browserDir "chromium")
+Invoke-Checked $browserDir "cargo" "clean" "--release" "--manifest-path" (Join-Path $browserDir "Cargo.toml")
 Invoke-Checked $browserDir "cargo" "build" "--manifest-path" (Join-Path $browserDir "Cargo.toml") "--release" "--locked"
 Invoke-Checked $browserDir "npm" "run" "verify"
 
 Write-Step "7/9 Clean and rebuild Native Host"
-Invoke-Checked $hostDir "cargo" "clean" "--manifest-path" (Join-Path $hostDir "Cargo.toml")
+Invoke-Checked $hostDir "cargo" "clean" "--release" "--manifest-path" (Join-Path $hostDir "Cargo.toml")
 Invoke-Checked $hostDir "cargo" "build" "--manifest-path" (Join-Path $hostDir "Cargo.toml") "--release" "--locked"
 
 $browserExe = Join-Path $browserDir "target\release\tuget-browser.exe"
@@ -439,8 +441,11 @@ if (Test-Path -LiteralPath $mainWebsiteTugetJson -PathType Leaf) {
   Write-Host "Updated website/public/tuget-version.json version -> $currentClientVersion" -ForegroundColor Green
 }
 
+Write-Step "10/10 Build Microsoft Store MSIX and MSIX-OK\test local test bundle"
+Invoke-Checked $clientDir "node" (Join-Path $clientDir "scripts\build-msix.mjs")
+
 Write-Host ""
-Write-Host "TuGet release build completed" -ForegroundColor Green
+Write-Host "TuGet release build completed (EXE + MSIX + MSIX-OK\test)" -ForegroundColor Green
 if ($stableInstallerUpdated) {
   Write-Host "Stable installer: $stableInstallerPath"
 } else {
