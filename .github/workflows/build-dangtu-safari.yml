@@ -51,7 +51,7 @@ jobs:
           xcrun safari-web-extension-converter GetPic/.output/safari-mv3 \
             --project-location /tmp/dangtu-safari \
             --app-name "DownPictures" \
-            --bundle-identifier "com.webtongbu.getpic.DownPictures" \
+            --bundle-identifier "com.downpictures.DownPictures" \
             --swift \
             --macos-only \
             --no-open \
@@ -59,7 +59,6 @@ jobs:
             --force
 
       - name: Import Apple Certificate to Temporary Keychain
-        if: inputs.skip_signing != 'true'
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -80,44 +79,37 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
           rm -f "$RUNNER_TEMP/certificate.p12"
 
-      - name: Build macOS Safari Extension Host App (DownPictures.app)
+      - name: Build & Sign macOS Safari Extension Host App (DownPictures.app)
         shell: bash
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           XCODEPROJ=$(find /tmp/dangtu-safari -maxdepth 3 -name "*.xcodeproj" | head -n 1)
           echo "Found Xcode project: $XCODEPROJ"
-          if [ "${{ inputs.skip_signing }}" = "true" ]; then
-            xcodebuild -project "$XCODEPROJ" \
-              -scheme "DownPictures" \
-              -configuration Release \
-              -derivedDataPath /tmp/dangtu-safari-build \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              build
-          else
-            xcodebuild -project "$XCODEPROJ" \
-              -scheme "DownPictures" \
-              -configuration Release \
-              -derivedDataPath /tmp/dangtu-safari-build \
-              DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
-              CODE_SIGN_STYLE=Automatic \
-              build || \
-            xcodebuild -project "$XCODEPROJ" \
-              -scheme "DownPictures" \
-              -configuration Release \
-              -derivedDataPath /tmp/dangtu-safari-build \
-              CODE_SIGN_IDENTITY="" \
-              CODE_SIGNING_REQUIRED=NO \
-              CODE_SIGNING_ALLOWED=NO \
-              build
-          fi
+          xcodebuild -project "$XCODEPROJ" \
+            -scheme "DownPictures" \
+            -configuration Release \
+            -derivedDataPath /tmp/dangtu-safari-build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
           APP_PATH=$(find /tmp/dangtu-safari-build/Build/Products -name "DownPictures.app" | head -n 1)
           if [ -z "$APP_PATH" ]; then
             echo "::error::Failed to locate built DownPictures.app"
             exit 1
           fi
+          SIGN_ID="${APPLE_SIGNING_IDENTITY:-Developer ID Application: AMIXIXI CO., LIMITED (YASG68SB5V)}"
+          if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
+            echo "==> Signing DownPictures Extension.appex and DownPictures.app with: $SIGN_ID"
+            codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_PATH/Contents/PlugIns/DownPictures Extension.appex"
+            codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_PATH"
+          else
+            echo "==> Fallback to ad-hoc signing"
+            codesign --force --deep --sign - "$APP_PATH"
+          fi
+          codesign -dv --verbose=2 "$APP_PATH" || true
           mkdir -p /tmp/safari-artifacts
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" /tmp/safari-artifacts/DownPictures-Safari-macOS.app.zip
           cp -f GetPic/.output/*-safari.zip /tmp/safari-artifacts/ || true
