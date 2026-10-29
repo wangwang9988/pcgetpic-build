@@ -1,0 +1,708 @@
+name: Test Safari Browser Extensions (macOS GUI)
+
+on:
+  workflow_dispatch:
+    inputs:
+      timeout_minutes:
+        description: '远程桌面保持开启的时长（分钟）'
+        required: false
+        default: '180'
+
+jobs:
+  remote-safari-plugin-gui:
+    runs-on: macos-latest
+    timeout-minutes: 200
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: 1. 切换苹果显示器分辨率至 1920x1080 并装载 Safari 浏览器插件
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat << 'EOF' > /tmp/set_res.m
+          #import <Foundation/Foundation.h>
+          #import <CoreGraphics/CoreGraphics.h>
+          #import <objc/runtime.h>
+          #import <objc/message.h>
+
+          @interface CGVirtualDisplayMode : NSObject
+          - (instancetype)initWithWidth:(NSUInteger)w height:(NSUInteger)h refreshRate:(double)r;
+          @end
+          @interface CGVirtualDisplaySettings : NSObject
+          @property (nonatomic, strong) NSArray *modes;
+          @property (nonatomic, assign) unsigned int hiDPI;
+          @end
+          @interface CGVirtualDisplayDescriptor : NSObject
+          @property (nonatomic, strong) NSString *name;
+          @property (nonatomic, assign) NSUInteger maxPixelsWide;
+          @property (nonatomic, assign) NSUInteger maxPixelsHigh;
+          @property (nonatomic, assign) CGSize sizeInMillimeters;
+          @property (nonatomic, assign) unsigned int vendorID;
+          @property (nonatomic, assign) unsigned int productID;
+          @property (nonatomic, assign) unsigned int serialNum;
+          @property (nonatomic, strong) dispatch_queue_t queue;
+          @end
+          @interface CGVirtualDisplay : NSObject
+          @property (nonatomic, readonly) CGDirectDisplayID displayID;
+          - (instancetype)initWithDescriptor:(CGVirtualDisplayDescriptor *)d;
+          - (BOOL)applySettings:(CGVirtualDisplaySettings *)s;
+          @end
+
+          int main(int argc, const char * argv[]) {
+              @autoreleasepool {
+                  CGDirectDisplayID mainID = CGMainDisplayID();
+                  NSDictionary *opts = @{ (__bridge NSString *)kCGDisplayShowDuplicateLowResolutionModes: @YES };
+                  CFArrayRef modes = CGDisplayCopyAllDisplayModes(mainID, (__bridge CFDictionaryRef)opts);
+                  if (modes) {
+                      CFIndex count = CFArrayGetCount(modes);
+                      for (CFIndex i = 0; i < count; i++) {
+                          CGDisplayModeRef m = (CGDisplayModeRef)CFArrayGetValueAtIndex(modes, i);
+                          size_t w = CGDisplayModeGetWidth(m);
+                          size_t h = CGDisplayModeGetHeight(m);
+                          if (w >= 1920 && h >= 1080) {
+                              CGDisplayConfigRef cfg;
+                              CGBeginDisplayConfiguration(&cfg);
+                              CGConfigureDisplayWithDisplayMode(cfg, mainID, m, NULL);
+                              CGCompleteDisplayConfiguration(cfg, kCGConfigurePermanently);
+                              return 0;
+                          }
+                      }
+                  }
+
+                  Class descCls = objc_getClass("CGVirtualDisplayDescriptor");
+                  Class modeCls = objc_getClass("CGVirtualDisplayMode");
+                  Class setCls  = objc_getClass("CGVirtualDisplaySettings");
+                  Class dispCls = objc_getClass("CGVirtualDisplay");
+                  if (!descCls || !modeCls || !setCls || !dispCls) return 1;
+
+                  CGVirtualDisplayDescriptor *desc = [[descCls alloc] init];
+                  desc.name = @"Mac-1080p-Display";
+                  desc.maxPixelsWide = 1920;
+                  desc.maxPixelsHigh = 1080;
+                  desc.sizeInMillimeters = CGSizeMake(530, 300);
+                  desc.vendorID = 0x1234;
+                  desc.productID = 0x5678;
+                  desc.serialNum = 1;
+                  desc.queue = dispatch_get_main_queue();
+
+                  CGVirtualDisplay *vDisp = [[dispCls alloc] initWithDescriptor:desc];
+                  CGVirtualDisplaySettings *settings = [[setCls alloc] init];
+                  settings.hiDPI = 0;
+                  CGVirtualDisplayMode *m1080 = [[modeCls alloc] initWithWidth:1920 height:1080 refreshRate:60.0];
+                  CGVirtualDisplayMode *m900  = [[modeCls alloc] initWithWidth:1600 height:900 refreshRate:60.0];
+                  settings.modes = @[m1080, m900];
+                  [vDisp applySettings:settings];
+
+                  CGDirectDisplayID vid = vDisp.displayID;
+                  if (vid != 0) {
+                      CGDisplayConfigRef cfg;
+                      if (CGBeginDisplayConfiguration(&cfg) == kCGErrorSuccess) {
+                          CGConfigureDisplayOrigin(cfg, vid, 0, 0);
+                          CGConfigureDisplayOrigin(cfg, mainID, 1920, 0);
+                          CGCompleteDisplayConfiguration(cfg, kCGConfigureForSession);
+                      }
+                      FILE *fp = fopen("/tmp/vdisplay_id.txt", "w");
+                      if (fp) { fprintf(fp, "%u", vid); fclose(fp); }
+                  }
+                  [[NSRunLoop mainRunLoop] run];
+              }
+              return 0;
+          }
+          EOF
+          clang -framework Foundation -framework CoreGraphics /tmp/set_res.m -o /tmp/set_res
+          export RUNNER_TRACKING_ID=""
+          nohup /tmp/set_res > /tmp/set_res.log 2>&1 &
+          sleep 2
+
+          mkdir -p /tmp/safari-pkgs
+          echo "==> 正在拉取最新构建的 Safari 浏览器插件宿主应用 ..."
+          SAFARI_RUN_ID=$(gh run list --repo wangwang9988/pcgetpic-build --workflow build-dangtu-safari.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
+          if [ -n "$SAFARI_RUN_ID" ] && [ "$SAFARI_RUN_ID" != "null" ]; then
+            gh run download "$SAFARI_RUN_ID" --repo wangwang9988/pcgetpic-build -n DangTu-Safari-macOS -D /tmp/safari-pkgs || true
+            if [ -f /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip ]; then
+              ditto -x -k /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip /Applications/
+              cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
+              pluginkit -a "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+              open /Applications/DownPictures.app || true
+            fi
+          fi
+
+          defaults write com.apple.Safari IncludeDevelopMenu -bool true || true
+          defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true || true
+          open -a Safari "https://www.1688.com" || true
+          sleep 1
+
+      - name: 2. 启动 macOS 1920x1080 Safari 插件测试远程图形桌面服务
+        run: |
+          cat << 'EOF' > /tmp/libfastjpg.m
+          #import <Foundation/Foundation.h>
+          #import <CoreGraphics/CoreGraphics.h>
+          #import <ImageIO/ImageIO.h>
+
+          int compress_screen_jpg(const char *inPath, int maxDim, float quality, unsigned char *outBuf, int maxOutLen) {
+              @autoreleasepool {
+                  NSString *path = [NSString stringWithUTF8String:inPath];
+                  NSURL *url = [NSURL fileURLWithPath:path];
+                  CGImageSourceRef src = CGImageSourceCreateWithURL((__bridge CFURLRef)url, NULL);
+                  if (!src) return 0;
+
+                  NSDictionary *thumbOpts = @{
+                      (__bridge NSString *)kCGImageSourceCreateThumbnailFromImageAlways: @YES,
+                      (__bridge NSString *)kCGImageSourceCreateThumbnailWithTransform: @YES,
+                      (__bridge NSString *)kCGImageSourceThumbnailMaxPixelSize: @(maxDim)
+                  };
+                  CGImageRef img = CGImageSourceCreateThumbnailAtIndex(src, 0, (__bridge CFDictionaryRef)thumbOpts);
+                  CFRelease(src);
+                  if (!img) return 0;
+
+                  NSMutableData *dstData = [NSMutableData dataWithCapacity:65536];
+                  CGImageDestinationRef dst = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)dstData, CFSTR("public.jpeg"), 1, NULL);
+                  if (!dst) {
+                      CFRelease(img);
+                      return 0;
+                  }
+                  NSDictionary *props = @{
+                      (__bridge NSString *)kCGImageDestinationLossyCompressionQuality: @(quality)
+                  };
+                  CGImageDestinationAddImage(dst, img, (__bridge CFDictionaryRef)props);
+                  bool ok = CGImageDestinationFinalize(dst);
+                  CFRelease(dst);
+                  CFRelease(img);
+                  if (!ok || dstData.length == 0 || (int)dstData.length > maxOutLen) return 0;
+                  memcpy(outBuf, dstData.bytes, dstData.length);
+                  return (int)dstData.length;
+              }
+          }
+          EOF
+          clang -dynamiclib -O3 -framework Foundation -framework CoreGraphics -framework ImageIO /tmp/libfastjpg.m -o /tmp/libfastjpg.dylib
+
+          cat << 'EOF' > /tmp/mac_web_desktop.py
+          import ctypes
+          import ctypes.util
+          import hashlib
+          import json
+          import os
+          import subprocess
+          import threading
+          import time
+          from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+          from urllib.parse import parse_qs, urlparse
+
+          cg = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices')
+          cf = ctypes.cdll.LoadLibrary('/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation')
+          fastjpg = None
+          if os.path.exists('/tmp/libfastjpg.dylib'):
+              try:
+                  fastjpg = ctypes.cdll.LoadLibrary('/tmp/libfastjpg.dylib')
+                  fastjpg.compress_screen_jpg.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_float, ctypes.c_char_p, ctypes.c_int]
+                  fastjpg.compress_screen_jpg.restype = ctypes.c_int
+              except Exception:
+                  fastjpg = None
+
+          class CGPoint(ctypes.Structure):
+              _fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double)]
+
+          class CGRect(ctypes.Structure):
+              _fields_ = [('x', ctypes.c_double), ('y', ctypes.c_double), ('w', ctypes.c_double), ('h', ctypes.c_double)]
+
+          cg.CGMainDisplayID.restype = ctypes.c_uint32
+          cg.CGDisplayPixelsWide.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayPixelsWide.restype = ctypes.c_size_t
+          cg.CGDisplayPixelsHigh.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayPixelsHigh.restype = ctypes.c_size_t
+          cg.CGDisplayBounds.argtypes = [ctypes.c_uint32]
+          cg.CGDisplayBounds.restype = CGRect
+
+          cg.CGEventCreateMouseEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint32, CGPoint, ctypes.c_uint32]
+          cg.CGEventCreateMouseEvent.restype = ctypes.c_void_p
+          cg.CGEventSetIntegerValueField.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_int64]
+          cg.CGEventPost.argtypes = [ctypes.c_uint32, ctypes.c_void_p]
+          cg.CGEventCreateKeyboardEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint16, ctypes.c_bool]
+          cg.CGEventCreateKeyboardEvent.restype = ctypes.c_void_p
+          cg.CGEventSetFlags.argtypes = [ctypes.c_void_p, ctypes.c_uint64]
+          cg.CGEventCreateScrollWheelEvent.argtypes = [ctypes.c_void_p, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_int32]
+          cg.CGEventCreateScrollWheelEvent.restype = ctypes.c_void_p
+          cf.CFRelease.argtypes = [ctypes.c_void_p]
+
+          kCGEventLeftMouseDown = 1
+          kCGEventLeftMouseUp = 2
+          kCGEventRightMouseDown = 3
+          kCGEventRightMouseUp = 4
+          kCGEventMouseMoved = 5
+          kCGEventLeftMouseDragged = 6
+          kCGMouseButtonLeft = 0
+          kCGMouseButtonRight = 1
+          kCGMouseEventClickState = 1
+          kCGHIDEventTap = 0
+          kCGEventFlagMaskCommand = 1 << 20
+
+          def get_target_display_id():
+              if os.path.exists('/tmp/vdisplay_id.txt'):
+                  try:
+                      vid = int(open('/tmp/vdisplay_id.txt').read().strip())
+                      if vid > 0 and cg.CGDisplayPixelsWide(vid) >= 1600:
+                          return vid
+                  except Exception:
+                      pass
+              return cg.CGMainDisplayID()
+
+          def get_screen_bounds():
+              did = get_target_display_id()
+              b = cg.CGDisplayBounds(did)
+              w = int(cg.CGDisplayPixelsWide(did) or 1920)
+              h = int(cg.CGDisplayPixelsHigh(did) or 1080)
+              return int(b.x), int(b.y), w, h
+
+          def post_mouse(ev_type, x, y, button=0, click_count=1):
+              ox, oy, _, _ = get_screen_bounds()
+              pt = CGPoint(float(ox + x), float(oy + y))
+              ev = cg.CGEventCreateMouseEvent(None, ev_type, pt, button)
+              if ev:
+                  if click_count > 1:
+                      cg.CGEventSetIntegerValueField(ev, kCGMouseEventClickState, click_count)
+                  cg.CGEventPost(kCGHIDEventTap, ev)
+                  cf.CFRelease(ev)
+
+          def post_key(keycode, flags=0):
+              for down in (True, False):
+                  ev = cg.CGEventCreateKeyboardEvent(None, keycode, down)
+                  if ev:
+                      if flags:
+                          cg.CGEventSetFlags(ev, flags)
+                      cg.CGEventPost(kCGHIDEventTap, ev)
+                      cf.CFRelease(ev)
+                  time.sleep(0.015)
+
+          def post_scroll(dy):
+              ev = cg.CGEventCreateScrollWheelEvent(None, 0, 1, int(dy))
+              if ev:
+                  cg.CGEventPost(kCGHIDEventTap, ev)
+                  cf.CFRelease(ev)
+
+          QUALITY_PRESETS = {
+              'fast': (1280, 0.42),
+              'balanced': (1536, 0.58),
+              'hd': (1920, 0.80),
+          }
+          current_preset = 'fast'
+          latest_jpg = b''
+          latest_hash = b''
+          frame_seq = 0
+          frame_cond = threading.Condition()
+          cap_lock = threading.Lock()
+          out_buf = ctypes.create_string_buffer(1024 * 1024)
+
+          def capture_once(force_seq=False):
+              global latest_jpg, latest_hash, frame_seq
+              raw_path = '/tmp/mac_raw_screen.jpg'
+              with cap_lock:
+                  try:
+                      ox, oy, w, h = get_screen_bounds()
+                      subprocess.run(
+                          ['/usr/sbin/screencapture', '-x', '-C', '-R', f'{ox},{oy},{w},{h}', '-t', 'jpg', raw_path],
+                          timeout=1.5
+                      )
+                      if not os.path.exists(raw_path):
+                          return latest_jpg, frame_seq
+                      max_dim, qual = QUALITY_PRESETS.get(current_preset, (1280, 0.42))
+                      data = b''
+                      if fastjpg is not None:
+                          n = fastjpg.compress_screen_jpg(raw_path.encode('utf-8'), max_dim, qual, out_buf, len(out_buf))
+                          if n > 0:
+                              data = out_buf.raw[:n]
+                      if not data:
+                          with open(raw_path, 'rb') as f:
+                              data = f.read()
+                      if data:
+                          hval = hashlib.md5(data).digest()
+                          with frame_cond:
+                              if force_seq or hval != latest_hash or not latest_jpg:
+                                  latest_jpg = data
+                                  latest_hash = hval
+                                  frame_seq += 1
+                                  frame_cond.notify_all()
+                              return latest_jpg, frame_seq
+                  except Exception:
+                      pass
+                  return latest_jpg, frame_seq
+
+          def capture_loop():
+              while not os.path.exists('/tmp/stop-remote-mac'):
+                  capture_once(force_seq=False)
+                  time.sleep(0.06)
+
+          threading.Thread(target=capture_loop, daemon=True).start()
+
+          HTML_PAGE = """<!DOCTYPE html>
+          <html lang="zh-CN">
+          <head>
+            <meta charset="utf-8" />
+            <title>macOS Safari 浏览器插件专测远程桌面</title>
+            <style>
+              * { box-sizing: border-box; }
+              body { margin: 0; background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+              .toolbar { background: #1e293b; border-bottom: 1px solid #334155; padding: 6px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 10; }
+              .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 13px; cursor: pointer; font-weight: 500; }
+              .btn:hover { background: #1d4ed8; }
+              .btn.green { background: #059669; }
+              .btn.green:hover { background: #047857; }
+              .btn.gray { background: #475569; }
+              .btn.gray:hover { background: #334155; }
+              .btn.red { background: #dc2626; margin-left: auto; }
+              .select-mode { background: #0f172a; color: #38bdf8; border: 1px solid #0284c7; border-radius: 6px; padding: 4px 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+              .input-box { flex: 1; min-width: 220px; display: flex; gap: 6px; }
+              .input-box input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+              .screen-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; position: relative; background: #020617; }
+              #screen { max-width: 100%; max-height: 100%; object-fit: contain; cursor: default; user-select: none; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+              .status { font-size: 12px; color: #38bdf8; font-variant-numeric: tabular-nums; }
+              .click-dot { position: fixed; width: 18px; height: 18px; border: 2px solid #38bdf8; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); animation: pulse 0.35s ease-out forwards; z-index: 999; }
+              @keyframes pulse { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); } }
+            </style>
+          </head>
+          <body>
+            <div class="toolbar">
+              <button class="btn green" onclick="runAction('open_safari')">🧭 打开/置顶 Safari</button>
+              <button class="btn green" onclick="runAction('open_dangtu_ext')">📦 激活当图扩展 (DownPictures)</button>
+              <button class="btn gray" onclick="runAction('open_1688')">🛍️ 打开 1688</button>
+              <button class="btn gray" onclick="runAction('open_taobao')">🛒 打开淘宝</button>
+              <button class="btn gray" onclick="runAction('open_downloads')">📂 下载目录</button>
+              <select class="select-mode" id="qualitySelect" onchange="changeQuality(this.value)">
+                <option value="fast" selected>⚡ 极速流畅 (~25KB/帧)</option>
+                <option value="balanced">🚀 均衡清晰 (~45KB/帧)</option>
+                <option value="hd">💎 原画高清 (~120KB/帧)</option>
+              </select>
+              <div class="input-box">
+                <input id="pasteText" type="text" placeholder="粘贴商品网址或文字，回车直接送入 Safari..." onkeydown="if(event.key==='Enter') sendPaste()" />
+                <button class="btn" onclick="sendPaste()">📋 粘贴到Mac</button>
+                <button class="btn gray" onclick="sendKey(36)">⏎ 回车</button>
+                <button class="btn gray" onclick="sendKey(51)">⌫ 退格</button>
+              </div>
+              <span class="status" id="status">正在连接极速流...</span>
+              <button class="btn red" onclick="if(confirm('确定结束测试并关闭这台云端 Mac 吗？')) runAction('shutdown')">⏹ 结束关机</button>
+            </div>
+            <div class="screen-wrap">
+              <img id="screen" draggable="false" alt="macOS Screen" />
+            </div>
+            <script>
+              const img = document.getElementById('screen');
+              const statusEl = document.getElementById('status');
+              let logicalW = 1920, logicalH = 1080;
+              let lastSeq = 0;
+              let prevBlobUrl = null;
+              let lastFrameKB = 0;
+              let lastRttMs = 0;
+
+              function applyBlob(blob, seqHdr, rtt) {
+                if (!blob || blob.size === 0) return;
+                const url = URL.createObjectURL(blob);
+                img.src = url;
+                if (prevBlobUrl) URL.revokeObjectURL(prevBlobUrl);
+                prevBlobUrl = url;
+                if (seqHdr) lastSeq = Math.max(lastSeq, parseInt(seqHdr, 10) || 0);
+                lastFrameKB = Math.round(blob.size / 1024);
+                if (rtt) lastRttMs = rtt;
+                statusEl.textContent = `🟢 极速已连接 | ${lastFrameKB} KB/帧 | 延迟 ${lastRttMs}ms`;
+              }
+
+              function syncInfo() {
+                fetch('/info').then(r => r.json()).then(d => { logicalW = d.width; logicalH = d.height; }).catch(() => {});
+              }
+              syncInfo();
+
+              let polling = false;
+              async function pollLoop() {
+                if (polling) return;
+                polling = true;
+                while (true) {
+                  const t0 = performance.now();
+                  try {
+                    const resp = await fetch(`/frame.jpg?seq=${lastSeq}&t=${Date.now()}`, { cache: 'no-store' });
+                    const rtt = Math.round(performance.now() - t0);
+                    if (resp.status === 200) {
+                      const seqHdr = resp.headers.get('X-Frame-Seq');
+                      const blob = await resp.blob();
+                      applyBlob(blob, seqHdr, rtt);
+                    } else if (resp.status === 204) {
+                      lastRttMs = rtt;
+                      statusEl.textContent = `🟢 画面静止(0流量) | ${lastFrameKB} KB/帧 | 延迟 ${lastRttMs}ms`;
+                    }
+                    await new Promise(r => setTimeout(r, 15));
+                  } catch (e) {
+                    statusEl.textContent = '🟡 正在重连画面...';
+                    await new Promise(r => setTimeout(r, 300));
+                  }
+                }
+              }
+              pollLoop();
+
+              async function postAndRender(url, opts = {}) {
+                const t0 = performance.now();
+                try {
+                  const resp = await fetch(url, opts);
+                  const rtt = Math.round(performance.now() - t0);
+                  const ct = resp.headers.get('Content-Type') || '';
+                  if (resp.status === 200 && ct.includes('image/jpeg')) {
+                    const seqHdr = resp.headers.get('X-Frame-Seq');
+                    const blob = await resp.blob();
+                    applyBlob(blob, seqHdr, rtt);
+                  }
+                } catch (e) {}
+              }
+
+              function showClickRipple(cx, cy) {
+                const dot = document.createElement('div');
+                dot.className = 'click-dot';
+                dot.style.left = cx + 'px';
+                dot.style.top = cy + 'px';
+                document.body.appendChild(dot);
+                setTimeout(() => dot.remove(), 360);
+              }
+
+              function getCoords(e) {
+                const rect = img.getBoundingClientRect();
+                const x = Math.round(((e.clientX - rect.left) / rect.width) * logicalW);
+                const y = Math.round(((e.clientY - rect.top) / rect.height) * logicalH);
+                return { x: Math.max(0, Math.min(logicalW, x)), y: Math.max(0, Math.min(logicalH, y)) };
+              }
+
+              let isDown = false;
+              let lastDragTs = 0;
+              img.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                showClickRipple(e.clientX, e.clientY);
+                isDown = true;
+                const { x, y } = getCoords(e);
+                const btn = e.button === 2 ? 'right_down' : 'left_down';
+                fetch(`/mouse?type=${btn}&x=${x}&y=${y}`, { method: 'POST', keepalive: true });
+              });
+              img.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const now = performance.now();
+                if (now - lastDragTs < 65) return;
+                lastDragTs = now;
+                const { x, y } = getCoords(e);
+                fetch(`/mouse?type=drag&x=${x}&y=${y}`, { method: 'POST', keepalive: true });
+              });
+              window.addEventListener('mouseup', (e) => {
+                if (!isDown) return;
+                isDown = false;
+                const { x, y } = getCoords(e);
+                const btn = e.button === 2 ? 'right_up' : 'left_up';
+                postAndRender(`/mouse?type=${btn}&x=${x}&y=${y}&snap=1`, { method: 'POST' });
+              });
+              img.addEventListener('dblclick', (e) => {
+                e.preventDefault();
+                showClickRipple(e.clientX, e.clientY);
+                const { x, y } = getCoords(e);
+                postAndRender(`/mouse?type=dblclick&x=${x}&y=${y}&snap=1`, { method: 'POST' });
+              });
+              img.addEventListener('contextmenu', (e) => e.preventDefault());
+              let lastWheelTs = 0;
+              img.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const now = performance.now();
+                if (now - lastWheelTs < 80) return;
+                lastWheelTs = now;
+                const dy = e.deltaY > 0 ? -6 : 6;
+                postAndRender(`/scroll?dy=${dy}&snap=1`, { method: 'POST' });
+              }, { passive: false });
+
+              function changeQuality(mode) {
+                postAndRender(`/quality?mode=${mode}&snap=1`, { method: 'POST' });
+              }
+              function sendPaste() {
+                const val = document.getElementById('pasteText').value;
+                if (!val) return;
+                postAndRender('/paste?snap=1', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ text: val })
+                });
+              }
+              function sendKey(code) {
+                postAndRender(`/key?code=${code}&snap=1`, { method: 'POST' });
+              }
+              function runAction(act) {
+                postAndRender(`/action?name=${act}&snap=1`, { method: 'POST' });
+              }
+            </script>
+          </body>
+          </html>
+          """
+
+          class Handler(BaseHTTPRequestHandler):
+              protocol_version = "HTTP/1.1"
+              def log_message(self, format, *args):
+                  pass
+              def send_jpeg(self, data, seq):
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'image/jpeg')
+                  self.send_header('Cache-Control', 'no-store')
+                  self.send_header('Connection', 'keep-alive')
+                  self.send_header('X-Frame-Seq', str(seq))
+                  self.send_header('Content-Length', str(len(data)))
+                  self.end_headers()
+                  self.wfile.write(data)
+
+              def do_GET(self):
+                  u = urlparse(self.path)
+                  qs = parse_qs(u.query)
+                  if u.path == '/frame.jpg':
+                      client_seq = int(qs.get('seq', [0])[0] or 0)
+                      with frame_cond:
+                          if client_seq > 0 and client_seq >= frame_seq:
+                              frame_cond.wait(timeout=0.18)
+                          data = latest_jpg
+                          seq = frame_seq
+                      if client_seq > 0 and seq == client_seq and data:
+                          self.send_response(204)
+                          self.send_header('Connection', 'keep-alive')
+                          self.send_header('Content-Length', '0')
+                          self.end_headers()
+                          return
+                      self.send_jpeg(data, seq)
+                  elif u.path == '/info':
+                      ox, oy, w, h = get_screen_bounds()
+                      body = json.dumps({'width': w, 'height': h, 'ox': ox, 'oy': oy}).encode()
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'application/json')
+                      self.send_header('Connection', 'keep-alive')
+                      self.send_header('Content-Length', str(len(body)))
+                      self.end_headers()
+                      self.wfile.write(body)
+                  else:
+                      body = HTML_PAGE.encode('utf-8')
+                      self.send_response(200)
+                      self.send_header('Content-Type', 'text/html; charset=utf-8')
+                      self.send_header('Connection', 'keep-alive')
+                      self.send_header('Content-Length', str(len(body)))
+                      self.end_headers()
+                      self.wfile.write(body)
+
+              def do_POST(self):
+                  global current_preset
+                  u = urlparse(self.path)
+                  qs = parse_qs(u.query)
+                  want_snap = qs.get('snap', ['0'])[0] == '1'
+                  if u.path == '/mouse':
+                      t = qs.get('type', [''])[0]
+                      x = float(qs.get('x', [0])[0])
+                      y = float(qs.get('y', [0])[0])
+                      if t == 'left_down':
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'left_up':
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'right_down':
+                          post_mouse(kCGEventRightMouseDown, x, y, kCGMouseButtonRight, 1)
+                      elif t == 'right_up':
+                          post_mouse(kCGEventRightMouseUp, x, y, kCGMouseButtonRight, 1)
+                      elif t == 'drag':
+                          post_mouse(kCGEventLeftMouseDragged, x, y, kCGMouseButtonLeft, 1)
+                      elif t == 'dblclick':
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 1)
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 1)
+                          post_mouse(kCGEventLeftMouseDown, x, y, kCGMouseButtonLeft, 2)
+                          post_mouse(kCGEventLeftMouseUp, x, y, kCGMouseButtonLeft, 2)
+                  elif u.path == '/scroll':
+                      dy = int(qs.get('dy', [0])[0])
+                      post_scroll(dy)
+                  elif u.path == '/key':
+                      code = int(qs.get('code', [36])[0])
+                      post_key(code)
+                  elif u.path == '/quality':
+                      mode = qs.get('mode', ['fast'])[0]
+                      if mode in QUALITY_PRESETS:
+                          current_preset = mode
+                  elif u.path == '/paste':
+                      length = int(self.headers.get('Content-Length', 0))
+                      payload = json.loads(self.rfile.read(length).decode('utf-8'))
+                      text = payload.get('text', '')
+                      subprocess.run(['pbcopy'], input=text.encode('utf-8'))
+                      time.sleep(0.03)
+                      post_key(9, kCGEventFlagMaskCommand)
+                  elif u.path == '/action':
+                      name = qs.get('name', [''])[0]
+                      if name == 'open_safari':
+                          subprocess.Popen(['open', '-a', 'Safari'])
+                      elif name == 'open_dangtu_ext':
+                          if os.path.exists('/Applications/DownPictures.app'):
+                              subprocess.Popen(['open', '/Applications/DownPictures.app'])
+                      elif name == 'open_1688':
+                          subprocess.Popen(['open', '-a', 'Safari', 'https://www.1688.com'])
+                      elif name == 'open_taobao':
+                          subprocess.Popen(['open', '-a', 'Safari', 'https://www.taobao.com'])
+                      elif name == 'open_downloads':
+                          subprocess.Popen(['open', os.path.expanduser('~/Downloads')])
+                      elif name == 'shutdown':
+                          open('/tmp/stop-remote-mac', 'w').close()
+
+                  if want_snap:
+                      time.sleep(0.035)
+                      data, seq = capture_once(force_seq=True)
+                      if data:
+                          self.send_jpeg(data, seq)
+                          return
+
+                  self.send_response(200)
+                  self.send_header('Content-Type', 'text/plain')
+                  self.send_header('Connection', 'keep-alive')
+                  self.send_header('Content-Length', '2')
+                  self.end_headers()
+                  self.wfile.write(b'ok')
+
+          ThreadingHTTPServer(('127.0.0.1', 6080), Handler).serve_forever()
+          EOF
+
+          export RUNNER_TRACKING_ID=""
+          nohup python3 /tmp/mac_web_desktop.py > /tmp/web.log 2>&1 &
+
+          curl -sL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-arm64.tgz | tar -xz -C /tmp
+          chmod +x /tmp/cloudflared
+
+          URL=""
+          for attempt in 1 2 3; do
+            pkill -f cloudflared || true
+            rm -f /tmp/cf.log
+            nohup /tmp/cloudflared tunnel --url http://127.0.0.1:6080 --no-autoupdate > /tmp/cf.log 2>&1 &
+            for i in $(seq 1 25); do
+              URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.trycloudflare\.com' /tmp/cf.log | head -n 1 || true)
+              if [ -n "$URL" ]; then
+                echo "$URL" > /tmp/remote-url.txt
+                echo "$URL" > "$GITHUB_WORKSPACE/remote-url.txt"
+                echo "=================================================================="
+                echo "✅ 苹果 Safari 插件测试远程桌面 (1920x1080) 已就绪！请点击以下网址："
+                echo "👉 $URL"
+                echo "=================================================================="
+                break 2
+              fi
+              sleep 1
+            done
+          done
+          cp /tmp/cf.log "$GITHUB_WORKSPACE/cf.log" || true
+
+      - name: 3. 导出远程桌面链接产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Safari-Plugin-Remote-Desktop-URL
+          path: |
+            remote-url.txt
+            cf.log
+
+      - name: 4. 保持远程桌面在线 (默认 3 小时，可随时在网页点击关机)
+        run: |
+          URL=$(cat /tmp/remote-url.txt || true)
+          echo "=================================================================="
+          echo "🟢 Safari 插件测试远程桌面正在运行中，请直接点击以下链接进入："
+          echo "👉 $URL"
+          echo "=================================================================="
+          MAX_SECONDS=$(( ${{ inputs.timeout_minutes || 180 }} * 60 ))
+          ELAPSED=0
+          while [ $ELAPSED -lt $MAX_SECONDS ]; do
+            if [ -f /tmp/stop-remote-mac ]; then
+              echo "收到网页端关机指令，正在退出..."
+              break
+            fi
+            sleep 5
+            ELAPSED=$((ELAPSED + 5))
+          done
