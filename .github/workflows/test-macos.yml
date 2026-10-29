@@ -146,19 +146,6 @@ jobs:
             hdiutil detach /Volumes/DangTu || true
           fi
 
-          echo "==> 正在拉取最新构建的当图 Safari 扩展宿主应用 (DangTu-Safari-macOS) ..."
-          SAFARI_RUN_ID=$(gh run list --repo wangwang9988/pcgetpic-build --workflow build-dangtu-safari.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
-          if [ -n "$SAFARI_RUN_ID" ] && [ "$SAFARI_RUN_ID" != "null" ]; then
-            gh run download "$SAFARI_RUN_ID" --repo wangwang9988/pcgetpic-build -n DangTu-Safari-macOS -D /tmp/pkgs || true
-            if [ -f /tmp/pkgs/DownPictures-Safari-macOS.app.zip ]; then
-              ditto -x -k /tmp/pkgs/DownPictures-Safari-macOS.app.zip /Applications/
-              cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
-              pluginkit -a "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
-            fi
-          fi
-          defaults write com.apple.Safari IncludeDevelopMenu -bool true || true
-          defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true || true
-
           open /Applications/TuGet.app || true
           sleep 2
 
@@ -393,7 +380,6 @@ jobs:
             <div class="toolbar">
               <button class="btn green" onclick="runAction('open_tuget')">🚀 图个吉利 (TuGet)</button>
               <button class="btn green" onclick="runAction('open_dangtu')">🚀 当图 (DangTu)</button>
-              <button class="btn green" onclick="runAction('open_safari_ext')">🧭 Safari测插件</button>
               <button class="btn gray" onclick="runAction('open_downloads')">📂 下载目录</button>
               <select class="select-mode" id="qualitySelect" onchange="changeQuality(this.value)">
                 <option value="fast" selected>⚡ 极速流畅 (~25KB/帧)</option>
@@ -657,10 +643,6 @@ jobs:
                           for p in os.listdir('/Applications'):
                               if ('当图' in p or 'dangtu' in p.lower() or 'getpic' in p.lower()) and p.endswith('.app'):
                                   subprocess.Popen(['open', f'/Applications/{p}'])
-                      elif name == 'open_safari_ext':
-                          if os.path.exists('/Applications/DownPictures.app'):
-                              subprocess.Popen(['open', '/Applications/DownPictures.app'])
-                          subprocess.Popen(['open', '-a', 'Safari', 'https://www.1688.com'])
                       elif name == 'open_downloads':
                           subprocess.Popen(['open', os.path.expanduser('~/Downloads')])
                       elif name == 'shutdown':
