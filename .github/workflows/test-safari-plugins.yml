@@ -19,6 +19,9 @@ jobs:
       - name: 1. 切换苹果显示器分辨率至 1920x1080 并装载 Safari 浏览器插件
         env:
           GH_TOKEN: ${{ github.token }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           cat << 'EOF' > /tmp/set_res.m
           #import <Foundation/Foundation.h>
@@ -117,14 +120,48 @@ jobs:
 
           mkdir -p /tmp/safari-pkgs
           sudo dscl . -passwd /Users/runner "123456" || true
+          sudo sysadminctl -resetPasswordFor runner -newPassword "123456" || true
           echo "==> 正在拉取最新构建的 Safari 浏览器插件宿主应用 ..."
           SAFARI_RUN_ID=$(gh run list --repo wangwang9988/pcgetpic-build --workflow build-dangtu-safari.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
           if [ -n "$SAFARI_RUN_ID" ] && [ "$SAFARI_RUN_ID" != "null" ]; then
             gh run download "$SAFARI_RUN_ID" --repo wangwang9988/pcgetpic-build -n DangTu-Safari-macOS -D /tmp/safari-pkgs || true
             if [ -f /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip ]; then
               ditto -x -k /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip /Applications/
+              cat << 'ENT_EOF' > /tmp/ext.entitlements
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>com.apple.security.app-sandbox</key>
+              <true/>
+          </dict>
+          </plist>
+          ENT_EOF
+              if [ -n "$APPLE_CERTIFICATE" ]; then
+                KEYCHAIN_PATH="/tmp/dangtu-safari-test.keychain-db"
+                KEYCHAIN_PASS="123456"
+                echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/cert.p12
+                security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
+                security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH" || true
+                security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
+                security import /tmp/cert.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH" || true
+                security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"') || true
+                security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
+                rm -f /tmp/cert.p12
+              fi
+              SIGN_ID="${APPLE_SIGNING_IDENTITY:-Developer ID Application: AMIXIXI CO., LIMITED (YASG68SB5V)}"
+              if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
+                codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+                codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "/Applications/DownPictures.app" || true
+              else
+                codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+                codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app" || true
+              fi
+              xattr -cr /Applications/DownPictures.app || true
               cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
+              /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f -R -trusted /Applications/DownPictures.app || true
               pluginkit -a "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+              pluginkit -e use -i com.downpictures.DownPictures.Extension || true
               open /Applications/DownPictures.app || true
             fi
           fi
@@ -365,6 +402,7 @@ jobs:
             <div class="toolbar">
               <button class="btn green" onclick="runAction('open_safari')">🧭 打开/置顶 Safari</button>
               <button class="btn green" onclick="runAction('open_dangtu_ext')">📦 激活当图扩展 (DownPictures)</button>
+              <button class="btn" onclick="runAction('type_password')">🔑 一键输入系统密码 (123456)</button>
               <button class="btn gray" onclick="runAction('open_1688')">🛍️ 打开 1688</button>
               <button class="btn gray" onclick="runAction('open_taobao')">🛒 打开淘宝</button>
               <button class="btn gray" onclick="runAction('open_downloads')">📂 下载目录</button>
@@ -629,6 +667,10 @@ jobs:
                       elif name == 'open_dangtu_ext':
                           if os.path.exists('/Applications/DownPictures.app'):
                               subprocess.Popen(['open', '/Applications/DownPictures.app'])
+                      elif name == 'type_password':
+                          for kc in (18, 19, 20, 21, 23, 22, 36):
+                              post_key(kc)
+                              time.sleep(0.04)
                       elif name == 'open_1688':
                           subprocess.Popen(['open', '-a', 'Safari', 'https://www.1688.com'])
                       elif name == 'open_taobao':
