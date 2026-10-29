@@ -51,7 +51,7 @@ jobs:
           xcrun safari-web-extension-converter GetPic/.output/safari-mv3 \
             --project-location /tmp/dangtu-safari \
             --app-name "DownPictures" \
-            --bundle-identifier "com.webtongbu.getpic.safari" \
+            --bundle-identifier "com.webtongbu.getpic.DownPictures" \
             --swift \
             --macos-only \
             --no-open \
