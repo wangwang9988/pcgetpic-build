@@ -1,0 +1,130 @@
+name: Build DangTu Safari Web Extension (macOS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_signing:
+        description: 'Skip code signing (build unsigned .app for testing in Safari)'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  build-safari-extension:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Rewrite Gitee SSH URLs to HTTPS & checkout GetPic submodule
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          if [ -z "$GITEE_TOKEN" ]; then
+            echo "::error::未配置 secrets.GITEE_TOKEN，无法检出 Gitee 私有子仓库 GetPic"
+            exit 1
+          fi
+          git config --global url."https://oauth2:${GITEE_TOKEN}@gitee.com/".insteadOf "git@gitee.com:"
+          git submodule sync
+          git submodule update --init GetPic
+          git -C GetPic pull origin main || git -C GetPic pull origin master || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build GetPic Safari MV3 Extension (Universal Store Mode without Newtab)
+        shell: bash
+        run: |
+          npm --prefix GetPic ci
+          npm --prefix GetPic run switch:universal
+          npm --prefix GetPic run package:safari
+
+      - name: Convert Web Extension to Xcode macOS Safari Project
+        shell: bash
+        run: |
+          rm -rf /tmp/dangtu-safari
+          xcrun safari-web-extension-converter GetPic/.output/safari-mv3 \
+            --project-location /tmp/dangtu-safari \
+            --app-name "DownPictures" \
+            --bundle-identifier "com.webtongbu.getpic.safari" \
+            --swift \
+            --macos-only \
+            --no-open \
+            --no-prompt \
+            --force
+
+      - name: Import Apple Certificate to Temporary Keychain
+        if: inputs.skip_signing != 'true'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "No APPLE_CERTIFICATE secret provided; skipping keychain import."
+            exit 0
+          fi
+          KEYCHAIN_PATH="$RUNNER_TEMP/dangtu-safari-signing.keychain-db"
+          KEYCHAIN_PASS="$(uuidgen)"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH"
+          rm -f "$RUNNER_TEMP/certificate.p12"
+
+      - name: Build macOS Safari Extension Host App (DownPictures.app)
+        shell: bash
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          XCODEPROJ=$(find /tmp/dangtu-safari -maxdepth 3 -name "*.xcodeproj" | head -n 1)
+          echo "Found Xcode project: $XCODEPROJ"
+          if [ "${{ inputs.skip_signing }}" = "true" ]; then
+            xcodebuild -project "$XCODEPROJ" \
+              -scheme "DownPictures" \
+              -configuration Release \
+              -derivedDataPath /tmp/dangtu-safari-build \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          else
+            xcodebuild -project "$XCODEPROJ" \
+              -scheme "DownPictures" \
+              -configuration Release \
+              -derivedDataPath /tmp/dangtu-safari-build \
+              DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
+              CODE_SIGN_STYLE=Automatic \
+              build || \
+            xcodebuild -project "$XCODEPROJ" \
+              -scheme "DownPictures" \
+              -configuration Release \
+              -derivedDataPath /tmp/dangtu-safari-build \
+              CODE_SIGN_IDENTITY="" \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+          fi
+          APP_PATH=$(find /tmp/dangtu-safari-build/Build/Products -name "DownPictures.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::Failed to locate built DownPictures.app"
+            exit 1
+          fi
+          mkdir -p /tmp/safari-artifacts
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" /tmp/safari-artifacts/DownPictures-Safari-macOS.app.zip
+          cp -f GetPic/.output/*-safari.zip /tmp/safari-artifacts/ || true
+
+      - name: Upload Safari Extension Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DangTu-Safari-macOS
+          path: /tmp/safari-artifacts/*
+          if-no-files-found: error
