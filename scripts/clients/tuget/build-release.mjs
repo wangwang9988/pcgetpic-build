@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { applyBrandStrings } from '../../../browser/scripts/apply-brand-strings.mjs';
 import { applyLinuxBrandIcon } from '../../../browser/scripts/apply-linux-brand-icon.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -598,6 +599,8 @@ if (!thin) {
   fs.cpSync(path.join(browserDir, 'licenses'), path.join(browserStageDir, 'licenses'), {
     recursive: true,
   });
+
+  applyBrandStrings({ chromiumDir: path.join(browserStageDir, 'chromium') });
 
   if (process.platform === 'darwin' && !skipSigning) {
     const configuredIdentity = (process.env.APPLE_SIGNING_IDENTITY || '').trim();
