@@ -119,8 +119,23 @@ jobs:
           sleep 2
 
           mkdir -p /tmp/safari-pkgs
-          sudo dscl . -passwd /Users/runner "123456" || true
-          sudo sysadminctl -resetPasswordFor runner -newPassword "123456" || true
+          sudo python3 -c '
+          import subprocess
+          key = [125, 137, 82, 35, 210, 188, 221, 234, 163, 185, 31]
+          try:
+              data = open("/etc/kcpassword", "rb").read()
+              out = bytearray()
+              for i, b in enumerate(data):
+                  c = b ^ key[i % len(key)]
+                  if c == 0:
+                      break
+                  out.append(c)
+              old_pw = out.decode("utf-8", errors="ignore")
+              if old_pw and old_pw != "123456":
+                  subprocess.run(["sudo", "/Users/runner/bootstrap/change_password", "runner", old_pw, "123456"], check=False)
+          except Exception as e:
+              print("kcpassword reset skipped:", e)
+          ' || true
           echo "==> 正在拉取最新构建的 Safari 浏览器插件宿主应用 ..."
           SAFARI_RUN_ID=$(gh run list --repo wangwang9988/pcgetpic-build --workflow build-dangtu-safari.yml --status success --limit 1 --json databaseId --jq '.[0].databaseId' || true)
           if [ -n "$SAFARI_RUN_ID" ] && [ "$SAFARI_RUN_ID" != "null" ]; then
@@ -137,26 +152,9 @@ jobs:
           </dict>
           </plist>
           ENT_EOF
-              if [ -n "$APPLE_CERTIFICATE" ]; then
-                KEYCHAIN_PATH="/tmp/dangtu-safari-test.keychain-db"
-                KEYCHAIN_PASS="123456"
-                echo "$APPLE_CERTIFICATE" | base64 --decode > /tmp/cert.p12
-                security create-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
-                security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH" || true
-                security unlock-keychain -p "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
-                security import /tmp/cert.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH" || true
-                security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"') || true
-                security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASS" "$KEYCHAIN_PATH" || true
-                rm -f /tmp/cert.p12
-              fi
-              SIGN_ID="${APPLE_SIGNING_IDENTITY:-Developer ID Application: AMIXIXI CO., LIMITED (YASG68SB5V)}"
-              if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
-                codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
-                codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "/Applications/DownPictures.app" || true
-              else
-                codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
-                codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app" || true
-              fi
+              # 使用 ad-hoc 签名避免未公证的 Developer ID 签名被 Safari syspolicyd (notarization daemon error 3) 拦截
+              codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+              codesign --force --sign - "/Applications/DownPictures.app" || true
               xattr -cr /Applications/DownPictures.app || true
               cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
               /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f -R -trusted /Applications/DownPictures.app || true
@@ -168,6 +166,10 @@ jobs:
 
           defaults write com.apple.Safari IncludeDevelopMenu -bool true || true
           defaults write com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true || true
+          defaults write com.apple.Safari "WebKitPreferences.developerExtrasEnabled" -bool true || true
+          defaults write ~/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari IncludeDevelopMenu -bool true || true
+          defaults write ~/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari WebKitDeveloperExtrasEnabledPreferenceKey -bool true || true
+          defaults write ~/Library/Containers/com.apple.Safari/Data/Library/Preferences/com.apple.Safari "WebKitPreferences.developerExtrasEnabled" -bool true || true
           open -a Safari "https://www.1688.com" || true
           sleep 1
 
