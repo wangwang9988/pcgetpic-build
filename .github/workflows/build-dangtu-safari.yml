@@ -82,6 +82,8 @@ jobs:
       - name: Build & Sign macOS Safari Extension Host App (DownPictures.app)
         shell: bash
         env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
@@ -100,11 +102,31 @@ jobs:
             echo "::error::Failed to locate built DownPictures.app"
             exit 1
           fi
+          cat << 'ENT_EOF' > /tmp/ext.entitlements
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>com.apple.security.app-sandbox</key>
+              <true/>
+          </dict>
+          </plist>
+          ENT_EOF
           SIGN_ID="${APPLE_SIGNING_IDENTITY:-Developer ID Application: AMIXIXI CO., LIMITED (YASG68SB5V)}"
           if security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
             echo "==> Signing DownPictures Extension.appex and DownPictures.app with: $SIGN_ID"
-            codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_PATH/Contents/PlugIns/DownPictures Extension.appex"
-            codesign --force --options runtime --timestamp --sign "$SIGN_ID" "$APP_PATH"
+            codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "$APP_PATH/Contents/PlugIns/DownPictures Extension.appex"
+            codesign --force --options runtime --timestamp --entitlements /tmp/ext.entitlements --sign "$SIGN_ID" "$APP_PATH"
+            if [ -n "$APPLE_ID" ] && [ -n "$APPLE_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+              echo "==> Submitting DownPictures.app for Apple Notarization..."
+              ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" /tmp/DownPictures-notarize.zip
+              xcrun notarytool submit /tmp/DownPictures-notarize.zip \
+                --apple-id "$APPLE_ID" \
+                --password "$APPLE_PASSWORD" \
+                --team-id "$APPLE_TEAM_ID" \
+                --wait
+              xcrun stapler staple "$APP_PATH"
+            fi
           else
             echo "==> Fallback to ad-hoc signing"
             codesign --force --deep --sign - "$APP_PATH"
