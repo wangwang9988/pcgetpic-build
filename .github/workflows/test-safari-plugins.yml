@@ -142,7 +142,10 @@ jobs:
             gh run download "$SAFARI_RUN_ID" --repo wangwang9988/pcgetpic-build -n DangTu-Safari-macOS -D /tmp/safari-pkgs || true
             if [ -f /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip ]; then
               ditto -x -k /tmp/safari-pkgs/DownPictures-Safari-macOS.app.zip /Applications/
-              cat << 'ENT_EOF' > /tmp/ext.entitlements
+              if xcrun stapler validate /Applications/DownPictures.app >/dev/null 2>&1; then
+                echo "==> DownPictures.app 已通过 Apple 公证与装订，直接保留官方 Developer ID 签名（无需开启未签名扩展）"
+              else
+                cat << 'ENT_EOF' > /tmp/ext.entitlements
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -152,9 +155,9 @@ jobs:
           </dict>
           </plist>
           ENT_EOF
-              # 使用 ad-hoc 签名避免未公证的 Developer ID 签名被 Safari syspolicyd (notarization daemon error 3) 拦截
-              codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
-              codesign --force --sign - "/Applications/DownPictures.app" || true
+                codesign --force --entitlements /tmp/ext.entitlements --sign - "/Applications/DownPictures.app/Contents/PlugIns/DownPictures Extension.appex" || true
+                codesign --force --sign - "/Applications/DownPictures.app" || true
+              fi
               xattr -cr /Applications/DownPictures.app || true
               cp -a /Applications/DownPictures.app "$HOME/Desktop/" || true
               /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f -R -trusted /Applications/DownPictures.app || true
