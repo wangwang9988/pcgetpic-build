@@ -200,7 +200,13 @@ if (process.platform === 'linux') {
       const controlPath = path.join(tmpDebDir, 'DEBIAN', 'control');
       if (fs.existsSync(controlPath)) {
         const controlText = fs.readFileSync(controlPath, 'utf8');
-        const fixedText = controlText.replace(/^Package:\s*.+$/m, 'Package: dangtu');
+        let fixedText = controlText.replace(/^Package:\s*.+$/m, 'Package: dangtu');
+        if (/^Depends:/m.test(fixedText) && !fixedText.includes('fonts-noto-color-emoji')) {
+          fixedText = fixedText.replace(
+            /^Depends:\s*(.+)$/m,
+            'Depends: $1, fonts-noto-color-emoji, fonts-noto-cjk',
+          );
+        }
         fs.writeFileSync(controlPath, fixedText, 'utf8');
         execFileSync('dpkg-deb', ['-Zxz', '-b', tmpDebDir, debArchivePath], { stdio: 'inherit' });
         console.log('==> Normalized Debian Package field to "dangtu" in dangtu-linux-x64.deb');
@@ -244,7 +250,7 @@ if (process.platform === 'linux') {
         'Release: 1',
         'Summary: DangTu desktop client',
         'License: Proprietary',
-        'Requires: webkit2gtk4.1, gtk3, libappindicator-gtk3, nss, atk, at-spi2-atk, cups-libs, libdrm, libxkbcommon, libXcomposite, libXdamage, libXfixes, libXrandr, mesa-libgbm, alsa-lib, xdg-utils',
+        'Requires: webkit2gtk4.1, gtk3, libappindicator-gtk3, nss, atk, at-spi2-atk, cups-libs, libdrm, libxkbcommon, libXcomposite, libXdamage, libXfixes, libXrandr, mesa-libgbm, alsa-lib, xdg-utils, google-noto-emoji-color-fonts',
         '',
         '%description',
         'DangTu desktop client',
