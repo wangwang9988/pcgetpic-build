@@ -441,6 +441,20 @@ if (Test-Path -LiteralPath $mainWebsiteTugetJson -PathType Leaf) {
   Write-Host "Updated website/public/tuget-version.json version -> $currentClientVersion" -ForegroundColor Green
 }
 
+$toolsProductsTs = Join-Path $workspaceRoot "tools\app\data\products.ts"
+if (Test-Path -LiteralPath $toolsProductsTs -PathType Leaf) {
+  $productsContent = Get-Content -LiteralPath $toolsProductsTs -Raw -Encoding UTF8
+  $updatedProductsContent = [regex]::Replace(
+    $productsContent,
+    "(slug:\s*'tuget-client'[\s\S]{0,80}?version:\s*')([^']+)(')",
+    "`${1}$currentClientVersion`${3}"
+  )
+  if ($updatedProductsContent -ne $productsContent) {
+    Set-Content -LiteralPath $toolsProductsTs -Value $updatedProductsContent -Encoding utf8NoBOM -NoNewline
+    Write-Host "Updated tools/app/data/products.ts tuget-client version -> $currentClientVersion" -ForegroundColor Green
+  }
+}
+
 Write-Step "10/10 Build Microsoft Store MSIX and MSIX-OK\test local test bundle"
 Invoke-Checked $clientDir "node" (Join-Path $clientDir "scripts\build-msix.mjs")
 
