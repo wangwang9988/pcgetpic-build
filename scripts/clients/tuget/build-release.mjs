@@ -451,6 +451,19 @@ function syncWebsiteVersionManifests(clientVersion, builtChromiumPlatform) {
     fs.writeFileSync(mainWebsiteVersionPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
     console.log(`Updated website/public/tuget-version.json (${builtChromiumPlatform}) -> ${clientVersion}`);
   }
+
+  const toolsProductsFile = path.join(workspaceRoot, 'tools', 'app', 'data', 'products.ts');
+  if (fs.existsSync(toolsProductsFile)) {
+    const productsContent = fs.readFileSync(toolsProductsFile, 'utf8');
+    const updatedProducts = productsContent.replace(
+      /(slug:\s*'tuget-client'[\s\S]{0,80}?version:\s*')([^']+)(')/,
+      `$1${clientVersion}$3`,
+    );
+    if (updatedProducts !== productsContent) {
+      fs.writeFileSync(toolsProductsFile, updatedProducts, 'utf8');
+      console.log(`Updated tools/app/data/products.ts tuget-client version -> ${clientVersion}`);
+    }
+  }
 }
 
 const { target, thin, skipSigning } = parseArgs(process.argv.slice(2));
